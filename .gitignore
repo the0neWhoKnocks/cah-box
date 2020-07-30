@@ -3,6 +3,7 @@
 *.zip
 
 # Folders
+.git
 .vscode
 __sapper__
 node_modules
