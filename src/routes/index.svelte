@@ -1,39 +1,49 @@
 <style>
-	h1, figure, p {
-		text-align: center;
-		margin: 0 auto;
-	}
-
-	h1 {
-		font-size: 2.8em;
-		text-transform: uppercase;
-		font-weight: 700;
-		margin: 0 0 0.5em 0;
-	}
-
-	figure {
-		margin: 0 0 1em 0;
-	}
-
-	p {
-		margin: 1em auto;
-	}
-
-	@media (min-width: 480px) {
-		h1 {
-			font-size: 4em;
-		}
-	}
+	
 </style>
 
 <svelte:head>
-	<title>Sapper project template</title>
+	<title>CAH-Box</title>
 </svelte:head>
 
-<h1>Great success!</h1>
+<script>
+  import { onMount } from 'svelte';
+  import {
+    WS_MSG__CREATE_GAME,
+  } from '../constants';
 
-<figure>
-	<figcaption>Have fun with Sapper!</figcaption>
-</figure>
+  let blackCards;
+  let whiteCards;
+  let roomID;
 
-<p><strong>Try editing this file (src/routes/index.svelte) to test live reloading.</strong></p>
+  function handleCreateClick() {
+    window.socket.on(WS_MSG__CREATE_GAME, (data) => {
+      blackCards = data.cards.black;
+      whiteCards = data.cards.white;
+      roomID = data.roomID;
+
+      console.log(blackCards, whiteCards, roomID);
+    });
+    window.socket.emit(WS_MSG__CREATE_GAME);
+  }
+  
+  onMount(() => {
+    window.socket = io();
+  });
+</script>
+
+<div>
+  {#if roomID}
+    <p>Room ID: {roomID}</p>
+  {:else}
+    <form>
+      <button 
+        type="button"
+        value="create"
+        on:click={handleCreateClick}
+      >Create</button>
+      or
+      <button type="button" value="join">Join</button>
+    </form>
+  {/if}
+</div>
