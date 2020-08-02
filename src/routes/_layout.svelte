@@ -1,14 +1,28 @@
-<style>
-	main {
-		position: relative;
-		max-width: 56em;
-		background-color: white;
-		padding: 2em;
-		margin: 0 auto;
-		box-sizing: border-box;
-	}
-</style>
+<script>
+  import { titleSuffix } from '../store';
 
-<main>
-	<slot></slot>
-</main>
+  const title = 'CAH-Box';
+</script>
+
+<svelte:head>
+  <title>{`${title}${$titleSuffix ? ` | ${$titleSuffix}` : ''}`}</title>
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      margin: 0;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    #sapper {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</svelte:head>
+
+<slot></slot>
