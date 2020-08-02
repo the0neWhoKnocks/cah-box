@@ -1,28 +1,43 @@
 <style>
-	
-</style>
+  button {
+    width: 100%;
+    font-size: 1em;
+    padding: 0.5em;
+    display: block;
+  }
 
-<svelte:head>
-	<title>CAH-Box</title>
-</svelte:head>
+  .wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #eee;
+  }
+
+  .start-form {
+    width: 300px;
+    font-size: 1.5em;
+    padding: 1em;
+    border: solid 1px #888;
+    border-radius: 0.25em;
+    background: #fff;
+  }
+</style>
 
 <script>
   import { onMount } from 'svelte';
-  import {
-    WS_MSG__CREATE_GAME,
-  } from '../constants';
-
-  let blackCards;
-  let whiteCards;
-  let roomID;
+  import { WS_MSG__CREATE_GAME } from '../constants';
 
   function handleCreateClick() {
     window.socket.on(WS_MSG__CREATE_GAME, (data) => {
-      blackCards = data.cards.black;
-      whiteCards = data.cards.white;
-      roomID = data.roomID;
+      const roomID = data.roomID;
 
-      console.log(blackCards, whiteCards, roomID);
+      window.sessionStorage.setItem(roomID, JSON.stringify({
+        blackCards: data.cards.black,
+        whiteCards: data.cards.white,
+      }));
+      window.location.assign(`/game/${roomID}`);
     });
     window.socket.emit(WS_MSG__CREATE_GAME);
   }
@@ -32,18 +47,12 @@
   });
 </script>
 
-<div>
-  {#if roomID}
-    <p>Room ID: {roomID}</p>
-  {:else}
-    <form>
-      <button 
-        type="button"
-        value="create"
-        on:click={handleCreateClick}
-      >Create</button>
-      or
-      <button type="button" value="join">Join</button>
-    </form>
-  {/if}
+<div class="wrapper">
+  <form class="start-form">
+    <button 
+      type="button"
+      value="create"
+      on:click={handleCreateClick}
+    >Create Game</button>
+  </form>
 </div>
