@@ -6,12 +6,16 @@ module.exports = (socket) => function createGame() {
   } = require('../../../data.json');
   const generateRoomID = require('../utils/generateRoomID');
   const shuffleArray = require('../utils/shuffleArray');
+  const { rooms } = require('../store');
+  const roomID = generateRoomID();
 
-  socket.emit(WS_MSG__CREATE_GAME, {
+  rooms[roomID] = {
     cards: {
       black: shuffleArray(blackCards),
       white: shuffleArray(whiteCards),
     },
-    roomID: generateRoomID(),
-  });
+    users: [],
+  };
+
+  socket.emit(WS_MSG__CREATE_GAME, { roomID });
 }

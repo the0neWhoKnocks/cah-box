@@ -26,25 +26,7 @@
 </style>
 
 <script>
-  import { onMount } from 'svelte';
-  import { WS_MSG__CREATE_GAME } from '../constants';
-
-  function handleCreateClick() {
-    window.socket.on(WS_MSG__CREATE_GAME, (data) => {
-      const roomID = data.roomID;
-
-      window.sessionStorage.setItem(roomID, JSON.stringify({
-        blackCards: data.cards.black,
-        whiteCards: data.cards.white,
-      }));
-      window.location.assign(`/game/${roomID}`);
-    });
-    window.socket.emit(WS_MSG__CREATE_GAME);
-  }
-  
-  onMount(() => {
-    window.socket = io();
-  });
+  import createGame from '../utils/createGame';
 </script>
 
 <div class="wrapper">
@@ -52,7 +34,7 @@
     <button 
       type="button"
       value="create"
-      on:click={handleCreateClick}
+      on:click={createGame}
     >Create Game</button>
   </form>
 </div>
