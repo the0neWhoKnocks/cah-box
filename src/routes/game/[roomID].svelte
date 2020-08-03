@@ -13,30 +13,54 @@
     display: flex;
   }
 
-  .user-nav {
+  .users-ui {
     width: 200px;
-    padding: 1em;
-    margin: 0;
     background: #fff;
+  }
+  .users-ui :global(.user) {
+    margin: 0.25em 0;
   }
 
-  .modal {
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.1);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  .user-ui {
     position: absolute;
-    top: 0;
-    left: 0;
+    top: 0.5em;
+    right: 0.5em;
   }
-  .modal__body {
-    font-size: 1.5em;
-    padding: 1em;
-    border: solid 1px #888;
-    border-radius: 0.25em;
-    background: #fff;
+  .user-ui :global(.user) {
+    overflow: hidden;
+    padding: 0 0 0 0.25em;
+    border: solid 2px;
+    border-radius: 0.75em;
+  }
+  .user-ui :global(.user .user__name) {
+    width: auto;
+    padding-right: 1em;
+    padding-left: 0.75em;
+    border-radius: 0 0.6em 0.6em 0;
+    margin-right: -2em;
+    background: #eee;
+    position: relative;
+  }
+  .user-ui :global(.user.is--active .user__name) {
+    margin-right: -1.25em;
+    box-shadow: 0 0 5px 2px;
+  }
+  .user-ui :global(.user .user__status-indicator) {
+    width: 2em;
+  }
+  .user-ui :global(.user .user__icon) {
+    display: none;
+  }
+  .user-ui :global(.user.is--admin .user__icon) {
+    margin-right: -0.5em;
+    background: #eee;
+    display: inline-block;
+    position: relative;
+    z-index: 1;
+  }
+
+  .join-form,
+  :global(.modal.room-error .modal__body) {
     display: flex;
     flex-direction: column;
   }
@@ -49,12 +73,12 @@
     margin-bottom: 1em;
   }
 
-  .room-error {
-    width: 400px;
+  :global(.modal.room-error .modal__body) {
+    width: 440px;
     text-align: center;
     background: #ffffa9;
   }
-  .room-error button {
+  :global(.modal.room-error button) {
     border: solid 1px;
     border-radius: 0.25em;
     margin-top: 1em;
@@ -75,23 +99,26 @@
 <script>
   import { stores } from '@sapper/app';
   import { onMount } from 'svelte';
-  import { titleSuffix } from '../../store';
+  import Modal from '../../components/Modal.svelte';
+  import User from '../../components/User.svelte';
   import {
     WS_MSG__CHECK_USERNAME,
     WS_MSG__ENTER_ROOM,
     WS_MSG__JOIN_GAME,
     WS_MSG__USER_JOINED,
   } from '../../constants';
+  import { titleSuffix } from '../../store';
   import createGame from '../../utils/createGame';
   
   const { page } = stores();
   const { roomID } = $page.params;
   let users = [];
   let mounted = false;
-  let loggedIn = false;
   let roomData;
   let usernameInputRef;
   let usernameInputError;
+  let createGameBtnRef;
+  let localUser;
 
   function handleJoinSubmit(ev) {
     ev.preventDefault();
@@ -102,43 +129,61 @@
     });
   }
 
+  function parseUserData(data) {
+    users = [...data.users];
+    
+    if (users.length && !localUser) {
+      localUser = users.filter(({ name }) => name === data.username)[0];
+    }
+  }
+
+  function handleEnteringRoom(data) {
+    mounted = true;
+    roomData = data.roomData;
+
+    if (roomData) {
+      parseUserData({
+        username: data.username,
+        users: roomData.users,
+      });
+    }
+
+    setTimeout(() => {
+      if (usernameInputRef) usernameInputRef.focus();
+      if (createGameBtnRef) createGameBtnRef.focus();
+    }, 0);
+  }
+
+  function handleUsernameCheck({ error, username }) {
+    if (error) {
+      usernameInputError = 'Sorry, it looks like that username is taken';
+    }
+    else {
+      window.socket.emit(WS_MSG__JOIN_GAME, { roomID, username });
+      window.sessionStorage.setItem(roomID, JSON.stringify({ username }));
+    }
+  }
+
+  function handleUserJoin(data) {
+    parseUserData({
+      username: data.username,
+      users: data.users,
+    });
+    users = [...data.users];
+    if (!localUser) localUser = users[users.length - 1];
+  }
+
   titleSuffix.set(`Game ${roomID}`);
 
   onMount(() => {
+    const { username } = JSON.parse(window.sessionStorage.getItem(roomID) || '{}');
+
     window.socketConnected.then(() => {
-      window.socket.on(WS_MSG__ENTER_ROOM, (data) => {
-        mounted = true;
-        roomData = data;
+      window.socket.on(WS_MSG__ENTER_ROOM, handleEnteringRoom);
+      window.socket.on(WS_MSG__CHECK_USERNAME, handleUsernameCheck);
+      window.socket.on(WS_MSG__USER_JOINED, handleUserJoin);
 
-        if (roomData) {
-          users = [...roomData.users];
-          const { username } = JSON.parse(window.sessionStorage.getItem(roomID) || '{}');
-
-          if (username) loggedIn = true;
-          else {
-            setTimeout(() => {
-              usernameInputRef.focus();
-            }, 0);
-          }
-        }
-      });
-
-      window.socket.on(WS_MSG__CHECK_USERNAME, ({ error, username }) => {
-        if (error) {
-          usernameInputError = 'Sorry, it looks like that username is taken';
-        }
-        else {
-          window.socket.emit(WS_MSG__JOIN_GAME, { roomID, username });
-          window.sessionStorage.setItem(roomID, JSON.stringify({ username }));
-          loggedIn = true;
-        }
-      });
-
-      window.socket.on(WS_MSG__USER_JOINED, (data) => {
-        users = [...data.users];
-      });
-
-      window.socket.emit(WS_MSG__ENTER_ROOM, { roomID });
+      window.socket.emit(WS_MSG__ENTER_ROOM, { roomID, username });
     });
   });
 </script>
@@ -146,14 +191,19 @@
 <div class="page">
   {#if mounted}
     {#if roomData}
-      <ul class="user-nav">
+      <div class="users-ui">
         {#each users as user}
-          <li>{user.name}</li>
+          <User class="user" {...user} />
         {/each}
-      </ul>
-      {#if !loggedIn}
-        <div class="modal">
-          <form class="modal__body join-form" autocomplete="off" on:submit={handleJoinSubmit}>
+      </div>
+      {#if localUser}
+        <div class="user-ui">
+          <User {...localUser} />
+        </div>
+      {/if}
+      {#if !localUser}
+        <Modal>
+          <form class="join-form" autocomplete="off" on:submit={handleJoinSubmit}>
             <label for="username">Enter Username</label>
             <input 
               id="username"
@@ -167,17 +217,15 @@
             {/if}
             <button>Join Game</button>
           </form>
-        </div>
+        </Modal>
       {/if}
     {:else}
-      <div class="modal">
-        <div class="modal__body room-error">
-          Sorry, it looks like this room doesn't exist anymore.
-          <button on:click={createGame}>
-            Click here to create a new game.
-          </button>
-        </div>
-      </div>
+      <Modal class="room-error">
+        Sorry, it looks like this room doesn't exist anymore.
+        <button on:click={createGame} bind:this={createGameBtnRef}>
+          Click here to create a new game.
+        </button>
+      </Modal>
     {/if}
   {/if}
 </div>
