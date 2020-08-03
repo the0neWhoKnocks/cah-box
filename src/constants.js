@@ -1,4 +1,7 @@
 module.exports = {
+  WS_MSG__CHECK_USERNAME: 'check username',
   WS_MSG__CREATE_GAME: 'create game',
+  WS_MSG__ENTER_ROOM: 'enter room',
   WS_MSG__JOIN_GAME: 'join game',
+  WS_MSG__USER_JOINED: 'user joined',
 };

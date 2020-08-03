@@ -1,11 +1,10 @@
-module.exports = (socket) => function joinGame() {
-  const { WS_MSG__JOIN_GAME } = require('../../../constants');
+module.exports = () => function joinGame({ roomID, username }) {
+  const { WS_MSG__USER_JOINED } = require('../../../constants');
+  const { io, rooms } = require('../store');
 
-  // socket.emit(WS_MSG__JOIN_GAME, {
-  //   cards: {
-  //     black: shuffleArray(blackCards),
-  //     white: shuffleArray(whiteCards),
-  //   },
-  //   roomID: generateRoomID(),
-  // });
+  rooms[roomID].users.push({ name: username });
+  
+  io.sockets.in(roomID).emit(WS_MSG__USER_JOINED, {
+    users: rooms[roomID].users,
+  });
 }
