@@ -17,6 +17,9 @@
 
   .user__name {
     width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .user:not(.is--admin):not(.is--czar) .user__icon {
