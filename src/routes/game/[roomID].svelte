@@ -38,6 +38,7 @@
   }
   .user-ui :global(.user .user__name) {
     width: auto;
+    max-width: 35vw;
     padding-right: 1em;
     padding-left: 0.75em;
     border-radius: 0 0.6em 0.6em 0;
@@ -94,8 +95,24 @@
     font-size: 1.3em;
   }
 
+  :global(.modal.user-data-menu button) {
+    max-width: 330px;
+    word-break: break-word;
+  }
   :global(.modal.user-data-menu button:not(:first-of-type)) {
     margin-top: 1em;
+  }
+  :global(.modal.user-data-menu button q) {
+    color: #ff00b1;
+    background: transparent;
+  }
+  :global(.modal.user-data-menu button:disabled q) {
+    color: currentColor;
+  }
+  :global(.modal.user-data-menu .help) {
+    color: #666;
+    font-size: 0.6em;
+    padding: 0.25em 0.5em 0 0.5em;
   }
 
   .error-msg {
@@ -126,7 +143,7 @@
   import { titleSuffix } from '../../store';
   import createGame from '../../utils/createGame';
   
-  const MSG__SET_CZAR = 'Bequeath the Czar';
+  const MSG__SET_CZAR = 'Make <User> the Czar';
   const { page } = stores();
   const { roomID } = $page.params;
   let users = [];
@@ -142,6 +159,7 @@
   let userClickHandler;
   let showUserDataMenu = false;
   let userData;
+  let minimumNumberOfPlayersJoined = false;
 
   function handleJoinSubmit(ev) {
     ev.preventDefault();
@@ -251,6 +269,8 @@
 
   titleSuffix.set(`Game ${roomID}`);
 
+  $: minimumNumberOfPlayersJoined = users.length > 1;
+
   onMount(() => {
     const { username, ...rest } = JSON.parse(window.sessionStorage.getItem(roomID) || '{}');
     adminInstructionsShown = rest.adminInstructionsShown;
@@ -313,8 +333,9 @@
             question, or by what ever means you choose.
           </p>
           <p>
-            Once the Czar's been chosen, you just have to click on that User and
-            choose <q>{MSG__SET_CZAR}</q>. Once you do so, the game will start.
+            Once the group's chosen the Czar, you just have to click on that
+            User and choose <q>{MSG__SET_CZAR}</q>. Once you do so, the game
+            will start.
           </p>
           <button 
             type="button"
@@ -328,13 +349,30 @@
           <button
             type="button"
             on:click={setCzar}
-            disabled={userData.czar}
-          >{MSG__SET_CZAR}</button>
+            disabled={userData.czar || !minimumNumberOfPlayersJoined}
+          >
+            {@html MSG__SET_CZAR.replace('<User>', `<q>${userData.name}</q>`)}
+          </button>
+          {#if !minimumNumberOfPlayersJoined}
+            <div class="help">
+              There has to be at least 2 players before you can assign a Czar.
+            </div>
+          {/if}
+          {#if userData.czar}
+            <div class="help">
+              You're already the Czar, yuh silly goose.
+            </div>
+          {/if}
           <button
             type="button"
             on:click={setAdmin}
             disabled={userData.admin}
-          >Make Admin</button>
+          >{@html `Make <q>${userData.name}</q> the MC`}</button>
+          {#if userData.admin}
+            <div class="help">
+              You're already the MC, yuh silly goose.
+            </div>
+          {/if}
           <button
             type="button"
             on:click={closeUserDataMenu}
