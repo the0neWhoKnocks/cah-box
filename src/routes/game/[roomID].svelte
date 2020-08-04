@@ -174,10 +174,6 @@
         adminInstructionsShown: true,
         username: localUser.name,
       }));
-
-      setTimeout(() => {
-        closeAdminInstructionsBtnRef.focus();
-      }, 0);
     }
   }
 
@@ -191,11 +187,6 @@
         users: roomData.users,
       });
     }
-
-    setTimeout(() => {
-      if (usernameInputRef) usernameInputRef.focus();
-      if (createGameBtnRef) createGameBtnRef.focus();
-    }, 0);
   }
 
   function handleUsernameCheck({ error, username }) {
@@ -293,7 +284,7 @@
         </div>
       {/if}
       {#if !localUser}
-        <Modal>
+        <Modal focusRef={usernameInputRef}>
           <form class="join-form" autocomplete="off" on:submit={handleJoinSubmit}>
             <label for="username">Enter Username</label>
             <input 
@@ -311,7 +302,10 @@
         </Modal>
       {/if}
       {#if showAdminInstructions}
-        <Modal class="admin-instructions">
+        <Modal
+          class="admin-instructions"
+          focusRef={closeAdminInstructionsBtnRef}
+        >
           <p>
             Congrats! You're the MC of this game, so you're running the game. When
             starting a new CAH game it's up to the group to choose the Card Czar.
@@ -348,7 +342,7 @@
         </Modal>
       {/if}
     {:else}
-      <Modal class="room-error">
+      <Modal class="room-error" focusRef={createGameBtnRef}>
         Sorry, it looks like this room doesn't exist anymore.
         <button on:click={createGame} bind:this={createGameBtnRef}>
           Click here to create a new game.
