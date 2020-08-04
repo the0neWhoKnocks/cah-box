@@ -42,8 +42,19 @@
     p {
       margin: 0;
     }
-    p:not(:first-of-type) {
-      margin-top: 1em;
+    p:not(:last-child) {
+      margin-bottom: 1em;
+    }
+
+    q {
+      color: #501600;
+      font-style: italic;
+      font-family: serif;
+      font-weight: bold;
+      padding: 0 0.5em;
+      border-radius: 0.25em;
+      background: #ffeb00;
+      display: inline-block;
     }
 
     #sapper {

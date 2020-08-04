@@ -89,9 +89,6 @@
     width: 500px;
     font-size: 1.3em;
   }
-  :global(.modal.admin-instructions button) {
-    margin-top: 1em;
-  }
 
   :global(.modal.user-data-menu button:not(:first-of-type)) {
     margin-top: 1em;
@@ -310,12 +307,12 @@
           <p>
             Congrats! You're the MC of this game, so you're running the game. When
             starting a new CAH game it's up to the group to choose the Card Czar.
-            Y'all can do that via the typical "Who was the last to poop?" question
-            or by what ever means you choose.
+            Y'all can do that via the typical <q>Who was the last to poop?</q>
+            question, or by what ever means you choose.
           </p>
           <p>
             Once the Czar's been chosen, you just have to click on that User and
-            choose "{MSG__SET_CZAR}". Once you do so, the game will start.
+            choose <q>{MSG__SET_CZAR}</q>. Once you do so, the game will start.
           </p>
           <button 
             type="button"
