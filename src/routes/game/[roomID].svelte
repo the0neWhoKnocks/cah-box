@@ -20,6 +20,10 @@
   .users-ui :global(.user) {
     margin: 0.25em 0;
   }
+  .users-ui.is--admin :global(.user:hover) {
+    cursor: pointer;
+    background: rgba(255, 255, 0, 0.5);
+  }
 
   .user-ui {
     position: absolute;
@@ -274,7 +278,11 @@
 <div class="page">
   {#if mounted}
     {#if roomData}
-      <div class="users-ui" on:click={userClickHandler}>
+      <div
+        class="users-ui"
+        class:is--admin={!!userClickHandler}
+        on:click={userClickHandler}
+      >
         {#each users as user}
           <User class="user" {...user} />
         {/each}
