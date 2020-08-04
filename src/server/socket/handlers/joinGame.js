@@ -1,7 +1,10 @@
 module.exports = () => function joinGame({ roomID, username }) {
   const { WS_MSG__USER_JOINED } = require('../../../constants');
   const { io, rooms } = require('../store');
-  const user = { name: username };
+  const user = {
+    cards: [],
+    name: username,
+  };
 
   if (!rooms[roomID].users.length) user.admin = true;
 

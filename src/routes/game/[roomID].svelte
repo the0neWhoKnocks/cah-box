@@ -124,15 +124,48 @@
     margin-bottom: 1em;
     background: #ffbcbc;
   }
+
+  .cards {
+    width: 100%;
+    padding: 3em 1em 1em 1em;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .cards :global(.card) {
+    flex-shrink: 0;
+  }
+  .cards .white {
+    height: 100%;
+    margin-top: 1em;
+    overflow: auto;
+  }
+  .cards .white :global(.card:not(:first-child)) {
+    margin-top: 0.5em;
+  }
+  @media (min-width: 1024px) {
+    .cards .white {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .cards .white :global(.card) {
+      margin: 0.25em;
+    }
+  }
 </style>
 
 <script>
   import { stores } from '@sapper/app';
   import { onMount } from 'svelte';
+  import Card from '../../components/Card.svelte';
   import Modal from '../../components/Modal.svelte';
   import User from '../../components/User.svelte';
   import {
+    WS_MSG__CARDS_DEALT,
     WS_MSG__CHECK_USERNAME,
+    WS_MSG__DEAL_CARDS,
     WS_MSG__ENTER_ROOM,
     WS_MSG__JOIN_GAME,
     WS_MSG__SET_ADMIN,
@@ -160,6 +193,8 @@
   let showUserDataMenu = false;
   let userData;
   let minimumNumberOfPlayersJoined = false;
+  let localCards = [];
+  let blackCard;
 
   function handleJoinSubmit(ev) {
     ev.preventDefault();
@@ -250,6 +285,8 @@
       username: userData.name,
     });
     closeUserDataMenu();
+    
+    window.socket.emit(WS_MSG__DEAL_CARDS, { roomID });
   }
 
   function setAdmin() {
@@ -267,6 +304,15 @@
     }, true);
   }
 
+  function handleCardsDealt(data) {
+    parseUserData({
+      username: localUser.name,
+      users: data.users,
+    }, true);
+
+    blackCard = data.blackCard;
+  }
+
   titleSuffix.set(`Game ${roomID}`);
 
   $: minimumNumberOfPlayersJoined = users.length > 1;
@@ -276,8 +322,9 @@
     adminInstructionsShown = rest.adminInstructionsShown;
 
     window.socketConnected.then(() => {
-      window.socket.on(WS_MSG__ENTER_ROOM, handleEnteringRoom);
+      window.socket.on(WS_MSG__CARDS_DEALT, handleCardsDealt);
       window.socket.on(WS_MSG__CHECK_USERNAME, handleUsernameCheck);
+      window.socket.on(WS_MSG__ENTER_ROOM, handleEnteringRoom);
       window.socket.on(WS_MSG__USER_JOINED, handleUserJoin);
       window.socket.on(WS_MSG__USER_UPDATE, handleUserUpdate);
 
@@ -298,11 +345,25 @@
           <User class="user" {...user} />
         {/each}
       </div>
+
       {#if localUser}
+        {#if localUser.cards.length}
+          <div class="cards">
+            <Card type="black" text={blackCard} />
+
+            <div class="white">
+              {#each localUser.cards as text}
+                <Card {text} />
+              {/each}
+            </div>
+          </div>
+        {/if}
+        
         <div class="user-ui">
           <User {...localUser} />
         </div>
       {/if}
+
       {#if !localUser}
         <Modal focusRef={usernameInputRef}>
           <form class="join-form" autocomplete="off" on:submit={handleJoinSubmit}>
@@ -321,6 +382,7 @@
           </form>
         </Modal>
       {/if}
+
       {#if showAdminInstructions}
         <Modal
           class="admin-instructions"
@@ -344,6 +406,7 @@
           >Close</button>
         </Modal>
       {/if}
+
       {#if showUserDataMenu}
         <Modal class="user-data-menu">
           <button
