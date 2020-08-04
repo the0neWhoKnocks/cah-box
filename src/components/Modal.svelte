@@ -22,7 +22,12 @@
 
 <script>
   let className = '';
+  export let focusRef;
   export { className as class };
+
+  $: if (focusRef) {
+    setTimeout(() => { focusRef.focus(); }, 0);
+  }
 </script>
 
 <div class={`modal ${className}`}>

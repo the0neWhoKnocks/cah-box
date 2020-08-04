@@ -14,9 +14,11 @@
 <script>
   import Modal from '../components/Modal.svelte';
   import createGame from '../utils/createGame';
+
+  let createGameBtnRef;
 </script>
 
-<Modal>
+<Modal focusRef={createGameBtnRef}>
   <form class="start-form">
     <p>
       Welcome to CAH-Box, a mashup of Cards Against Humanity and Jackbox games.
@@ -25,6 +27,7 @@
       type="button"
       value="create"
       on:click={createGame}
+      bind:this={createGameBtnRef}
     >Create Game</button>
   </form>
 </Modal>
