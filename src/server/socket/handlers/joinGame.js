@@ -3,10 +3,7 @@ module.exports = () => function joinGame({ roomID, username }) {
   const { io, rooms } = require('../store');
   const user = { name: username };
 
-  if (!rooms[roomID].users.length) {
-    user.active = true;
-    user.admin = true;
-  }
+  if (!rooms[roomID].users.length) user.admin = true;
 
   rooms[roomID].users.push(user);
   

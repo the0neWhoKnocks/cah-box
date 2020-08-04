@@ -41,17 +41,17 @@
     background: #eee;
     position: relative;
   }
-  .user-ui :global(.user.is--active .user__name) {
+  .user-ui :global(.user.is--czar .user__name) {
     margin-right: -1.25em;
     box-shadow: 0 0 5px 2px;
   }
   .user-ui :global(.user .user__status-indicator) {
     width: 2em;
   }
-  .user-ui :global(.user .user__icon) {
+  .user-ui :global(.user:not(.is--admin):not(.is--czar) .user__icon) {
     display: none;
   }
-  .user-ui :global(.user.is--admin .user__icon) {
+  .user-ui :global(.user .user__icon) {
     margin-right: -0.5em;
     background: #eee;
     display: inline-block;
@@ -85,6 +85,18 @@
     background: #00ff95;
   }
 
+  :global(.modal.admin-instructions .modal__body) {
+    width: 500px;
+    font-size: 1.3em;
+  }
+  :global(.modal.admin-instructions button) {
+    margin-top: 1em;
+  }
+
+  :global(.modal.user-data-menu button:not(:first-of-type)) {
+    margin-top: 1em;
+  }
+
   .error-msg {
     color: #7d0000;
     line-height: 1.2em;
@@ -105,20 +117,30 @@
     WS_MSG__CHECK_USERNAME,
     WS_MSG__ENTER_ROOM,
     WS_MSG__JOIN_GAME,
+    WS_MSG__SET_ADMIN,
+    WS_MSG__SET_CZAR,
     WS_MSG__USER_JOINED,
+    WS_MSG__USER_UPDATE,
   } from '../../constants';
   import { titleSuffix } from '../../store';
   import createGame from '../../utils/createGame';
   
+  const MSG__SET_CZAR = 'Bequeath the Czar';
   const { page } = stores();
   const { roomID } = $page.params;
   let users = [];
   let mounted = false;
+  let showAdminInstructions = false;
+  let adminInstructionsShown = false;
   let roomData;
   let usernameInputRef;
   let usernameInputError;
   let createGameBtnRef;
   let localUser;
+  let closeAdminInstructionsBtnRef;
+  let userClickHandler;
+  let showUserDataMenu = false;
+  let userData;
 
   function handleJoinSubmit(ev) {
     ev.preventDefault();
@@ -129,11 +151,32 @@
     });
   }
 
-  function parseUserData(data) {
+  function parseUserData(data, update) {
     users = [...data.users];
     
-    if (users.length && !localUser) {
+    if (
+      users.length
+      && (!localUser || update)
+    ) {
       localUser = users.filter(({ name }) => name === data.username)[0];
+    }
+
+    if (update && !localUser.admin) userClickHandler = undefined;
+
+    if (localUser && localUser.admin) userClickHandler = handleUserClick;
+
+    if (!adminInstructionsShown && localUser && localUser.admin) {
+      showAdminInstructions = true;
+      adminInstructionsShown = true;
+
+      window.sessionStorage.setItem(roomID, JSON.stringify({
+        adminInstructionsShown: true,
+        username: localUser.name,
+      }));
+
+      setTimeout(() => {
+        closeAdminInstructionsBtnRef.focus();
+      }, 0);
     }
   }
 
@@ -163,25 +206,68 @@
       window.sessionStorage.setItem(roomID, JSON.stringify({ username }));
     }
   }
-
+  
   function handleUserJoin(data) {
     parseUserData({
       username: data.username,
       users: data.users,
     });
-    users = [...data.users];
-    if (!localUser) localUser = users[users.length - 1];
+  }
+
+  function closeAdminInstructions() {
+    showAdminInstructions = false;
+  }
+
+  function openUserDataMenu(username) {
+    showUserDataMenu = true;
+    userData = users.filter(({ name }) => name === username)[0];
+  }
+
+  function closeUserDataMenu() {
+    showUserDataMenu = false;
+    userData = undefined;
+  }
+
+  function handleUserClick(ev) {
+    const el = ev.target;
+
+    if (el.classList.contains('user')) openUserDataMenu(el.dataset.name);
+  }
+
+  function setCzar() {
+    window.socket.emit(WS_MSG__SET_CZAR, {
+      roomID,
+      username: userData.name,
+    });
+    closeUserDataMenu();
+  }
+
+  function setAdmin() {
+    window.socket.emit(WS_MSG__SET_ADMIN, {
+      roomID,
+      username: userData.name,
+    });
+    closeUserDataMenu();
+  }
+
+  function handleUserUpdate(data) {
+    parseUserData({
+      username: localUser.name,
+      users: data.users,
+    }, true);
   }
 
   titleSuffix.set(`Game ${roomID}`);
 
   onMount(() => {
-    const { username } = JSON.parse(window.sessionStorage.getItem(roomID) || '{}');
+    const { username, ...rest } = JSON.parse(window.sessionStorage.getItem(roomID) || '{}');
+    adminInstructionsShown = rest.adminInstructionsShown;
 
     window.socketConnected.then(() => {
       window.socket.on(WS_MSG__ENTER_ROOM, handleEnteringRoom);
       window.socket.on(WS_MSG__CHECK_USERNAME, handleUsernameCheck);
       window.socket.on(WS_MSG__USER_JOINED, handleUserJoin);
+      window.socket.on(WS_MSG__USER_UPDATE, handleUserUpdate);
 
       window.socket.emit(WS_MSG__ENTER_ROOM, { roomID, username });
     });
@@ -191,7 +277,7 @@
 <div class="page">
   {#if mounted}
     {#if roomData}
-      <div class="users-ui">
+      <div class="users-ui" on:click={userClickHandler}>
         {#each users as user}
           <User class="user" {...user} />
         {/each}
@@ -217,6 +303,43 @@
             {/if}
             <button>Join Game</button>
           </form>
+        </Modal>
+      {/if}
+      {#if showAdminInstructions}
+        <Modal class="admin-instructions">
+          <p>
+            Congrats! You're the MC of this game, so you're running the game. When
+            starting a new CAH game it's up to the group to choose the Card Czar.
+            Y'all can do that via the typical "Who was the last to poop?" question
+            or by what ever means you choose.
+          </p>
+          <p>
+            Once the Czar's been chosen, you just have to click on that User and
+            choose "{MSG__SET_CZAR}". Once you do so, the game will start.
+          </p>
+          <button 
+            type="button"
+            on:click={closeAdminInstructions}
+            bind:this={closeAdminInstructionsBtnRef}
+          >Close</button>
+        </Modal>
+      {/if}
+      {#if showUserDataMenu}
+        <Modal class="user-data-menu">
+          <button
+            type="button"
+            on:click={setCzar}
+            disabled={userData.czar}
+          >{MSG__SET_CZAR}</button>
+          <button
+            type="button"
+            on:click={setAdmin}
+            disabled={userData.admin}
+          >Make Admin</button>
+          <button
+            type="button"
+            on:click={closeUserDataMenu}
+          >Cancel</button>
         </Modal>
       {/if}
     {:else}

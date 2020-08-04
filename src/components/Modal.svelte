@@ -9,6 +9,7 @@
     position: absolute;
     top: 0;
     left: 0;
+    z-index: 10;
   }
   .modal__body {
     font-size: 1.5em;

@@ -28,7 +28,7 @@
       margin: 0;
     }
 
-    button {
+    button:not(:disabled) {
       cursor: pointer;
     }
 
@@ -37,6 +37,13 @@
     }
     input[type="text"] {
       padding: 0.25em;
+    }
+
+    p {
+      margin: 0;
+    }
+    p:not(:first-of-type) {
+      margin-top: 1em;
     }
 
     #sapper {

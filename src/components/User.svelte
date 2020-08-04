@@ -3,6 +3,9 @@
     font-size: 1.25em;
     display: flex;
   }
+  .user * {
+    pointer-events: none;
+  }
 
   .user__icon,
   .user__status-indicator,
@@ -16,7 +19,7 @@
     width: 100%;
   }
 
-  .user:not(.is--admin) .user__icon {
+  .user:not(.is--admin):not(.is--czar) .user__icon {
     opacity: 0;
   }
 
@@ -24,7 +27,7 @@
     background-color: #27cfb6;
     transition: background-color 300ms;
   }
-  .user:not(.is--active) .user__status-indicator {
+  .user:not(.is--czar) .user__status-indicator {
     background-color: #393939;
   }
 </style>
@@ -34,22 +37,19 @@
   const ICON__CZAR = '&#x1F451;';
   let className = '';
   
-  export let active = false;
   export let admin = false;
   export let czar = false;
   export let name = '';
   export { className as class };
-
-  const icon = czar ? ICON__CZAR : ICON__ADMIN;
 </script>
 
 <div
   class={`user ${className}`}
-  class:is--active={active}
   class:is--admin={admin}
   class:is--czar={czar}
+  data-name={name}
 >
-  <span class="user__icon">{@html icon}</span>
+  <span class="user__icon">{@html czar ? ICON__CZAR : ICON__ADMIN}</span>
   <span class="user__name">{name}</span>
   <span class="user__status-indicator"></span>
 </div>
