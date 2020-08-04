@@ -7,7 +7,7 @@
   }
 
   .start-form {
-    width: 300px;
+    width: 440px;
   }
 </style>
 
@@ -18,6 +18,9 @@
 
 <Modal>
   <form class="start-form">
+    <p>
+      Welcome to CAH-Box, a mashup of Cards Against Humanity and Jackbox games.
+    </p>
     <button 
       type="button"
       value="create"
