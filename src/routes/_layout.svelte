@@ -1,7 +1,9 @@
 <script>
+  import { onMount } from 'svelte';
   import { titleSuffix } from '../store';
 
   const title = 'CAH-Box';
+  let mounted = false;
 
   // NOTE - svelte's `onMount` (when fired within `_layout`) fires after the
   // child components `onMount` calls. This allows for any top-level
@@ -12,6 +14,10 @@
       window.socket.on('connect', () => { resolve(); });
     });
   }
+
+  onMount(() => {
+    mounted = true;
+  });
 </script>
 
 <svelte:head>
@@ -70,10 +76,37 @@
       left: 0;
       pointer-events: none;
     }
+
+    @keyframes showMsg {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+    .no-js {
+      width: 100%;
+      height: 100%;
+      padding: 2em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation-name: showMsg;
+      animation-duration: 300ms;
+      animation-delay: 300ms;
+      animation-fill-mode: both;
+    }
   </style>
 </svelte:head>
 
-<div class="page">
-  <slot></slot>
-</div>
-<div id="portal"></div>
+{#if mounted}
+  <div class="page">
+    <slot></slot>
+  </div>
+  <div id="portal"></div>
+{:else}
+  <div class="no-js">
+    This App requires Javascript. You'll have to enable it if you want to play.
+  </div>
+{/if}
