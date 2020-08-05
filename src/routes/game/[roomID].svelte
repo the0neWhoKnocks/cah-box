@@ -6,7 +6,7 @@
     display: block;
   }
 
-  .page {
+  .wrapper {
     width: 100%;
     height: 100%;
     background: #eee;
@@ -95,8 +95,10 @@
     font-size: 1.3em;
   }
 
+  :global(.modal.user-data-menu .modal__body) {
+    max-width: 400px;
+  }
   :global(.modal.user-data-menu button) {
-    max-width: 330px;
     word-break: break-word;
   }
   :global(.modal.user-data-menu button:not(:first-of-type)) {
@@ -333,7 +335,7 @@
   });
 </script>
 
-<div class="page">
+<div class="wrapper">
   {#if mounted}
     {#if roomData}
       <div
