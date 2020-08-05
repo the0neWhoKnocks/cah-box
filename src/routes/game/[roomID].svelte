@@ -14,8 +14,9 @@
   }
 
   .users-ui {
-    width: 200px;
+    width: 130px;
     background: #fff;
+    flex-shrink: 0;
   }
   .users-ui :global(.user) {
     margin: 0.25em 0;
@@ -23,6 +24,11 @@
   .users-ui.is--admin :global(.user:hover) {
     cursor: pointer;
     background: rgba(255, 255, 0, 0.5);
+  }
+  @media (min-width: 1024px) {
+    .users-ui {
+      width: 200px;
+    }
   }
 
   .czar-pending-msg {
@@ -148,12 +154,15 @@
     flex-shrink: 0;
   }
   .cards .white {
+    width: 100%;
     height: 100%;
     margin-top: 1em;
     overflow: auto;
   }
-  .cards .white :global(.card:not(:first-child)) {
-    margin-top: 0.5em;
+  @media (max-width: 1023px) {
+    .cards .white :global(.card:not(:first-child)) {
+      margin-top: 0.5em;
+    }
   }
   @media (min-width: 1024px) {
     .cards .white {
