@@ -57,11 +57,23 @@
       display: inline-block;
     }
 
-    #sapper {
+    #sapper,
+    #portal,
+    .page {
       width: 100%;
       height: 100%;
+    }
+
+    #portal {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
     }
   </style>
 </svelte:head>
 
-<slot></slot>
+<div class="page">
+  <slot></slot>
+</div>
+<div id="portal"></div>

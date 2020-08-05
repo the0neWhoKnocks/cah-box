@@ -10,7 +10,9 @@
     top: 0;
     left: 0;
     z-index: 10;
+    pointer-events: all;
   }
+
   .modal__body {
     font-size: 1.5em;
     padding: 1em;
@@ -19,19 +21,39 @@
     margin: 1em;
     background: #fff;
   }
+
+  :global(body.modal--open .page) {
+    filter: blur(6px);
+  }
 </style>
 
 <script>
+  import { onDestroy, onMount } from 'svelte';
+
+  const MODIFIER__OPEN = 'modal--open';
   let className = '';
+  let modalRef;
+
   export let focusRef;
   export { className as class };
 
   $: if (focusRef) {
     setTimeout(() => { focusRef.focus(); }, 0);
   }
+
+  onMount(() => {
+    const portal = document.getElementById('portal');
+    portal.innerHTML = '';
+    portal.appendChild(modalRef);
+    document.body.classList.add(MODIFIER__OPEN);
+  });
+
+  onDestroy(() => {
+    document.body.classList.remove(MODIFIER__OPEN);
+  });
 </script>
 
-<div class={`modal ${className}`}>
+<div class={`modal ${className}`} bind:this={modalRef}>
   <div class="modal__body">
     <slot></slot>
   </div>
