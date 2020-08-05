@@ -7,7 +7,7 @@
   }
 
   .start-form {
-    width: 440px;
+    max-width: 440px;
   }
 </style>
 

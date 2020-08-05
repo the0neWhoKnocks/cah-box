@@ -153,24 +153,64 @@
   .cards :global(.card) {
     flex-shrink: 0;
   }
-  .cards .white {
+  .cards .user-cards {
     width: 100%;
     height: 100%;
-    margin-top: 1em;
+    padding-top: 2em;
+    padding-bottom: 2em;
+    margin-top: -2em;
+    margin-bottom: -3em;
     overflow: auto;
   }
+  .cards .user-cards.disabled :global(.card) {
+    opacity: 0.25;
+    pointer-events: none;
+  }
+  .cards .sep {
+    width: 100%;
+    height: 6em;
+    position: relative;
+    pointer-events: none;
+  }
+  .cards .sep.is--top {
+    margin-top: 1em;
+    background: linear-gradient(180deg, #eeeeee 50%, transparent);
+  }
+  .cards .sep.is--btm {
+    background: linear-gradient(0deg, #eeeeee 20%, transparent);
+  }
+  .cards .sep.is--top::after {
+    content: '';
+    width: 100%;
+    border-top: dashed 2px #999;
+    position: absolute;
+    top: 25%;
+    left: 0;
+  }
   @media (max-width: 1023px) {
-    .cards .white :global(.card:not(:first-child)) {
+    .cards .answers :global(.card) {
+      box-shadow: 0 2px 8px 0px rgba(0, 0, 0, 0.5);
+    }
+    .cards .answers :global(.card:not(:first-child)) {
+      margin-top: -0.5em;
+    }
+    .cards .user-cards :global(.card:not(:first-child)) {
       margin-top: 0.5em;
     }
   }
   @media (min-width: 1024px) {
-    .cards .white {
+    .cards .answers :global(.card) {
+      box-shadow: 2px 0 8px 0px rgba(0, 0, 0, 0.5);
+    }
+    .cards .answers :global(.card:not(:first-child)) {
+      margin-left: -0.5em;
+    }
+    .cards .user-cards {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
     }
-    .cards .white :global(.card) {
+    .cards .user-cards :global(.card) {
       margin: 0.25em;
     }
   }
@@ -215,6 +255,9 @@
   let minimumNumberOfPlayersJoined = false;
   let localCards = [];
   let blackCard;
+  let requiredWhiteCardsCount;
+  let selectedCards = [];
+  let maxCardsSelected = false;
 
   function handleJoinSubmit(ev) {
     ev.preventDefault();
@@ -331,6 +374,30 @@
     }, true);
 
     blackCard = data.blackCard;
+    requiredWhiteCardsCount = data.requiredWhiteCardsCount;
+    // Add an index after cards are dealt to make manipulation easier.
+    localUser.cards.forEach((card, ndx) => { card.ndx = ndx; });
+  }
+
+  function handleCardSelect(ndx) {
+    const card = localUser.cards[ndx];
+
+    if (!maxCardsSelected) {
+      card.selected = true;
+      selectedCards = [...selectedCards, card];
+    }
+    
+    if (selectedCards.length === requiredWhiteCardsCount) maxCardsSelected = true;
+  }
+
+  function handleCardDeselect(ndx) {
+    const card = localUser.cards[ndx];
+    card.selected = false;
+
+    selectedCards.splice(selectedCards.indexOf(card.text), 1);
+    selectedCards = [...selectedCards];
+    localUser.cards = [...localUser.cards];
+    maxCardsSelected = false;
   }
 
   titleSuffix.set(`Game ${roomID}`);
@@ -369,13 +436,22 @@
       {#if localUser}
         {#if localUser.cards.length}
           <div class="cards">
-            <Card type="black" text={blackCard} />
-
-            <div class="white">
-              {#each localUser.cards as text}
-                <Card {text} />
+            <div class="answers">
+              <Card type="black" text={blackCard} />
+              {#each selectedCards as { ndx, text }}
+                <Card {ndx} {text} onClick={handleCardDeselect} rotate />
               {/each}
             </div>
+
+            <div class="sep is--top"></div>
+            
+            <div class="user-cards" class:disabled={maxCardsSelected}>
+              {#each localUser.cards as { ndx, selected, text }}
+                <Card {ndx} {text} onClick={handleCardSelect} {selected} />
+              {/each}
+            </div>
+
+            <div class="sep is--btm"></div>
           </div>
         {:else}
           <div class="czar-pending-msg">
