@@ -14,6 +14,12 @@
     background: #000;
   }
 
+  .card__text {
+    font-size: 0.85em;
+    max-height: 100%;
+    overflow: auto;
+  }
+
   @media (min-width: 1024px) {
     .card {
       width: 10.5em;
