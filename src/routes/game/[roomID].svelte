@@ -25,6 +25,15 @@
     background: rgba(255, 255, 0, 0.5);
   }
 
+  .czar-pending-msg {
+    width: 100%;
+    height: 100%;
+    padding: 2em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
   .user-ui {
     position: absolute;
     top: 0.5em;
@@ -358,6 +367,10 @@
                 <Card {text} />
               {/each}
             </div>
+          </div>
+        {:else}
+          <div class="czar-pending-msg">
+            Waiting for the Card Czar to be chosen.
           </div>
         {/if}
         
