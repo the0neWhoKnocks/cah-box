@@ -1,5 +1,6 @@
 module.exports = {
   WS_MSG__CARDS_DEALT: 'cards dealt',
+  WS_MSG__CARDS_SUBMITTED: 'cards submitted',
   WS_MSG__CHECK_USERNAME: 'check username',
   WS_MSG__CREATE_GAME: 'create game',
   WS_MSG__DEAL_CARDS: 'deal cards',
@@ -7,6 +8,7 @@ module.exports = {
   WS_MSG__JOIN_GAME: 'join game',
   WS_MSG__SET_ADMIN: 'set admin',
   WS_MSG__SET_CZAR: 'set czar',
+  WS_MSG__SUBMIT_CARDS: 'submit cards',
   WS_MSG__USER_JOINED: 'user joined',
   WS_MSG__USER_UPDATE: 'user update',
 };
