@@ -17,6 +17,8 @@
     width: 130px;
     background: #fff;
     flex-shrink: 0;
+    position: relative;
+    z-index: 1;
   }
   .users-ui :global(.user) {
     margin: 0.25em 0;
@@ -188,6 +190,9 @@
     left: 0;
   }
   @media (max-width: 1023px) {
+    .cards .answers {
+      width: 100%;
+    }
     .cards .answers :global(.card) {
       box-shadow: 0 2px 8px 0px rgba(0, 0, 0, 0.5);
     }
@@ -199,6 +204,10 @@
     }
   }
   @media (min-width: 1024px) {
+    .cards .answers {
+      display: flex;
+      justify-content: center;
+    }
     .cards .answers :global(.card) {
       box-shadow: 2px 0 8px 0px rgba(0, 0, 0, 0.5);
     }
@@ -214,6 +223,16 @@
       margin: 0.25em;
     }
   }
+
+  .submit-cards-btn {
+    max-width: 16em;
+    margin-top: 2em;
+    font-size: 1.2em;
+    font-weight: bold;
+    border: solid 1px;
+    border-radius: 0.25em;
+    background: #5df1db;
+  }
 </style>
 
 <script>
@@ -224,12 +243,14 @@
   import User from '../../components/User.svelte';
   import {
     WS_MSG__CARDS_DEALT,
+    WS_MSG__CARDS_SUBMITTED,
     WS_MSG__CHECK_USERNAME,
     WS_MSG__DEAL_CARDS,
     WS_MSG__ENTER_ROOM,
     WS_MSG__JOIN_GAME,
     WS_MSG__SET_ADMIN,
     WS_MSG__SET_CZAR,
+    WS_MSG__SUBMIT_CARDS,
     WS_MSG__USER_JOINED,
     WS_MSG__USER_UPDATE,
   } from '../../constants';
@@ -258,6 +279,7 @@
   let requiredWhiteCardsCount;
   let selectedCards = [];
   let maxCardsSelected = false;
+  let showUserCards = false;
 
   function handleJoinSubmit(ev) {
     ev.preventDefault();
@@ -278,9 +300,14 @@
       localUser = users.filter(({ name }) => name === data.username)[0];
     }
 
-    if (update && !localUser.admin) userClickHandler = undefined;
+    if (localUser) {
+      if (update && !localUser.admin) userClickHandler = undefined;
 
-    if (localUser && localUser.admin) userClickHandler = handleUserClick;
+      if (localUser.admin) userClickHandler = handleUserClick;
+
+      // Add an index after cards are dealt to make manipulation easier.
+      if (localUser.cards) localUser.cards.forEach((card, ndx) => { card.ndx = ndx; });
+    }
 
     if (!adminInstructionsShown && localUser && localUser.admin) {
       showAdminInstructions = true;
@@ -375,8 +402,8 @@
 
     blackCard = data.blackCard;
     requiredWhiteCardsCount = data.requiredWhiteCardsCount;
-    // Add an index after cards are dealt to make manipulation easier.
-    localUser.cards.forEach((card, ndx) => { card.ndx = ndx; });
+
+    if (!localUser.czar) showUserCards = true;
   }
 
   function handleCardSelect(ndx) {
@@ -400,6 +427,29 @@
     maxCardsSelected = false;
   }
 
+  function handleSubmitCards() {
+    window.socket.emit(WS_MSG__SUBMIT_CARDS, {
+      cards: selectedCards.map(({ text }) => text),
+      roomID,
+      username: localUser.name,
+    });
+    showUserCards = false;
+  }
+
+  function handleCardsSubmitted(data) {
+    parseUserData({
+      username: localUser.name,
+      users: data.users,
+    }, true);
+
+    if (localUser.czar) {
+      if (Object.keys(data.submittedCards).length === (users.length - 1)) {
+        console.log(data.submittedCards);
+        alert('show answers');
+      }
+    }
+  }
+
   titleSuffix.set(`Game ${roomID}`);
 
   $: minimumNumberOfPlayersJoined = users.length > 1;
@@ -410,6 +460,7 @@
 
     window.socketConnected.then(() => {
       window.socket.on(WS_MSG__CARDS_DEALT, handleCardsDealt);
+      window.socket.on(WS_MSG__CARDS_SUBMITTED, handleCardsSubmitted);
       window.socket.on(WS_MSG__CHECK_USERNAME, handleUsernameCheck);
       window.socket.on(WS_MSG__ENTER_ROOM, handleEnteringRoom);
       window.socket.on(WS_MSG__USER_JOINED, handleUserJoin);
@@ -438,20 +489,33 @@
           <div class="cards">
             <div class="answers">
               <Card type="black" text={blackCard} />
-              {#each selectedCards as { ndx, text }}
-                <Card {ndx} {text} onClick={handleCardDeselect} rotate />
-              {/each}
+              {#if showUserCards}
+                {#each selectedCards as { ndx, text }}
+                  <Card {ndx} {text} onClick={handleCardDeselect} rotate />
+                {/each}
+              {/if}
             </div>
 
-            <div class="sep is--top"></div>
-            
-            <div class="user-cards" class:disabled={maxCardsSelected}>
-              {#each localUser.cards as { ndx, selected, text }}
-                <Card {ndx} {text} onClick={handleCardSelect} {selected} />
-              {/each}
-            </div>
+            {#if showUserCards}
+              {#if maxCardsSelected}
+                <button
+                  class="submit-cards-btn"
+                  on:click={handleSubmitCards}
+                >
+                  {@html `Submit Card${selectedCards.length > 1 ? 's' : ''}`}
+                </button>
+              {/if}
 
-            <div class="sep is--btm"></div>
+              <div class="sep is--top"></div>
+              
+              <div class="user-cards" class:disabled={maxCardsSelected}>
+                {#each localUser.cards as { ndx, selected, text }}
+                  <Card {ndx} {text} onClick={handleCardSelect} {selected} />
+                {/each}
+              </div>
+
+              <div class="sep is--btm"></div>
+            {/if}
           </div>
         {:else}
           <div class="czar-pending-msg">

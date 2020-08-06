@@ -2,6 +2,7 @@
   .user {
     font-size: 1.25em;
     display: flex;
+    position: relative;
   }
   .user * {
     pointer-events: none;
@@ -33,6 +34,32 @@
   .user:not(.is--czar) .user__status-indicator {
     background-color: #393939;
   }
+
+  @keyframes showCard {
+    0% {
+      opacity: 0;
+      transform: translateX(-1em) rotate(-20deg);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0em) rotate(0deg);
+    }
+  }
+  .user.cards-submitted::after {
+    content: '';
+    width: 1em;
+    height: 100%;
+    border: solid 1px;
+    border-radius: 0.1em;
+    background: #fff;
+    position: absolute;
+    top: 0;
+    left: calc(100% + 0.25em);
+    box-shadow: 0 2px 8px 0px rgba(0, 0, 0, 0.5);
+    animation-name: showCard;
+    animation-fill-mode: both;
+    animation-duration: 300ms;
+  }
 </style>
 
 <script>
@@ -41,6 +68,7 @@
   let className = '';
   
   export let admin = false;
+  export let cardsSubmitted = false;
   export let czar = false;
   export let name = '';
   export { className as class };
@@ -50,6 +78,7 @@
   class={`user ${className}`}
   class:is--admin={admin}
   class:is--czar={czar}
+  class:cards-submitted={cardsSubmitted}
   data-name={name}
 >
   <span class="user__icon">{@html czar ? ICON__CZAR : ICON__ADMIN}</span>
