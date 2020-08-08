@@ -1,17 +1,21 @@
 module.exports = () => function joinGame({ roomID, username }) {
   const { WS_MSG__USER_JOINED } = require('../../../constants');
   const { io, rooms } = require('../store');
+  const { users } = rooms[roomID];
   const user = {
     cards: [],
     name: username,
+    reviewingAnswers: false,
+    reviewNdx: 0,
+    startedReviewingAnswers: false,
   };
 
-  if (!rooms[roomID].users.length) user.admin = true;
+  if (!users.length) user.admin = true;
 
-  rooms[roomID].users.push(user);
+  users.push(user);
   
   io.sockets.in(roomID).emit(WS_MSG__USER_JOINED, {
+    room: rooms[roomID],
     username,
-    users: rooms[roomID].users,
   });
 }

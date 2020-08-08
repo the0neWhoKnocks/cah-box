@@ -4,7 +4,7 @@ module.exports = (socket) => function enterRoom({ roomID, username }) {
 
   socket.join(roomID, () => {
     socket.emit(WS_MSG__ENTER_ROOM, {
-      roomData: rooms[roomID],
+      room: rooms[roomID],
       username,
     });
   });
