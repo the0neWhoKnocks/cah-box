@@ -233,6 +233,46 @@
     border-radius: 0.25em;
     background: #5df1db;
   }
+
+  .black-card-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .black-card-wrapper nav {
+    width: 100%;
+    margin-top: 1em;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .black-card-wrapper nav button {
+    font-size: 1.2em;
+    padding: 0.5em 1em;
+    border: solid 1px #000;
+    border-radius: 0.5em;
+    background: #fff;
+  }
+  .black-card-wrapper nav button.hidden {
+    display: none;
+  }
+  .black-card-wrapper nav .prev-btn,
+  .black-card-wrapper nav .next-btn {
+    width: 50%;
+  }
+  .black-card-wrapper nav .prev-btn {
+    border-radius: 0.5em 0 0 0.5em;
+  }
+  .black-card-wrapper nav .next-btn {
+    border-radius: 0 0.5em 0.5em 0;
+  }
+  .black-card-wrapper nav .pick-answer-btn {
+    margin-top: 1em;
+  }
+  @media (max-width: 1023px) {
+    .black-card-wrapper :global(.card) {
+      width: 100%;
+    }
+  }
 </style>
 
 <script>
@@ -242,6 +282,8 @@
   import Modal from '../../components/Modal.svelte';
   import User from '../../components/User.svelte';
   import {
+    WS_MSG__ANSWER_REVIEW_STATE_UPDATED,
+    WS_MSG__CARD_SELECTION_TOGGLED,
     WS_MSG__CARDS_DEALT,
     WS_MSG__CARDS_SUBMITTED,
     WS_MSG__CHECK_USERNAME,
@@ -249,8 +291,10 @@
     WS_MSG__ENTER_ROOM,
     WS_MSG__JOIN_GAME,
     WS_MSG__SET_ADMIN,
+    WS_MSG__SET_ANSWER_REVIEW_STATE,
     WS_MSG__SET_CZAR,
     WS_MSG__SUBMIT_CARDS,
+    WS_MSG__TOGGLE_CARD_SELECTION,
     WS_MSG__USER_JOINED,
     WS_MSG__USER_UPDATE,
   } from '../../constants';
@@ -258,27 +302,31 @@
   import createGame from '../../utils/createGame';
   
   const MSG__SET_CZAR = 'Make <User> the Czar';
+  const ACTION__ANSWER_REVIEW_STATE_UPDATED = 'answerReviewStateUpdated';
+  const ACTION__CARD_SELECTION_TOGGLED = 'cardSelectionToggled';
+  const ACTION__CARDS_DEALT = 'cardsDealt';
+  const ACTION__CARDS_SUBMITTED = 'cardsSubmitted';
+  const ACTION__ENTERED_ROOM = 'enteredRoom';
+  const ACTION__USER_JOINED = 'userJoined';
+  const ACTION__USER_UPDATE = 'userUpdate';
   const { page } = stores();
   const { roomID } = $page.params;
   let users = [];
   let mounted = false;
   let showAdminInstructions = false;
   let adminInstructionsShown = false;
-  let roomData;
+  let room;
   let usernameInputRef;
   let usernameInputError;
   let createGameBtnRef;
-  let localUser;
+  let localUser = {};
   let closeAdminInstructionsBtnRef;
   let userClickHandler;
   let showUserDataMenu = false;
   let userData;
   let minimumNumberOfPlayersJoined = false;
-  let localCards = [];
   let blackCard;
-  let requiredWhiteCardsCount;
   let selectedCards = [];
-  let maxCardsSelected = false;
   let showUserCards = false;
 
   function handleJoinSubmit(ev) {
@@ -290,46 +338,82 @@
     });
   }
 
-  function parseUserData(data, update) {
-    users = [...data.users];
-    
-    if (
-      users.length
-      && (!localUser || update)
-    ) {
-      localUser = users.filter(({ name }) => name === data.username)[0];
-    }
+  function updateTurnProps() {
+    if (room && room.blackCard) blackCard = room.blackCard;
 
-    if (localUser) {
-      if (update && !localUser.admin) userClickHandler = undefined;
+    showUserCards = !localUser.czar && !localUser.cardsSubmitted;
+  };
 
-      if (localUser.admin) userClickHandler = handleUserClick;
+  function updateGameState(action) {
+    return (data) => {
+      if (data.room) room = data.room;
 
-      // Add an index after cards are dealt to make manipulation easier.
-      if (localUser.cards) localUser.cards.forEach((card, ndx) => { card.ndx = ndx; });
-    }
+      if (room && room.users) users = [...room.users];
+      
+      if (users.length) {
+        const user = users.filter(({ name }) => name === localUser.name)[0];
+        localUser = { ...user };
+      }
 
-    if (!adminInstructionsShown && localUser && localUser.admin) {
-      showAdminInstructions = true;
-      adminInstructionsShown = true;
+      if (action === ACTION__ENTERED_ROOM) {
+        mounted = true;
+        updateTurnProps();
+      }
 
-      window.sessionStorage.setItem(roomID, JSON.stringify({
-        adminInstructionsShown: true,
-        username: localUser.name,
-      }));
-    }
-  }
+      userClickHandler = (localUser.admin) ? handleUserClick : undefined;
 
-  function handleEnteringRoom(data) {
-    mounted = true;
-    roomData = data.roomData;
+      if (localUser.cards) {
+        // Add an index after cards are dealt to make manipulation easier.
+        localUser.cards.forEach((card, ndx) => { card.ndx = ndx; });
 
-    if (roomData) {
-      parseUserData({
-        username: data.username,
-        users: roomData.users,
-      });
-    }
+        const cards = localUser.cards.filter(({ selected }) => selected);
+        selectedCards = [...cards];
+      }
+      
+      if (localUser.admin && !adminInstructionsShown) {
+        showAdminInstructions = true;
+        adminInstructionsShown = true;
+
+        window.sessionStorage.setItem(roomID, JSON.stringify({
+          adminInstructionsShown: true,
+          username: localUser.name,
+        }));
+      }
+
+      switch (action) {
+        case ACTION__CARDS_DEALT: {
+          updateTurnProps();
+          break;
+        }
+
+        case ACTION__CARDS_SUBMITTED: {
+          if (
+            localUser.czar
+            && room.submittedCards.length === (users.length - 1)
+          ) {
+            window.socket.emit(WS_MSG__SET_ANSWER_REVIEW_STATE, {
+              roomID,
+              state: { reviewingAnswers: true },
+              username: localUser.name,
+            });
+          }
+          
+          if (!localUser.czar) showUserCards = false;
+
+          break;
+        }
+
+        case ACTION__USER_JOINED: {
+          if (room && room.blackCard) {
+            window.socket.emit(WS_MSG__DEAL_CARDS, { roomID });
+
+            if (localUser.reviewingAnswers) resetAnswersReview();
+          }
+
+          break;
+        }
+      }
+    };
   }
 
   function handleUsernameCheck({ error, username }) {
@@ -337,16 +421,10 @@
       usernameInputError = 'Sorry, it looks like that username is taken';
     }
     else {
+      localUser.name = username;
       window.socket.emit(WS_MSG__JOIN_GAME, { roomID, username });
       window.sessionStorage.setItem(roomID, JSON.stringify({ username }));
     }
-  }
-  
-  function handleUserJoin(data) {
-    parseUserData({
-      username: data.username,
-      users: data.users,
-    });
   }
 
   function closeAdminInstructions() {
@@ -376,7 +454,7 @@
     });
     closeUserDataMenu();
     
-    window.socket.emit(WS_MSG__DEAL_CARDS, { roomID });
+    window.socket.emit(WS_MSG__DEAL_CARDS, { newRound: true, roomID });
   }
 
   function setAdmin() {
@@ -387,44 +465,12 @@
     closeUserDataMenu();
   }
 
-  function handleUserUpdate(data) {
-    parseUserData({
+  function handleCardSelectionToggle(ndx) {
+    window.socket.emit(WS_MSG__TOGGLE_CARD_SELECTION, {
+      ndx,
+      roomID,
       username: localUser.name,
-      users: data.users,
-    }, true);
-  }
-
-  function handleCardsDealt(data) {
-    parseUserData({
-      username: localUser.name,
-      users: data.users,
-    }, true);
-
-    blackCard = data.blackCard;
-    requiredWhiteCardsCount = data.requiredWhiteCardsCount;
-
-    if (!localUser.czar) showUserCards = true;
-  }
-
-  function handleCardSelect(ndx) {
-    const card = localUser.cards[ndx];
-
-    if (!maxCardsSelected) {
-      card.selected = true;
-      selectedCards = [...selectedCards, card];
-    }
-    
-    if (selectedCards.length === requiredWhiteCardsCount) maxCardsSelected = true;
-  }
-
-  function handleCardDeselect(ndx) {
-    const card = localUser.cards[ndx];
-    card.selected = false;
-
-    selectedCards.splice(selectedCards.indexOf(card.text), 1);
-    selectedCards = [...selectedCards];
-    localUser.cards = [...localUser.cards];
-    maxCardsSelected = false;
+    });
   }
 
   function handleSubmitCards() {
@@ -433,21 +479,47 @@
       roomID,
       username: localUser.name,
     });
-    showUserCards = false;
   }
 
-  function handleCardsSubmitted(data) {
-    parseUserData({
+  function resetAnswersReview() {
+    window.socket.emit(WS_MSG__SET_ANSWER_REVIEW_STATE, {
+      roomID,
+      state: {
+        reviewNdx: 0,
+        showReviewAnswersUI: false,
+        startedReviewingAnswers: false,
+      },
       username: localUser.name,
-      users: data.users,
-    }, true);
+    });
+  }
 
-    if (localUser.czar) {
-      if (Object.keys(data.submittedCards).length === (users.length - 1)) {
-        console.log(data.submittedCards);
-        alert('show answers');
-      }
-    }
+  function reviewPreviousAnswer() {
+    const reviewNdx = localUser.reviewNdx - 1;
+    window.socket.emit(WS_MSG__SET_ANSWER_REVIEW_STATE, {
+      answer: room.submittedCards[reviewNdx],
+      roomID,
+      state: { reviewNdx },
+      username: localUser.name,
+    });
+  }
+
+  function reviewNextAnswer() {
+    const reviewNdx = localUser.reviewNdx + 1;
+    window.socket.emit(WS_MSG__SET_ANSWER_REVIEW_STATE, {
+      answer: room.submittedCards[reviewNdx],
+      roomID,
+      state: { reviewNdx },
+      username: localUser.name,
+    });
+  }
+
+  function startedReviewingAnswers() {
+    window.socket.emit(WS_MSG__SET_ANSWER_REVIEW_STATE, {
+      answer: room.submittedCards[localUser.reviewNdx],
+      roomID,
+      state: { startedReviewingAnswers: true },
+      username: localUser.name,
+    });
   }
 
   titleSuffix.set(`Game ${roomID}`);
@@ -457,14 +529,17 @@
   onMount(() => {
     const { username, ...rest } = JSON.parse(window.sessionStorage.getItem(roomID) || '{}');
     adminInstructionsShown = rest.adminInstructionsShown;
+    localUser.name = username;
 
     window.socketConnected.then(() => {
-      window.socket.on(WS_MSG__CARDS_DEALT, handleCardsDealt);
-      window.socket.on(WS_MSG__CARDS_SUBMITTED, handleCardsSubmitted);
+      window.socket.on(WS_MSG__ANSWER_REVIEW_STATE_UPDATED, updateGameState(ACTION__ANSWER_REVIEW_STATE_UPDATED));
+      window.socket.on(WS_MSG__CARD_SELECTION_TOGGLED, updateGameState(ACTION__CARD_SELECTION_TOGGLED));
+      window.socket.on(WS_MSG__CARDS_DEALT, updateGameState(ACTION__CARDS_DEALT));
+      window.socket.on(WS_MSG__CARDS_SUBMITTED, updateGameState(ACTION__CARDS_SUBMITTED));
       window.socket.on(WS_MSG__CHECK_USERNAME, handleUsernameCheck);
-      window.socket.on(WS_MSG__ENTER_ROOM, handleEnteringRoom);
-      window.socket.on(WS_MSG__USER_JOINED, handleUserJoin);
-      window.socket.on(WS_MSG__USER_UPDATE, handleUserUpdate);
+      window.socket.on(WS_MSG__ENTER_ROOM, updateGameState(ACTION__ENTERED_ROOM));
+      window.socket.on(WS_MSG__USER_JOINED, updateGameState(ACTION__USER_JOINED));
+      window.socket.on(WS_MSG__USER_UPDATE, updateGameState(ACTION__USER_UPDATE));
 
       window.socket.emit(WS_MSG__ENTER_ROOM, { roomID, username });
     });
@@ -473,7 +548,7 @@
 
 <div class="wrapper">
   {#if mounted}
-    {#if roomData}
+    {#if room}
       <div
         class="users-ui"
         class:is--admin={!!userClickHandler}
@@ -484,20 +559,47 @@
         {/each}
       </div>
 
-      {#if localUser}
+      {#if localUser.cards}
         {#if localUser.cards.length}
           <div class="cards">
             <div class="answers">
-              <Card type="black" text={blackCard} />
+              <div class="black-card-wrapper">
+                <Card type="black" text={blackCard} answer={room.blackCardAnswer.cards} />
+                {#if localUser.reviewingAnswers}
+                  <nav>
+                    <button
+                      class="prev-btn"
+                      class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
+                      disabled={localUser.reviewNdx === 0}
+                      on:click={reviewPreviousAnswer}
+                    >Previous</button>
+                    <button
+                      class="next-btn"
+                      class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
+                      disabled={localUser.reviewNdx === room.submittedCards.length - 1}
+                      on:click={reviewNextAnswer}
+                    >Next</button>
+                    <button
+                      class="show-answer-btn"
+                      class:hidden={localUser.startedReviewingAnswers}
+                      on:click={startedReviewingAnswers}
+                    >Show Answer</button>
+                    <button
+                      class="pick-answer-btn"
+                      disabled={!localUser.startedReviewingAnswers}
+                    >Pick Answer</button>
+                  </nav>
+                {/if}
+              </div>
               {#if showUserCards}
                 {#each selectedCards as { ndx, text }}
-                  <Card {ndx} {text} onClick={handleCardDeselect} rotate />
+                  <Card {ndx} {text} onClick={handleCardSelectionToggle} rotate />
                 {/each}
               {/if}
             </div>
 
             {#if showUserCards}
-              {#if maxCardsSelected}
+              {#if localUser.maxCardsSelected}
                 <button
                   class="submit-cards-btn"
                   on:click={handleSubmitCards}
@@ -508,9 +610,9 @@
 
               <div class="sep is--top"></div>
               
-              <div class="user-cards" class:disabled={maxCardsSelected}>
+              <div class="user-cards" class:disabled={localUser.maxCardsSelected}>
                 {#each localUser.cards as { ndx, selected, text }}
-                  <Card {ndx} {text} onClick={handleCardSelect} {selected} />
+                  <Card {ndx} {text} onClick={handleCardSelectionToggle} {selected} />
                 {/each}
               </div>
 
@@ -528,7 +630,7 @@
         </div>
       {/if}
 
-      {#if !localUser}
+      {#if !localUser.name}
         <Modal focusRef={usernameInputRef}>
           <form class="join-form" autocomplete="off" on:submit={handleJoinSubmit}>
             <label for="username">Enter Username</label>

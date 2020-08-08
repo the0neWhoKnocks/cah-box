@@ -4,6 +4,7 @@ module.exports = () => function submitCards({
   username,
 }) {
   const { WS_MSG__CARDS_SUBMITTED } = require('../../../constants');
+  const shuffleArray = require('../utils/shuffleArray');
   const { io, rooms } = require('../store');
   const { cards: { dead }, users } = rooms[roomID];
 
@@ -12,17 +13,23 @@ module.exports = () => function submitCards({
 
     if (user.name === username) {
       user.cardsSubmitted = true;
-      user.cards = user.cards.filter(({ text }) => submittedCards.includes(text));
-      break;
+      // remove the submitted card from the User's deck
+      user.cards = user.cards.filter(({ text: card }) => {
+        dead.white.push(card);
+        return submittedCards.includes(card);
+      });
+      // add cards
+      rooms[roomID].submittedCards.push({ cards: submittedCards, username });
     }
   }
-
-  submittedCards.forEach((card) => dead.white.push(card));
   
-  rooms[roomID].submittedCards[username] = submittedCards;
+  // shuffle answers once all Users have submitted
+  if (rooms[roomID].submittedCards.length === (users.length - 1)) {
+    rooms[roomID].submittedCards = shuffleArray(rooms[roomID].submittedCards);
+    // users.forEach((user) => { user.cardsSubmitted = false; });
+  }
   
   io.sockets.in(roomID).emit(WS_MSG__CARDS_SUBMITTED, {
-    submittedCards: rooms[roomID].submittedCards,
-    users,
+    room: rooms[roomID],
   });
 }

@@ -9,6 +9,6 @@ module.exports = (socket, prop) => function setUserState({ roomID, username }) {
   }
   
   io.sockets.in(roomID).emit(WS_MSG__USER_UPDATE, {
-    users: rooms[roomID].users,
+    room: rooms[roomID],
   });
 }

@@ -33,6 +33,14 @@
     overflow: auto;
   }
 
+  :global(.answer) {
+    color: yellow;
+  }
+  :global(.answer:not(.gap)) {
+    margin-top: 0.5em;
+    display: block;
+  }
+
   @media (min-width: 1024px) {
     .card {
       width: 10.5em;
@@ -44,8 +52,10 @@
 </style>
 
 <script>
+  import getGaps from '../utils/getGaps';
   import randomNumber from '../utils/randomNumber';
 
+  export let answer;
   export let onClick;
   export let rotate = false;
   export let selected = false;
@@ -58,6 +68,25 @@
       onClick($$props.ndx);
     }
   }
+
+  const transformAnswer = (t, a) => {
+    let ret = t;
+
+    if (Array.isArray(a) && a.length) {
+      const gaps = getGaps(t);
+
+      if (!gaps.length) {
+        ret = `${t}<span class="answer">${a[0].trim()}</span>`;
+      }
+      else {
+        ret = gaps.reduce((_t, gap, ndx) => {
+          return _t.replace(gap, `<span class="answer gap">${a[ndx].trim().replace(/\.$/, '')}</span>`);
+        }, t);
+      }
+    }
+    
+    return ret;
+  }
 </script>
 
 <div
@@ -69,5 +98,5 @@
   style={rotate ? `transform: rotate(${randomNumber(-3, 3)}deg);` : undefined}
   on:click={handleClick}
 >
-  <div class="card__text">{text}</div>
+  <div class="card__text">{@html transformAnswer(text, answer)}</div>
 </div>
