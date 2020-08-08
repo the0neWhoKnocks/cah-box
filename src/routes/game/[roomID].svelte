@@ -287,6 +287,7 @@
     WS_MSG__CARDS_DEALT,
     WS_MSG__CARDS_SUBMITTED,
     WS_MSG__CHECK_USERNAME,
+    WS_MSG__CHOSE_ANSWER,
     WS_MSG__DEAL_CARDS,
     WS_MSG__ENTER_ROOM,
     WS_MSG__JOIN_GAME,
@@ -326,7 +327,6 @@
   let userData;
   let minimumNumberOfPlayersJoined = false;
   let blackCard;
-  let selectedCards = [];
   let showUserCards = false;
 
   function handleJoinSubmit(ev) {
@@ -364,10 +364,7 @@
 
       if (localUser.cards) {
         // Add an index after cards are dealt to make manipulation easier.
-        localUser.cards.forEach((card, ndx) => { card.ndx = ndx; });
-
-        const cards = localUser.cards.filter(({ selected }) => selected);
-        selectedCards = [...cards];
+        localUser.cards.forEach((card, ndx) => { card.ndx = ndx; });        
       }
       
       if (localUser.admin && !adminInstructionsShown) {
@@ -398,7 +395,7 @@
             });
           }
           
-          if (!localUser.czar) showUserCards = false;
+          updateTurnProps();
 
           break;
         }
@@ -447,6 +444,11 @@
     if (el.classList.contains('user')) openUserDataMenu(el.dataset.name);
   }
 
+  function chooseAnswer() {
+    window.socket.emit(WS_MSG__CHOSE_ANSWER, { roomID });
+    resetAnswersReview();
+  }
+
   function setCzar() {
     window.socket.emit(WS_MSG__SET_CZAR, {
       roomID,
@@ -475,7 +477,6 @@
 
   function handleSubmitCards() {
     window.socket.emit(WS_MSG__SUBMIT_CARDS, {
-      cards: selectedCards.map(({ text }) => text),
       roomID,
       username: localUser.name,
     });
@@ -486,7 +487,7 @@
       roomID,
       state: {
         reviewNdx: 0,
-        showReviewAnswersUI: false,
+        reviewingAnswers: false,
         startedReviewingAnswers: false,
       },
       username: localUser.name,
@@ -587,12 +588,13 @@
                     <button
                       class="pick-answer-btn"
                       disabled={!localUser.startedReviewingAnswers}
+                      on:click={chooseAnswer}
                     >Pick Answer</button>
                   </nav>
                 {/if}
               </div>
               {#if showUserCards}
-                {#each selectedCards as { ndx, text }}
+                {#each localUser.selectedCards as { ndx, text }}
                   <Card {ndx} {text} onClick={handleCardSelectionToggle} rotate />
                 {/each}
               {/if}
@@ -604,7 +606,7 @@
                   class="submit-cards-btn"
                   on:click={handleSubmitCards}
                 >
-                  {@html `Submit Card${selectedCards.length > 1 ? 's' : ''}`}
+                  {@html `Submit Card${localUser.selectedCards.length > 1 ? 's' : ''}`}
                 </button>
               {/if}
 

@@ -1,6 +1,7 @@
 module.exports = function connection(socket) {
   const {
     WS_MSG__CHECK_USERNAME,
+    WS_MSG__CHOSE_ANSWER,
     WS_MSG__CREATE_GAME,
     WS_MSG__DEAL_CARDS,
     WS_MSG__ENTER_ROOM,
@@ -12,6 +13,7 @@ module.exports = function connection(socket) {
     WS_MSG__TOGGLE_CARD_SELECTION,
   } = require('../../../constants');
   const checkUsername = require('./checkUsername');
+  const choseAnswer = require('./choseAnswer');
   const createGame = require('./createGame');
   const dealCards = require('./dealCards');
   const enterRoom = require('./enterRoom');
@@ -22,6 +24,7 @@ module.exports = function connection(socket) {
   const toggleCardSelection = require('./toggleCardSelection');
 
   socket.on(WS_MSG__CHECK_USERNAME, checkUsername(socket));
+  socket.on(WS_MSG__CHOSE_ANSWER, choseAnswer(socket));
   socket.on(WS_MSG__CREATE_GAME, createGame(socket));
   socket.on(WS_MSG__DEAL_CARDS, dealCards(socket));
   socket.on(WS_MSG__ENTER_ROOM, enterRoom(socket));

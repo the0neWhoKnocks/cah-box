@@ -27,6 +27,11 @@
     opacity: 0;
   }
 
+  .user__points {
+    font-family: monospace;
+    padding: 0 0.25em;
+  }
+
   .user__status-indicator {
     background-color: #27cfb6;
     transition: background-color 300ms;
@@ -71,6 +76,7 @@
   export let cardsSubmitted = false;
   export let czar = false;
   export let name = '';
+  export let points = 0;
   export { className as class };
 </script>
 
@@ -83,5 +89,6 @@
 >
   <span class="user__icon">{@html czar ? ICON__CZAR : ICON__ADMIN}</span>
   <span class="user__name">{name}</span>
+  <span class="user__points">{points}</span>
   <span class="user__status-indicator"></span>
 </div>

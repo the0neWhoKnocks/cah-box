@@ -4,6 +4,7 @@ module.exports = {
   WS_MSG__CARDS_DEALT: 'cards dealt',
   WS_MSG__CARDS_SUBMITTED: 'cards submitted',
   WS_MSG__CHECK_USERNAME: 'check username',
+  WS_MSG__CHOSE_ANSWER: 'chose answer',
   WS_MSG__CREATE_GAME: 'create game',
   WS_MSG__DEAL_CARDS: 'deal cards',
   WS_MSG__ENTER_ROOM: 'enter room',
