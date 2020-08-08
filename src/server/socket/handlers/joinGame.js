@@ -5,8 +5,10 @@ module.exports = () => function joinGame({ roomID, username }) {
   const user = {
     cards: [],
     name: username,
+    points: 0,
     reviewingAnswers: false,
     reviewNdx: 0,
+    selectedCards: [],
     startedReviewingAnswers: false,
   };
 

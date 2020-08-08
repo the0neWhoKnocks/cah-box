@@ -7,7 +7,11 @@ module.exports = (socket) => function toggleCardSelection({ ndx, roomID, usernam
     const user = rooms[roomID].users[i];
 
     if (user.name === username) {
-      user.cards[ndx].selected = !user.cards[ndx].selected;
+      const card = user.cards[ndx];
+      card.selected = !card.selected;
+
+      if (card.selected) user.selectedCards.push(card);
+      else user.selectedCards = user.selectedCards.filter(({ text }) => card.text !== text);
 
       const selectedCount = user.cards.filter(({ selected }) => selected).length;
 

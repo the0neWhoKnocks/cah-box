@@ -26,6 +26,7 @@ module.exports = () => function dealCards({ newRound, roomID }) {
     if (newRound || !user.cards.length) {
       user.cardsSubmitted = false;
       user.maxCardsSelected = false;
+      user.selectedCards = [];
 
       for (let j = 0; j < MAX_CARDS; j++) {
         if (user.cards.length < MAX_CARDS) {
