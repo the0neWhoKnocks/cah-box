@@ -41,11 +41,11 @@
 ## Frameworks
 
 - https://sapper.svelte.dev/docs
-  - Downloaded template by getting the template URL from
-  https://github.com/sveltejs/sapper-template/tree/webpack and DownGit to
-  download instead of `degit` (cuz who wants another global dep)
-  https://downgit.github.io/#/home.
-  - Explains why `node_modules` are in `src` https://github.com/sveltejs/sapper/issues/551
+   - Downloaded template by getting the template URL from
+   https://github.com/sveltejs/sapper-template/tree/webpack and DownGit to
+   download instead of `degit` (cuz who wants another global dep)
+   https://downgit.github.io/#/home.
+   - Explains why `node_modules` are in `src` https://github.com/sveltejs/sapper/issues/551
 - https://github.com/sveltech/routify
 
 ## Hosting
@@ -53,13 +53,19 @@
 - https://aws.amazon.com/free/webapps/
 - https://www.codeinwp.com/blog/best-nodejs-hosting/
 - https://devcenter.heroku.com/articles/deploying-nodejs
-  - https://www.youtube.com/watch?v=AZNFox2CvBk
-  - https://stackoverflow.com/questions/4536326/heroku-free-account-limited
-  - https://www.heroku.com/pricing
+   - https://devcenter.heroku.com/articles/getting-started-with-nodejs#set-up
+   - https://devcenter.heroku.com/articles/getting-started-with-nodejs#deploy-the-app
+   - https://devcenter.heroku.com/articles/creating-apps
+   - https://devcenter.heroku.com/articles/getting-started-with-nodejs#define-a-procfile
+   - https://devcenter.heroku.com/articles/free-dyno-hours#free-dyno-hour-pool
+   - https://devcenter.heroku.com/articles/deploying-nodejs
+   - https://www.youtube.com/watch?v=AZNFox2CvBk
+   - https://stackoverflow.com/questions/4536326/heroku-free-account-limited
+   - https://www.heroku.com/pricing
 
 ## Testing
 
 - https://github.com/testing-library/svelte-testing-library
-  - https://testing-library.com/docs/svelte-testing-library/setup
-  - https://github.com/svelte-society/recipes-mvp/blob/master/testing.md
+   - https://testing-library.com/docs/svelte-testing-library/setup
+   - https://github.com/svelte-society/recipes-mvp/blob/master/testing.md
 - https://www.npmjs.com/package/dainte
