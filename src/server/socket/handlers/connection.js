@@ -4,7 +4,7 @@ module.exports = function connection(socket) {
     WS_MSG__CHOSE_ANSWER,
     WS_MSG__CREATE_GAME,
     WS_MSG__DEAL_CARDS,
-    WS_MSG__ENTER_ROOM,
+    WS_MSG__USER_ENTERED_ROOM,
     WS_MSG__JOIN_GAME,
     WS_MSG__SET_ADMIN,
     WS_MSG__SET_ANSWER_REVIEW_STATE,
@@ -27,7 +27,7 @@ module.exports = function connection(socket) {
   socket.on(WS_MSG__CHOSE_ANSWER, choseAnswer(socket));
   socket.on(WS_MSG__CREATE_GAME, createGame(socket));
   socket.on(WS_MSG__DEAL_CARDS, dealCards(socket));
-  socket.on(WS_MSG__ENTER_ROOM, enterRoom(socket));
+  socket.on(WS_MSG__USER_ENTERED_ROOM, enterRoom(socket));
   socket.on(WS_MSG__JOIN_GAME, joinGame(socket));
   socket.on(WS_MSG__SET_ADMIN, setUserState(socket, 'admin'));
   socket.on(WS_MSG__SET_ANSWER_REVIEW_STATE, setAnswerReviewState(socket));

@@ -15,6 +15,7 @@ module.exports = (socket) => function createGame() {
   }
 
   rooms[roomID] = {
+    blackCardAnswer: [],
     cards: {
       dead: { black: [], white: [] },
       live: {
@@ -22,6 +23,7 @@ module.exports = (socket) => function createGame() {
         white: shuffleArray(whiteCards),
       },
     },
+    submittedCards: [],
     users: [],
   };
 

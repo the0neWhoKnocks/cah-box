@@ -1,9 +1,9 @@
 module.exports = () => function choseAnswer({ roomID }) {
+  const assignNextCzar = require('../utils/assignNextCzar');
   const dealCards = require('./dealCards');
   const { rooms } = require('../store');
   const room = rooms[roomID];
   const { cards: { dead }, users } = room;
-  let czarUpdated = false;
   let answer;
 
   dead.black.push(room.blackCard);
@@ -11,14 +11,9 @@ module.exports = () => function choseAnswer({ roomID }) {
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
 
-    if (user.czar && !czarUpdated) {
+    if (user.czar) {
       answer = room.submittedCards[user.reviewNdx];
-
-      if (i === users.length - 1) users[0].czar = true;
-      else users[i + 1].czar = true;
-
-      delete user.czar;
-      czarUpdated = true;
+      break;
     }
   }
 
@@ -30,6 +25,8 @@ module.exports = () => function choseAnswer({ roomID }) {
       break;
     }
   }
+
+  assignNextCzar(roomID);
   
   dealCards()({ newRound: true, roomID });
 }
