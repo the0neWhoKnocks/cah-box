@@ -290,7 +290,7 @@
     WS_MSG__CHECK_USERNAME,
     WS_MSG__CHOSE_ANSWER,
     WS_MSG__DEAL_CARDS,
-    WS_MSG__ENTER_ROOM,
+    WS_MSG__USER_ENTERED_ROOM,
     WS_MSG__JOIN_GAME,
     WS_MSG__SET_ADMIN,
     WS_MSG__SET_ANSWER_REVIEW_STATE,
@@ -298,6 +298,7 @@
     WS_MSG__SUBMIT_CARDS,
     WS_MSG__TOGGLE_CARD_SELECTION,
     WS_MSG__USER_JOINED,
+    WS_MSG__USER_LEFT_ROOM,
     WS_MSG__USER_UPDATE,
   } from '../../constants';
   import { titleSuffix } from '../../store';
@@ -308,8 +309,9 @@
   const ACTION__CARD_SELECTION_TOGGLED = 'cardSelectionToggled';
   const ACTION__CARDS_DEALT = 'cardsDealt';
   const ACTION__CARDS_SUBMITTED = 'cardsSubmitted';
-  const ACTION__ENTERED_ROOM = 'enteredRoom';
+  const ACTION__USER_ENTERED_ROOM = 'userEnteredRoom';
   const ACTION__USER_JOINED = 'userJoined';
+  const ACTION__USER_LEFT_ROOM = 'userLeftRoom';
   const ACTION__USER_UPDATE = 'userUpdate';
   const { page } = stores();
   const { roomID } = $page.params;
@@ -329,6 +331,7 @@
   let minimumNumberOfPlayersJoined = false;
   let blackCard;
   let showUserCards = false;
+  let czarSelected = false;
 
   function handleJoinSubmit(ev) {
     ev.preventDefault();
@@ -352,12 +355,21 @@
       if (room && room.users) users = [...room.users];
       
       if (users.length) {
-        const user = users.filter(({ name }) => name === localUser.name)[0];
+        let someoneIsCzar = false;
+        const user = users.filter(({ czar, name }) => {
+          if (czar) someoneIsCzar = true;
+          return name === localUser.name;
+        })[0];
+
         localUser = { ...user };
+        czarSelected = someoneIsCzar;
       }
 
-      if (action === ACTION__ENTERED_ROOM) {
+      if (action === ACTION__USER_ENTERED_ROOM) {
         mounted = true;
+        updateTurnProps();
+      }
+      else if (action === ACTION__USER_LEFT_ROOM) {
         updateTurnProps();
       }
 
@@ -378,26 +390,22 @@
         }));
       }
 
+      if (
+        localUser.czar
+        && room.submittedCards.length === (users.length - 1)
+        && !localUser.reviewingAnswers
+      ) {
+        window.socket.emit(WS_MSG__SET_ANSWER_REVIEW_STATE, {
+          roomID,
+          state: { reviewingAnswers: true },
+          username: localUser.name,
+        });
+      }
+
       switch (action) {
-        case ACTION__CARDS_DEALT: {
-          updateTurnProps();
-          break;
-        }
-
+        case ACTION__CARDS_DEALT:
         case ACTION__CARDS_SUBMITTED: {
-          if (
-            localUser.czar
-            && room.submittedCards.length === (users.length - 1)
-          ) {
-            window.socket.emit(WS_MSG__SET_ANSWER_REVIEW_STATE, {
-              roomID,
-              state: { reviewingAnswers: true },
-              username: localUser.name,
-            });
-          }
-          
           updateTurnProps();
-
           break;
         }
 
@@ -539,11 +547,12 @@
       window.socket.on(WS_MSG__CARDS_DEALT, updateGameState(ACTION__CARDS_DEALT));
       window.socket.on(WS_MSG__CARDS_SUBMITTED, updateGameState(ACTION__CARDS_SUBMITTED));
       window.socket.on(WS_MSG__CHECK_USERNAME, handleUsernameCheck);
-      window.socket.on(WS_MSG__ENTER_ROOM, updateGameState(ACTION__ENTERED_ROOM));
+      window.socket.on(WS_MSG__USER_ENTERED_ROOM, updateGameState(ACTION__USER_ENTERED_ROOM));
       window.socket.on(WS_MSG__USER_JOINED, updateGameState(ACTION__USER_JOINED));
+      window.socket.on(WS_MSG__USER_LEFT_ROOM, updateGameState(ACTION__USER_LEFT_ROOM));
       window.socket.on(WS_MSG__USER_UPDATE, updateGameState(ACTION__USER_UPDATE));
 
-      window.socket.emit(WS_MSG__ENTER_ROOM, { roomID, username });
+      window.socket.emit(WS_MSG__USER_ENTERED_ROOM, { roomID, username });
     });
   });
 </script>
@@ -562,7 +571,7 @@
       </div>
 
       {#if localUser.cards}
-        {#if localUser.cards.length}
+        {#if (localUser.cards.length && czarSelected)}
           <div class="cards">
             <div class="answers">
               <div class="black-card-wrapper">

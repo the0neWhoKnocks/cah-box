@@ -1,21 +1,31 @@
-module.exports = () => function joinGame({ roomID, username }) {
+module.exports = (socket) => function joinGame({ roomID, username }) {
   const { WS_MSG__USER_JOINED } = require('../../../constants');
+  const getUser = require('../utils/getUser');
   const { io, rooms } = require('../store');
   const { users } = rooms[roomID];
-  const user = {
-    cards: [],
-    name: username,
-    points: 0,
-    reviewingAnswers: false,
-    reviewNdx: 0,
-    selectedCards: [],
-    startedReviewingAnswers: false,
-  };
+  let user = getUser(roomID, username);
 
-  if (!users.length) user.admin = true;
+  if (!user) {
+    user = {
+      admin: !users.length,
+      cards: [],
+      cardsSubmitted: false,
+      connected: true,
+      czar: false,
+      maxCardsSelected: false,
+      name: username,
+      points: 0,
+      reviewingAnswers: false,
+      reviewNdx: 0,
+      selectedCards: [],
+      startedReviewingAnswers: false,
+    };
 
-  users.push(user);
-  
+    users.push(user);
+
+    socket.user = user;
+  }
+
   io.sockets.in(roomID).emit(WS_MSG__USER_JOINED, {
     room: rooms[roomID],
     username,

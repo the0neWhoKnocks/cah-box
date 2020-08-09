@@ -32,11 +32,11 @@
 - [x] The User after the current Czar becomes the new Czar, and it all starts
   over again.
 - User leaves
-   - [ ] wait X seconds to see if they've actually left, or just refreshed the page
-   - [ ] dump their white cards into the `dead` pile
-   - [ ] remove them from the `users` list
-   - [ ] if not enough players are left, go back into a waiting state
-   - [ ] if the MC tries to leave, prompt them to grant MC control to someone else
+   - [x] wait X seconds to see if they've actually left, or just refreshed the page
+   - [x] dump their white cards into the `dead` pile
+   - [x] remove them from the `users` list
+   - [x] if not enough players are left, go back into a waiting state
+   - [x] if the MC tries to leave, prompt them to grant MC control to someone else
 
 ## Frameworks
 
