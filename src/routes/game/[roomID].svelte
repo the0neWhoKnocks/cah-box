@@ -279,6 +279,7 @@
   import { stores } from '@sapper/app';
   import { onMount } from 'svelte';
   import Card from '../../components/Card.svelte';
+  import Copyable from '../../components/Copyable.svelte';
   import Modal from '../../components/Modal.svelte';
   import User from '../../components/User.svelte';
   import {
@@ -657,9 +658,13 @@
           focusRef={closeAdminInstructionsBtnRef}
         >
           <p>
-            Congrats! You're the MC of this game, so you're running the game. When
-            starting a new CAH game it's up to the group to choose the Card Czar.
-            Y'all can do that via the typical <q>Who was the last to poop?</q>
+            Congrats! You're the MC, so you're running the game. In order for
+            others to join, just send them this URL:
+            <Copyable text={window.location.href} />
+          </p>
+          <p>
+            When starting a new CAH game it's up to the group to choose the Card
+            Czar. Y'all can do that via the typical <q>Who was the last to poop?</q>
             question, or by what ever means you choose.
           </p>
           <p>
