@@ -7,7 +7,12 @@ module.exports = (socket) => function createGame() {
   const generateRoomID = require('../utils/generateRoomID');
   const shuffleArray = require('../utils/shuffleArray');
   const { rooms } = require('../store');
-  const roomID = generateRoomID();
+  let roomID;
+
+  while (!roomID) {
+    const id = generateRoomID();
+    if (!rooms[id]) roomID = id;
+  }
 
   rooms[roomID] = {
     cards: {
