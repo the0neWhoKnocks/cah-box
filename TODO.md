@@ -53,6 +53,7 @@
 - https://aws.amazon.com/free/webapps/
 - https://www.codeinwp.com/blog/best-nodejs-hosting/
 - https://devcenter.heroku.com/articles/deploying-nodejs
+   - https://www.freecodecamp.org/news/how-to-deploy-an-application-to-heroku/
    - https://devcenter.heroku.com/articles/getting-started-with-nodejs#set-up
    - https://devcenter.heroku.com/articles/getting-started-with-nodejs#deploy-the-app
    - https://devcenter.heroku.com/articles/creating-apps
