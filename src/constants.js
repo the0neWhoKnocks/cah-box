@@ -1,4 +1,6 @@
 module.exports = {
+  ERROR_CODE__NAME_TAKEN: 101,
+  ERROR_CODE__ROOM_DOES_NOT_EXIST: 100,
   WS_MSG__ANSWER_REVIEW_STATE_UPDATED: 'answer review state updated',
   WS_MSG__CARD_SELECTION_TOGGLED: 'card selection toggled',
   WS_MSG__CARDS_DEALT: 'cards dealt',
@@ -8,6 +10,7 @@ module.exports = {
   WS_MSG__CREATE_GAME: 'create game',
   WS_MSG__DEAL_CARDS: 'deal cards',
   WS_MSG__JOIN_GAME: 'join game',
+  WS_MSG__ROOM_DESTROYED: 'room destroyed',
   WS_MSG__SERVER_DOWN: 'server down',
   WS_MSG__SET_ADMIN: 'set admin',
   WS_MSG__SET_ANSWER_REVIEW_STATE: 'set answer review state',

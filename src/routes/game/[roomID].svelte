@@ -283,6 +283,8 @@
   import Modal from '../../components/Modal.svelte';
   import User from '../../components/User.svelte';
   import {
+    ERROR_CODE__NAME_TAKEN,
+    ERROR_CODE__ROOM_DOES_NOT_EXIST,
     WS_MSG__ANSWER_REVIEW_STATE_UPDATED,
     WS_MSG__CARD_SELECTION_TOGGLED,
     WS_MSG__CARDS_DEALT,
@@ -292,6 +294,7 @@
     WS_MSG__DEAL_CARDS,
     WS_MSG__USER_ENTERED_ROOM,
     WS_MSG__JOIN_GAME,
+    WS_MSG__ROOM_DESTROYED,
     WS_MSG__SERVER_DOWN,
     WS_MSG__SET_ADMIN,
     WS_MSG__SET_ANSWER_REVIEW_STATE,
@@ -430,7 +433,15 @@
 
   function handleUsernameCheck({ error, username }) {
     if (error) {
-      usernameInputError = 'Sorry, it looks like that username is taken';
+      switch (error.code) {
+        case ERROR_CODE__NAME_TAKEN:
+          usernameInputError = 'Sorry, it looks like that username is taken';
+          break;
+
+        case ERROR_CODE__ROOM_DOES_NOT_EXIST:
+          handleRoomDestruction();
+          break;
+      }
     }
     else {
       localUser.name = username;
@@ -543,6 +554,10 @@
     socketConnected = false;
   }
 
+  function handleRoomDestruction() {
+    room = undefined;
+  }
+
   titleSuffix.set(`Game ${roomID}`);
 
   $: minimumNumberOfPlayersJoined = users.length > 1;
@@ -561,6 +576,7 @@
       window.socket.on(WS_MSG__CARDS_DEALT, updateGameState(ACTION__CARDS_DEALT));
       window.socket.on(WS_MSG__CARDS_SUBMITTED, updateGameState(ACTION__CARDS_SUBMITTED));
       window.socket.on(WS_MSG__CHECK_USERNAME, handleUsernameCheck);
+      window.socket.on(WS_MSG__ROOM_DESTROYED, handleRoomDestruction);
       window.socket.on(WS_MSG__SERVER_DOWN, handleServerDisconnect);
       window.socket.on(WS_MSG__USER_ENTERED_ROOM, updateGameState(ACTION__USER_ENTERED_ROOM));
       window.socket.on(WS_MSG__USER_JOINED, updateGameState(ACTION__USER_JOINED));
