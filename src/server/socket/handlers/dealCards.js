@@ -21,6 +21,7 @@ module.exports = () => function dealCards({ newRound, roomID }) {
     rooms[roomID].requiredWhiteCardsCount = getRequiredCount(blackCard);
   }
   
+  // ensure all users have the required number of cards
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
 
@@ -31,6 +32,16 @@ module.exports = () => function dealCards({ newRound, roomID }) {
         }
         else break;
       }
+    }
+  }
+
+  // ensure the cards have the proper indexing
+  for (let i = 0; i < users.length; i++) {
+    const user = users[i];
+
+    for (let j = 0; j < user.cards.length; j++) {
+      const card = user.cards[j];
+      card.ndx = j;
     }
   }
 

@@ -384,11 +384,6 @@
 
       userClickHandler = (localUser.admin) ? handleUserClick : undefined;
 
-      if (localUser.cards) {
-        // Add an index after cards are dealt to make manipulation easier.
-        localUser.cards.forEach((card, ndx) => { card.ndx = ndx; });        
-      }
-      
       if (localUser.admin && !adminInstructionsShown) {
         showAdminInstructions = true;
         adminInstructionsShown = true;
