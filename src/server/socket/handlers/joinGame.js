@@ -2,7 +2,8 @@ module.exports = (socket) => function joinGame({ roomID, username }) {
   const { WS_MSG__USER_JOINED } = require('../../../constants');
   const getUser = require('../utils/getUser');
   const { io, rooms } = require('../store');
-  const { users } = rooms[roomID];
+  const room = rooms[roomID];
+  const { users } = room;
   let user = getUser(roomID, username);
 
   if (!user) {
@@ -26,8 +27,5 @@ module.exports = (socket) => function joinGame({ roomID, username }) {
     socket.user = user;
   }
 
-  io.sockets.in(roomID).emit(WS_MSG__USER_JOINED, {
-    room: rooms[roomID],
-    username,
-  });
+  io.sockets.in(roomID).emit(WS_MSG__USER_JOINED, { room, username });
 }
