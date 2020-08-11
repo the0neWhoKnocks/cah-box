@@ -40,3 +40,7 @@ code {
 		font-size: 16px;
 	}
 }
+
+body.no-js .loading-msg .msg {
+  display: none;
+}

@@ -31,7 +31,10 @@
 	     the current page has one -->
 	%sapper.head%
 </head>
-<body>
+<body class="no-js">
+  <script>
+    document.body.classList.remove('no-js');
+  </script>
   <svg style="display:none; position:absolute" width="0" height="0">
     <symbol id="ui-icon__crown" viewBox="0 -61 512 512" xmlns="http://www.w3.org/2000/svg">
       <path d="M91 300v90h330v-90zm0 0" fill="#ff9f00" />
