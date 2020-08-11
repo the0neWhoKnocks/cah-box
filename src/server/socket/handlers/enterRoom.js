@@ -1,5 +1,6 @@
 module.exports = (socket) => function enterRoom({ roomID, username }) {
   const {
+    WS_MSG__ROOM_DESTROYED,
     WS_MSG__USER_ENTERED_ROOM,
     WS_MSG__USER_LEFT_ROOM,
   } = require('../../../constants');
@@ -35,7 +36,14 @@ module.exports = (socket) => function enterRoom({ roomID, username }) {
               room.users = room.users.filter(({ name }) => name !== user.name);
 
               // if all Users have left, kill the room
-              if (!room.users.length) delete rooms[roomID];
+              if (!room.users.length) {
+                // it's possible that a User is in the process of joining when
+                // the Admin left the room, so lets tell them that the room no
+                // longer exists.
+                io.to(roomID).emit(WS_MSG__ROOM_DESTROYED);
+
+                delete rooms[roomID];
+              }
               else {
                 // dump white cards back into `live` cards
                 cards.forEach(({ text }) => { live.white.push(text); });
