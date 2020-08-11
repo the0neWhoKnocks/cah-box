@@ -292,6 +292,7 @@
     WS_MSG__DEAL_CARDS,
     WS_MSG__USER_ENTERED_ROOM,
     WS_MSG__JOIN_GAME,
+    WS_MSG__SERVER_DISCONNECTED,
     WS_MSG__SET_ADMIN,
     WS_MSG__SET_ANSWER_REVIEW_STATE,
     WS_MSG__SET_CZAR,
@@ -332,6 +333,8 @@
   let blackCard;
   let showUserCards = false;
   let czarSelected = false;
+  let socketConnectedAtLeastOnce = false;
+  let socketConnected = false;
 
   function handleJoinSubmit(ev) {
     ev.preventDefault();
@@ -532,6 +535,11 @@
     });
   }
 
+  function handleServerDisconnect() {
+    window.socket.disconnect();
+    socketConnected = false;
+  }
+
   titleSuffix.set(`Game ${roomID}`);
 
   $: minimumNumberOfPlayersJoined = users.length > 1;
@@ -542,11 +550,15 @@
     localUser.name = username;
 
     window.socketConnected.then(() => {
+      socketConnectedAtLeastOnce = true;
+      socketConnected = true;
+
       window.socket.on(WS_MSG__ANSWER_REVIEW_STATE_UPDATED, updateGameState(ACTION__ANSWER_REVIEW_STATE_UPDATED));
       window.socket.on(WS_MSG__CARD_SELECTION_TOGGLED, updateGameState(ACTION__CARD_SELECTION_TOGGLED));
       window.socket.on(WS_MSG__CARDS_DEALT, updateGameState(ACTION__CARDS_DEALT));
       window.socket.on(WS_MSG__CARDS_SUBMITTED, updateGameState(ACTION__CARDS_SUBMITTED));
       window.socket.on(WS_MSG__CHECK_USERNAME, handleUsernameCheck);
+      window.socket.on(WS_MSG__SERVER_DISCONNECTED, handleServerDisconnect);
       window.socket.on(WS_MSG__USER_ENTERED_ROOM, updateGameState(ACTION__USER_ENTERED_ROOM));
       window.socket.on(WS_MSG__USER_JOINED, updateGameState(ACTION__USER_JOINED));
       window.socket.on(WS_MSG__USER_LEFT_ROOM, updateGameState(ACTION__USER_LEFT_ROOM));
@@ -558,7 +570,7 @@
 </script>
 
 <div class="wrapper">
-  {#if mounted}
+  {#if mounted && socketConnected}
     {#if room}
       <div
         class="users-ui"
@@ -732,5 +744,11 @@
         </button>
       </Modal>
     {/if}
+  {:else if !socketConnected && socketConnectedAtLeastOnce}
+    <Modal class="room-error">
+      Sorry, it looks like the game has lost connection to the Server. You can 
+      try refreshing the page, but it's likely the Server went down for 
+      maintainence and you'll have to start a new game.
+    </Modal>
   {/if}
 </div>

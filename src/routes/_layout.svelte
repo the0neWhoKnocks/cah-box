@@ -85,7 +85,7 @@
         opacity: 1;
       }
     }
-    .no-js {
+    .loading-msg {
       width: 100%;
       height: 100%;
       padding: 2em;
@@ -106,7 +106,10 @@
   </div>
   <div id="portal"></div>
 {:else}
-  <div class="no-js">
-    This App requires Javascript. You'll have to enable it if you want to play.
+  <div class="loading-msg">
+    <span class="msg">Loading...</span>
+    <noscript>
+      This App requires Javascript. You'll have to enable it if you want to play.
+    </noscript>
   </div>
 {/if}
