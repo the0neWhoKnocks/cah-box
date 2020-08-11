@@ -14,7 +14,9 @@
   }
 
   .modal__body {
+    max-height: 90vh;
     font-size: 1.5em;
+    overflow: auto;
     padding: 1em;
     border: solid 1px #888;
     border-radius: 0.25em;

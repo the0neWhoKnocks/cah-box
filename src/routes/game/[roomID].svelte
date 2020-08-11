@@ -27,11 +27,6 @@
     cursor: pointer;
     background: rgba(255, 255, 0, 0.5);
   }
-  @media (min-width: 1024px) {
-    .users-ui {
-      width: 200px;
-    }
-  }
 
   .czar-pending-msg {
     width: 100%;
@@ -70,7 +65,8 @@
   .user-ui :global(.user .user__status-indicator) {
     width: 2em;
   }
-  .user-ui :global(.user:not(.is--admin):not(.is--czar) .user__icon) {
+  .user-ui :global(.user:not(.is--admin):not(.is--czar) .user__icon),
+  .user-ui :global(.user .user__points) {
     display: none;
   }
   .user-ui :global(.user .user__icon) {
@@ -146,7 +142,7 @@
 
   .cards {
     width: 100%;
-    padding: 3em 1em 1em 1em;
+    padding: 4em 1em 1em 1em;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -188,40 +184,6 @@
     position: absolute;
     top: 25%;
     left: 0;
-  }
-  @media (max-width: 1023px) {
-    .cards .answers {
-      width: 100%;
-    }
-    .cards .answers :global(.card) {
-      box-shadow: 0 2px 8px 0px rgba(0, 0, 0, 0.5);
-    }
-    .cards .answers :global(.card:not(:first-child)) {
-      margin-top: -0.5em;
-    }
-    .cards .user-cards :global(.card:not(:first-child)) {
-      margin-top: 0.5em;
-    }
-  }
-  @media (min-width: 1024px) {
-    .cards .answers {
-      display: flex;
-      justify-content: center;
-    }
-    .cards .answers :global(.card) {
-      box-shadow: 2px 0 8px 0px rgba(0, 0, 0, 0.5);
-    }
-    .cards .answers :global(.card:not(:first-child)) {
-      margin-left: -0.5em;
-    }
-    .cards .user-cards {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .cards .user-cards :global(.card) {
-      margin: 0.25em;
-    }
   }
 
   .submit-cards-btn {
@@ -268,9 +230,47 @@
   .black-card-wrapper nav .pick-answer-btn {
     margin-top: 1em;
   }
-  @media (max-width: 1023px) {
+
+  @media (max-width: 849px) {
+    .cards .answers {
+      width: 100%;
+    }
+    .cards .answers :global(.card) {
+      box-shadow: 0 2px 8px 0px rgba(0, 0, 0, 0.5);
+    }
+    .cards .answers :global(.card:not(:first-child)) {
+      margin-top: -0.5em;
+    }
+    .cards .user-cards :global(.card:not(:first-child)) {
+      margin-top: 0.5em;
+    }
+
     .black-card-wrapper :global(.card) {
       width: 100%;
+    }
+  }
+  @media (min-width: 850px) {
+    .users-ui {
+      width: 200px;
+    }
+
+    .cards .answers {
+      display: flex;
+      justify-content: center;
+    }
+    .cards .answers :global(.card) {
+      box-shadow: 2px 0 8px 0px rgba(0, 0, 0, 0.5);
+    }
+    .cards .answers :global(.card:not(:first-child)) {
+      margin-left: -0.5em;
+    }
+    .cards .user-cards {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .cards .user-cards :global(.card) {
+      margin: 0.25em;
     }
   }
 </style>
