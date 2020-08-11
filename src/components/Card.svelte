@@ -41,10 +41,10 @@
     display: block;
   }
 
-  @media (min-width: 1024px) {
+  @media (min-width: 850px) {
     .card {
       width: 10.5em;
-      height: 14em;
+      min-height: 14em;
       display: inline-block;
       vertical-align: top;
     }
@@ -95,7 +95,7 @@
   class:is--black={type === 'black'}
   class:is--selected={selected}
   class:is--selectedable={!!onClick}
-  style={rotate ? `transform: rotate(${randomNumber(-3, 3)}deg);` : undefined}
+  style={rotate ? `transform: rotate(${randomNumber(-2, 2)}deg);` : undefined}
   on:click={handleClick}
 >
   <div class="card__text">{@html transformAnswer(text, answer)}</div>

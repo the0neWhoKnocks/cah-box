@@ -26,6 +26,9 @@
   .user:not(.is--admin):not(.is--czar) .user__icon {
     opacity: 0;
   }
+  .user.is--admin .icon {
+    fill: #228fff;
+  }
 
   .user__points {
     font-family: monospace;
@@ -68,8 +71,6 @@
 </style>
 
 <script>
-  const ICON__ADMIN = '&#x2605;';
-  const ICON__CZAR = '&#x1F451;';
   let className = '';
   
   export let admin = false;
@@ -87,7 +88,14 @@
   class:cards-submitted={cardsSubmitted}
   data-name={name}
 >
-  <span class="user__icon">{@html czar ? ICON__CZAR : ICON__ADMIN}</span>
+  <span class="user__icon">
+    <svg class="icon">
+      <use
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        xlink:href={`#ui-icon__${czar ? 'crown' : 'star'}`}
+      ></use>
+    </svg>
+  </span>
   <span class="user__name">{name}</span>
   <span class="user__points">{points}</span>
   <span class="user__status-indicator"></span>

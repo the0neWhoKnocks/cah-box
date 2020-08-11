@@ -31,7 +31,14 @@
   on:click={addValueToClipboard}
 >
   <div class="copyable-item__text">{text}</div>
-  <div class="copyable-item__clipboard-icon">&#x1F4CB;</div>
+  <div class="copyable-item__clipboard-icon">
+    <svg class="icon">
+      <use
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        xlink:href="#ui-icon__clipboard"
+      ></use>
+    </svg>
+  </div>
 </button>
 
 <style>
@@ -74,19 +81,25 @@
   .copyable-item:not(:first-child) {
     margin-top: 0.5em;
   }
-  .copyable-item * {
+  .copyable-item > * {
     margin: 0 0.5em;
     user-select: none;
     pointer-events: none;
   }
   .copyable-item__text {
+    max-width: 67vw;
     font-family: monospace;
     line-height: 2em;
     text-align: center;
+    text-overflow: ellipsis;
+    overflow: hidden;
     border-top: dashed 1px #eee;
   }
   .copyable-item__clipboard-icon {
     display: flex;
     align-items: center;
+    transform: scale(2.5) translate(1px, -10%);
+    position: relative;
+    z-index: 1;
   }
 </style>
