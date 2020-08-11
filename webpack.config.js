@@ -35,6 +35,7 @@ module.exports = {
 			// pending https://github.com/sveltejs/svelte/issues/2377
 			// dev && new webpack.HotModuleReplacementPlugin(),
 			new webpack.DefinePlugin({
+        'process.app.version': JSON.stringify(process.env.SOURCE_VERSION), // exposed by Heroku during build
 				'process.browser': true,
 				'process.env.NODE_ENV': JSON.stringify(mode)
 			}),
