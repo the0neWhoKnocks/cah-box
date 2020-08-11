@@ -22,3 +22,23 @@ const { server } = polka()
   });
 
 socket(server);
+
+function handleServerDeath(signal) {
+  const { WS_MSG__SERVER_DOWN } = require('../constants');
+  const { io } = require('./socket/store');
+  
+  console.log(`\n[${signal}] Server closing`);
+  
+  if (io) io.sockets.emit(WS_MSG__SERVER_DOWN);
+  
+  server.close(() => {
+    console.log(`[${signal}] Server closed`);
+    process.exit(0);
+  });
+}
+
+[
+  'SIGINT', 
+  'SIGQUIT',
+  'SIGTERM', 
+].forEach(signal => process.on(signal, handleServerDeath));

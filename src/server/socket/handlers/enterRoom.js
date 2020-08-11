@@ -34,17 +34,21 @@ module.exports = (socket) => function enterRoom({ roomID, username }) {
               // remove the User
               room.users = room.users.filter(({ name }) => name !== user.name);
 
-              // dump white cards back into `live` cards
-              cards.forEach(({ text }) => { live.white.push(text); });
+              // if all Users have left, kill the room
+              if (!room.users.length) delete rooms[roomID];
+              else {
+                // dump white cards back into `live` cards
+                cards.forEach(({ text }) => { live.white.push(text); });
 
-              // if there aren't enough players, put game back into a waiting state
-              if (room.users.length === 1) {
-                room.users[0].czar = false;
-                room.users[0].points = 0;
-                resetGameRound(roomID);
+                // if there aren't enough players, put game back into a waiting state
+                if (room.users.length === 1) {
+                  room.users[0].czar = false;
+                  room.users[0].points = 0;
+                  resetGameRound(roomID);
+                }
+
+                io.to(roomID).emit(WS_MSG__USER_LEFT_ROOM, { room });
               }
-              
-              io.to(roomID).emit(WS_MSG__USER_LEFT_ROOM, { room });
             }
           }, 1000);
         }
@@ -54,7 +58,7 @@ module.exports = (socket) => function enterRoom({ roomID, username }) {
     // game is running, and User refreshed Browser
     if (room && username) {
       socket.user = getUser(roomID, username);
-      socket.user.connected = true;
+      if (socket.user) socket.user.connected = true;
     }
 
     socket.emit(WS_MSG__USER_ENTERED_ROOM, { room, username });

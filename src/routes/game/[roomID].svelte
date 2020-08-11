@@ -292,7 +292,7 @@
     WS_MSG__DEAL_CARDS,
     WS_MSG__USER_ENTERED_ROOM,
     WS_MSG__JOIN_GAME,
-    WS_MSG__SERVER_DISCONNECTED,
+    WS_MSG__SERVER_DOWN,
     WS_MSG__SET_ADMIN,
     WS_MSG__SET_ANSWER_REVIEW_STATE,
     WS_MSG__SET_CZAR,
@@ -359,12 +359,15 @@
       
       if (users.length) {
         let someoneIsCzar = false;
+        
         const user = users.filter(({ czar, name }) => {
           if (czar) someoneIsCzar = true;
           return name === localUser.name;
         })[0];
 
-        localUser = { ...user };
+        if (user) localUser = { ...user };
+        else localUser = {};
+        
         czarSelected = someoneIsCzar;
       }
 
@@ -558,7 +561,7 @@
       window.socket.on(WS_MSG__CARDS_DEALT, updateGameState(ACTION__CARDS_DEALT));
       window.socket.on(WS_MSG__CARDS_SUBMITTED, updateGameState(ACTION__CARDS_SUBMITTED));
       window.socket.on(WS_MSG__CHECK_USERNAME, handleUsernameCheck);
-      window.socket.on(WS_MSG__SERVER_DISCONNECTED, handleServerDisconnect);
+      window.socket.on(WS_MSG__SERVER_DOWN, handleServerDisconnect);
       window.socket.on(WS_MSG__USER_ENTERED_ROOM, updateGameState(ACTION__USER_ENTERED_ROOM));
       window.socket.on(WS_MSG__USER_JOINED, updateGameState(ACTION__USER_JOINED));
       window.socket.on(WS_MSG__USER_LEFT_ROOM, updateGameState(ACTION__USER_LEFT_ROOM));

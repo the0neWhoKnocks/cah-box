@@ -8,7 +8,7 @@ module.exports = {
   WS_MSG__CREATE_GAME: 'create game',
   WS_MSG__DEAL_CARDS: 'deal cards',
   WS_MSG__JOIN_GAME: 'join game',
-  WS_MSG__SERVER_DISCONNECTED: 'disconnect',
+  WS_MSG__SERVER_DOWN: 'server down',
   WS_MSG__SET_ADMIN: 'set admin',
   WS_MSG__SET_ANSWER_REVIEW_STATE: 'set answer review state',
   WS_MSG__SET_CZAR: 'set czar',
