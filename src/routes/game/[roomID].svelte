@@ -383,7 +383,7 @@
       }
 
       userClickHandler = (localUser.admin) ? handleUserClick : undefined;
-
+      
       if (localUser.admin && !adminInstructionsShown) {
         showAdminInstructions = true;
         adminInstructionsShown = true;
@@ -630,7 +630,7 @@
                 {/if}
               </div>
               {#if showUserCards}
-                {#each localUser.selectedCards as { ndx, text }}
+                {#each localUser.selectedCards as { ndx, text } (`answer_${ndx}`)}
                   <Card {ndx} {text} onClick={handleCardSelectionToggle} rotate />
                 {/each}
               {/if}
