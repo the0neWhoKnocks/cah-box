@@ -1,8 +1,7 @@
 <script>
   import { onMount } from 'svelte';
-  import { titleSuffix } from '../store';
+  import { title, titleSuffix } from '../store';
 
-  const title = 'CAH-Box';
   let mounted = false;
 
   // NOTE - svelte's `onMount` (when fired within `_layout`) fires after the
@@ -21,7 +20,7 @@
 </script>
 
 <svelte:head>
-  <title>{`${title}${$titleSuffix ? ` | ${$titleSuffix}` : ''}`}</title>
+  <title>{`${$title}${($title && $titleSuffix) ? ' | ' : ''}${$titleSuffix ? $titleSuffix : ''}`}</title>
   <style>
     *, *::after, *::before {
       box-sizing: border-box;

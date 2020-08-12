@@ -305,7 +305,7 @@
     WS_MSG__USER_LEFT_ROOM,
     WS_MSG__USER_UPDATE,
   } from '../../constants';
-  import { titleSuffix } from '../../store';
+  import { title, titleSuffix } from '../../store';
   import createGame from '../../utils/createGame';
   
   const MSG__SET_CZAR = 'Make <User> the Czar';
@@ -404,6 +404,29 @@
           state: { reviewingAnswers: true },
           username: localUser.name,
         });
+
+        if (
+          !document.hasFocus()
+          && window.Notification.permission === 'granted'
+        ) {
+          const n = new window.Notification('All Users have submitted answers');
+          setTimeout(() => { n.close(); }, 3000);
+
+          const origTitle = $title;
+          const origTitleSuffix = $titleSuffix;
+          title.set('');
+          const i = setInterval(() => {
+            if (document.hasFocus()) {
+              clearInterval(i);
+              title.set(origTitle);
+              titleSuffix.set(origTitleSuffix);
+            }
+            else {
+              if ($titleSuffix === origTitle) titleSuffix.set('Come Back!');
+              else titleSuffix.set(origTitle);
+            }
+          }, 500);
+        }
       }
 
       switch (action) {
@@ -579,6 +602,8 @@
       window.socket.on(WS_MSG__USER_UPDATE, updateGameState(ACTION__USER_UPDATE));
 
       window.socket.emit(WS_MSG__USER_ENTERED_ROOM, { roomID, username });
+
+      window.Notification.requestPermission();
     });
   });
 </script>
