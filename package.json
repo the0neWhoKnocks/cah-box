@@ -2,6 +2,9 @@
   "name": "cah-box",
   "description": "Cards Against Humanity mixed with the play-on-any-device strategy of JackBox",
   "version": "0.0.1",
+  "engines": {
+    "node": "10.x"
+  },
   "scripts": {
     "dev": "sapper dev --no-hot",
     "build": "NODE_ENV=production sapper build",
