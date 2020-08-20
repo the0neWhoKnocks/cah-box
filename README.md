@@ -38,3 +38,27 @@ all that Heroku needs.
            Deploys** button.
       - **Manual Deploy**:
          - Make sure the proper branch is selected, click the **Deploy Branch** button.
+  
+---
+
+## Testing
+
+In order to ensure Cypress runs consistently on all OS's for CI and the GUI mode
+I've opted for the Docker image. One downside to this is the size (over 2gb,
+yeesh). I tried the non-Docker route, and the setup would be different for all
+OS's and there was no guarantee it'd even work.
+
+If you don't care about the GUI mode, just run `npm run test`.
+
+To get the GUI to work:
+- [Download VcXsrv](https://sourceforge.net/projects/vcxsrv/files/latest/download), 
+  it's available for OSX, Windows, and Linux.
+- Install it and start a Server with these settings:
+   - **Display Settings**: `Multiple Windows`
+   - **Start Clients**: `Start no Clients`
+   - **Extra Settings**: Check `Disable Access Control`
+- Once the XServer is started, if you mouse over the icon, the hover tooltip will
+  tell you where the Server is listening for connections. Most likely something
+  like `<computer_nam>:0.0`.
+- Run `npm run test:watch`
+   
