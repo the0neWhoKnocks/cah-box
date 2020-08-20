@@ -9,9 +9,10 @@
 module.exports = (on, config) => {
   return {
     baseUrl: `http://${process.env.DOCKER_HOST || 'localhost'}:3000`,
-    // NOTE - The below doesn't work while in Docker (or perhaps just headless?)
-    // browsers: config.browsers.filter(({ channel, name }) => {
-    //   return channel === 'stable' && name === 'chrome';
-    // }),
+    // NOTE - In headless mode, the `electron` Browser always has to be present
+    // or the tests won't run.
+    // I move Electron to the top of the Browsers list since it seems to be
+    // the most reliable on all OS's (as far as display).
+    browsers: config.browsers.sort(({ name }) => name === 'electron' ? -1 : 0),
   };
 }
