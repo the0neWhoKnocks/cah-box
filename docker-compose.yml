@@ -1,0 +1,14 @@
+version: "3.4"
+
+services:
+  "e2e-cypress":
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: e2e-cypress
+    environment:
+      DOCKER_HOST: host.docker.internal
+    ports:
+      - "3000:3000"
+    volumes:
+      - "${PWD}:/e2e"

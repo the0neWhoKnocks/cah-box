@@ -7,8 +7,6 @@
 .vscode
 __sapper__
 node_modules
-bin/cypress
 tests/cypress/fixtures
 tests/cypress/integration/examples
 tests/cypress/screenshots
-tests/cypress/support
