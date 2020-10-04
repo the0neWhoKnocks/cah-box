@@ -14,7 +14,7 @@ context('Create a New Game', () => {
   it('should create a new game', () => {
     cy.get('.start-form > button').click();
 
-    cy.location('pathname').should('match', /\/game\/[A-Z0-9]{4}/);
+    cy.location('pathname').should('match', /^\/[A-Z0-9]{4}$/);
     cy.get('.join-form label').should('have.text', 'Enter Username');
     cy.get('.join-form input#username').should('exist');
     cy.get('.join-form button').should('have.text', 'Join Game');
