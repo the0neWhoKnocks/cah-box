@@ -38,3 +38,36 @@ all that Heroku needs.
            Deploys** button.
       - **Manual Deploy**:
          - Make sure the proper branch is selected, click the **Deploy Branch** button.
+  
+---
+
+## Testing
+
+In order to ensure Cypress runs consistently on all OS's for CI and the GUI mode
+I've opted for the Docker image. One downside to this is the size (over 2gb,
+yeesh). I tried the non-Docker route, and the setup would be different for all
+OS's and there was no guarantee it'd even work.
+
+If you don't care about the GUI mode, just run `npm run test`.
+
+To get the GUI to work, follow the instructions for your OS.
+
+**Windows/WSL**
+- Install `choco install vcxsrv`
+- ~~Start a Server with these settings:~~
+   ~~- **Display Settings**: `Multiple Windows`~~
+   ~~- **Start Clients**: `Start no Clients`~~
+   ~~- **Extra Settings**: Check `Disable Access Control`~~
+- ~~Once the XServer is started, if you mouse over the icon, the hover tooltip will~~
+  ~~tell you where the Server is listening for connections. Most likely something~~
+  ~~like `<computer_nam>:0.0`.~~
+
+**OSX**
+- Install `brew install xquartz`
+- Start XQuartz `open -a xquartz`.
+   - Go to Preferences > Security.
+      - Make sure `Allow connections from network clients` is checked
+- Once the settings have been updated you can close XQuartz
+
+**Once an XServer is set up on your OS**, run `npm run test:watch`
+   
