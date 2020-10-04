@@ -4,6 +4,7 @@
 
 # Folders
 .git
+.ignore
 .vscode
 __sapper__
 node_modules
