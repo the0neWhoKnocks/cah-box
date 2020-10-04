@@ -1,6 +1,6 @@
 context('Game', () => {
   beforeEach(() => {
-    cy.visit('/game/D3AD');
+    cy.visit('/D3AD');
   });
 
   it('should ', () => {

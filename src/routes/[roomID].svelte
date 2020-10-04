@@ -278,10 +278,10 @@
 <script>
   import { stores } from '@sapper/app';
   import { onMount } from 'svelte';
-  import Card from '../../components/Card.svelte';
-  import Copyable from '../../components/Copyable.svelte';
-  import Modal from '../../components/Modal.svelte';
-  import User from '../../components/User.svelte';
+  import Card from '../components/Card.svelte';
+  import Copyable from '../components/Copyable.svelte';
+  import Modal from '../components/Modal.svelte';
+  import User from '../components/User.svelte';
   import {
     ERROR_CODE__NAME_TAKEN,
     ERROR_CODE__ROOM_DOES_NOT_EXIST,
@@ -304,9 +304,9 @@
     WS_MSG__USER_JOINED,
     WS_MSG__USER_LEFT_ROOM,
     WS_MSG__USER_UPDATE,
-  } from '../../constants';
-  import { title, titleSuffix } from '../../store';
-  import createGame from '../../utils/createGame';
+  } from '../constants';
+  import { title, titleSuffix } from '../store';
+  import createGame from '../utils/createGame';
   
   const MSG__SET_CZAR = 'Make <User> the Czar';
   const ACTION__ANSWER_REVIEW_STATE_UPDATED = 'answerReviewStateUpdated';

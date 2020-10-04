@@ -20,7 +20,7 @@
      favorite answer, two points to the second best, and one point to number
      three.
 - [ ] Ability for MC to remove a User
-- [ ] Remove `/game` in path to have less for Mobile users to type
+- [x] Remove `/game` in path to have less for Mobile users to type
 - [ ] Switch from SocketIO to just WebSocket
 - [ ] Change root path to display
    ```
