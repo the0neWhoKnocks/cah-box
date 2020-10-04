@@ -1,3 +1,45 @@
+## Features/Changes
+
+- [ ] Make the chosen card more obvious
+   - Once chosen it displays the card, then a point zips over to the player?
+   - Sprites for explosions
+      - https://www.kirupa.com/canvas/sprite_animations_canvas.htm
+      - https://www.mrspeaker.net/2012/02/02/colorising-sprites-2/
+      - https://spicyyoghurt.com/tutorials/html5-javascript-game-development/images-and-sprite-animations
+- [ ] Add confirmation to card selection, or make it harder for Users on Mobile
+  devices to accidentally click it.
+- Optional Rules:
+   - [ ] Spend a point to discard X amount of cards, and get the same number of
+     new cards back. (requires they have points of course)
+   - [ ] Everyone can discard any number of cards and draw up to ten when the
+     haiku card is played (before answering)
+   - [ ] The first player to reach 3 points wins. Deal out new hands to start
+     the next game.
+   - [ ] Reward the top three answers. If you're playing with a large group, the
+     Card Czar can choose three winners. Award three points to the Czar's
+     favorite answer, two points to the second best, and one point to number
+     three.
+- [ ] Ability for MC to remove a User
+- [ ] Remove `/game` in path to have less for Mobile users to type
+- [ ] Switch from SocketIO to just WebSocket
+- [ ] Change root path to display
+   ```
+      Enter Code for Game
+           [    ]
+   --------- or -----------
+   [Click to Create a Game]
+   ```
+   That way a Mobile user can just add the root path to their home screen, and
+   enter a code to go to a running game.
+   Might have to update the "Looks like that room doesn't exist" message, and
+   give the option to enter a code there as well.
+
+## Bugs
+
+- Random disconnects
+   - [ ] Phone going to sleep, causes a User to be removed from room.
+   - [ ] User bumped from room during idle
+
 
 ## Flow
 
