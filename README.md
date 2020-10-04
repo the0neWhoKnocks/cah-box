@@ -38,7 +38,19 @@ all that Heroku needs.
            Deploys** button.
       - **Manual Deploy**:
          - Make sure the proper branch is selected, click the **Deploy Branch** button.
-  
+
+### Debugging App Issues in Heroku
+
+While in the dashboard for your specific App, there'll be a `Open App` button
+and a `More` button.
+- `Open App` does what it says.
+- `More` gives you access to `View Logs` and `Run console`.
+   - `View Logs` isn't that helpful. It seems to just give you the last X number
+     of logs. So unless the important part of a stacktrace are in the last few
+     lines, you may be SOL.
+   - `Run console` allows you to connect to the current instance and run
+     commands like you would in any SSH session.
+
 ---
 
 ## Testing

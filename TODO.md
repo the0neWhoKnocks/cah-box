@@ -22,6 +22,10 @@
 - [ ] Ability for MC to remove a User
 - [x] Remove `/game` in path to have less for Mobile users to type
 - [ ] Switch from SocketIO to just WebSocket
+   - https://github.com/websockets/ws
+   - https://www.pubnub.com/blog/nodejs-websocket-programming-examples/
+   - https://devcenter.heroku.com/articles/node-websockets
+   - https://www.hackdoor.io/articles/6xQkgQo4/differences-between-websockets-and-socketio
 - [ ] Change root path to display
    ```
       Enter Code for Game
@@ -37,6 +41,9 @@
 ## Bugs
 
 - Random disconnects
+   - Since I can SSH into the box, I should start writing a log to the FS to
+     keep track of connections and disconnects to maybe get some more info on
+     what's possibly happening. 
    - [ ] Phone going to sleep, causes a User to be removed from room.
    - [ ] User bumped from room during idle
 
