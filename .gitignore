@@ -1,5 +1,6 @@
 # Files
 *.log
+*.patch
 *.zip
 
 # Folders
