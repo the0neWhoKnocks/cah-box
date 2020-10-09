@@ -1,9 +1,9 @@
 #!/bin/bash
 
-echo "[CREATE] Required directories"
+# Create required directories
 mkdir -p ./dist/server ./dist/public
 
-echo "[SYNC] Server files"
+# Sync Server files
 rsync -avh \
   ./src/constants.js \
   ./src/data.json \
@@ -11,7 +11,7 @@ rsync -avh \
   ./src/utils \
   ./dist --delete
 
-echo "[SYNC] Static files"
+# Sync Static files
 rsync -avh \
   ./src/static/imgs \
   ./dist/public --delete
