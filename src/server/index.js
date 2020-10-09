@@ -1,12 +1,13 @@
 const compression = require('compression');
 const polka = require('polka');
 const sirv = require('sirv');
+const { SERVER__PORT } = require('../constants');
 const socket = require('./socket');
 const shell = require('./shell');
 
 const {
   NODE_ENV,
-  PORT = 3000,
+  PORT = SERVER__PORT,
 } = process.env;
 const dev = NODE_ENV !== 'production';
 const middleware = [

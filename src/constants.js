@@ -3,6 +3,7 @@ module.exports = {
   DOM__SVELTE_MOUNT_POINT: 'route',
   ERROR_CODE__NAME_TAKEN: 101,
   ERROR_CODE__ROOM_DOES_NOT_EXIST: 100,
+  SERVER__PORT: +process.env.SERVER_PORT || 3000,
   WS_MSG__ANSWER_REVIEW_STATE_UPDATED: 'answer review state updated',
   WS_MSG__CARD_SELECTION_TOGGLED: 'card selection toggled',
   WS_MSG__CARDS_DEALT: 'cards dealt',
