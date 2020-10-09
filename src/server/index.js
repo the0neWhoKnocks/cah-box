@@ -1,24 +1,30 @@
-const { middleware: sapperMiddleware } = require('@sapper/server');
 const compression = require('compression');
 const polka = require('polka');
 const sirv = require('sirv');
 const socket = require('./socket');
+const shell = require('./shell');
 
 const {
   NODE_ENV,
   PORT = 3000,
 } = process.env;
-const dev = NODE_ENV === 'development';
+const dev = NODE_ENV !== 'production';
 const middleware = [
   compression({ threshold: 0 }),
-  sirv('static', { dev }),
-  sapperMiddleware(),
+  sirv('./dist/public', { dev, etag: true }),
 ];
 
 const { server } = polka()
   .use(...middleware)
+  .get('/:roomID', (req, res) => {
+    res.end(shell({ page: 'room', params: req.params }));
+  })
+  .get('/', (req, res) => {
+    res.end(shell({ page: 'root' }));
+  })
   .listen(PORT, err => {
     if (err) console.log('error', err);
+    console.log(`Server running at: http://localhost:${PORT}`);
   });
 
 socket(server);

@@ -1,4 +1,6 @@
 module.exports = {
+  APP__TITLE: 'CAH-Box',
+  DOM__SVELTE_MOUNT_POINT: 'route',
   ERROR_CODE__NAME_TAKEN: 101,
   ERROR_CODE__ROOM_DOES_NOT_EXIST: 100,
   WS_MSG__ANSWER_REVIEW_STATE_UPDATED: 'answer review state updated',
