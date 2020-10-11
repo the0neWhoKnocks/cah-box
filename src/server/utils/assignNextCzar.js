@@ -3,6 +3,7 @@ const assignNextCzar = (room, userLeftRoom) => {
   
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
+
     if (user.czar) {
       const maxRequired = userLeftRoom ? 2 : 1;
       // in case Users leave during a game

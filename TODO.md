@@ -37,6 +37,8 @@
    enter a code to go to a running game.
    Might have to update the "Looks like that room doesn't exist" message, and
    give the option to enter a code there as well.
+- [ ] Add a "Waiting for players to submit answers" message for the Czar. Maybe
+  have it be dynamic "Waiting for 'name', 'name', and 'name' to submit answers".
 
 ## Bugs
 
@@ -49,7 +51,7 @@
 - [x] On Desktop (maybe Mobile), when you shrink the viewport vertically (while there
   are cards to be chosen for an answer), the cards sometimes overflow from the
   top or bottom.
-- [ ] If Users have submitted their cards and the Czar leaves, the Czar gets
+- [x] If Users have submitted their cards and the Czar leaves, the Czar gets
   assigned to someone that had submitted a card. Instead the round should be
   reset and those cards thrown out.
 
