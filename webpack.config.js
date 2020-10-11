@@ -17,8 +17,8 @@ module.exports = {
   devtool: dev && 'source-map',
   entry: {
     'css/global': resolve(__dirname, './src/client/global.styl'),
+    'js/home': resolve(__dirname, './src/client/routes/home'),
     'js/room': resolve(__dirname, './src/client/routes/room'),
-    'js/root': resolve(__dirname, './src/client/routes/root'),
   },
   mode,
   module: {
