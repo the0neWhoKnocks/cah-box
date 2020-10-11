@@ -1,3 +1,7 @@
+const disconnectChecksForRoom = new Map();
+
+const disconnectKey = (roomID, username) => `${roomID}__${username}`;
+
 module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
   const {
     DISCONNECT_TIMEOUT,
@@ -29,7 +33,9 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
           // if a User refreshed their Browser, `connected` will be set back to
           // `true` fairly quickly. The timeout value is a guesstimate based on a
           // User having assets cached so the reload time should be quick.
-          user.disconnectCheck = setTimeout(() => {
+          const disconnectCheck = setTimeout(() => {
+            delete user.disconnectCheck;
+
             if (!user.connected) {
               const { cards: { live } } = room.data;
               const { admin, cards, czar } = user;
@@ -74,6 +80,10 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
               }
             }
           }, DISCONNECT_TIMEOUT);
+          disconnectChecksForRoom.set(
+            disconnectKey(roomID, user.name), 
+            disconnectCheck
+          );
         }
       });
   
@@ -82,16 +92,16 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
         serverSocket.data.user = getUser(room, username);
         const { user } = serverSocket.data;
 
-        if (user) {
-          user.connected = true;
+        if (user) user.connected = true;
 
-          if (user.disconnectCheck) {
-            clearTimeout(user.disconnectCheck);
-            delete user.disconnectCheck;
-          }
+        const dKey = disconnectKey(roomID, username);
+        const disconnectCheck = disconnectChecksForRoom.get(dKey);
+        if (disconnectCheck) {
+          clearTimeout(disconnectCheck);
+          disconnectChecksForRoom.delete(dKey);
         }
       }
-      
+
       serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__USER_ENTERED_ROOM, {
         room: room.data,
         username,
