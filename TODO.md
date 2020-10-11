@@ -39,6 +39,7 @@
    give the option to enter a code there as well.
 - [ ] Add a "Waiting for players to submit answers" message for the Czar. Maybe
   have it be dynamic "Waiting for 'name', 'name', and 'name' to submit answers".
+- [x] Increase disconnect to 5 seconds, display user as disconnected, then as left room.
 
 ## Bugs
 
@@ -47,6 +48,7 @@
      keep track of connections and disconnects to maybe get some more info on
      what's possibly happening. 
    - [ ] Phone going to sleep, causes a User to be removed from room.
+      - https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API
    - [ ] User bumped from room during idle
 - [x] On Desktop (maybe Mobile), when you shrink the viewport vertically (while there
   are cards to be chosen for an answer), the cards sometimes overflow from the

@@ -308,7 +308,6 @@
     WS__MSG_TYPE__CHECK_USERNAME,
     WS__MSG_TYPE__CHOSE_ANSWER,
     WS__MSG_TYPE__DEAL_CARDS,
-    WS__MSG_TYPE__USER_ENTERED_ROOM,
     WS__MSG_TYPE__JOIN_GAME,
     WS__MSG_TYPE__ROOM_DESTROYED,
     WS__MSG_TYPE__SERVER_DOWN,
@@ -317,6 +316,8 @@
     WS__MSG_TYPE__SET_CZAR,
     WS__MSG_TYPE__SUBMIT_CARDS,
     WS__MSG_TYPE__TOGGLE_CARD_SELECTION,
+    WS__MSG_TYPE__USER_DISCONNECTED,
+    WS__MSG_TYPE__USER_ENTERED_ROOM,
     WS__MSG_TYPE__USER_JOINED,
     WS__MSG_TYPE__USER_LEFT_ROOM,
     WS__MSG_TYPE__USER_UPDATE,
@@ -333,6 +334,7 @@
   const ACTION__CARD_SELECTION_TOGGLED = 'cardSelectionToggled';
   const ACTION__CARDS_DEALT = 'cardsDealt';
   const ACTION__CARDS_SUBMITTED = 'cardsSubmitted';
+  const ACTION__USER_DISCONNECTED = 'userDisconnected';
   const ACTION__USER_ENTERED_ROOM = 'userEnteredRoom';
   const ACTION__USER_JOINED = 'userJoined';
   const ACTION__USER_LEFT_ROOM = 'userLeftRoom';
@@ -614,6 +616,7 @@
       window.clientSocket.on(WS__MSG_TYPE__CHECK_USERNAME, handleUsernameCheck);
       window.clientSocket.on(WS__MSG_TYPE__ROOM_DESTROYED, handleRoomDestruction);
       window.clientSocket.on(WS__MSG_TYPE__SERVER_DOWN, handleServerDisconnect);
+      window.clientSocket.on(WS__MSG_TYPE__USER_DISCONNECTED, updateGameState(ACTION__USER_DISCONNECTED));
       window.clientSocket.on(WS__MSG_TYPE__USER_ENTERED_ROOM, updateGameState(ACTION__USER_ENTERED_ROOM));
       window.clientSocket.on(WS__MSG_TYPE__USER_JOINED, updateGameState(ACTION__USER_JOINED));
       window.clientSocket.on(WS__MSG_TYPE__USER_LEFT_ROOM, updateGameState(ACTION__USER_LEFT_ROOM));
@@ -634,11 +637,12 @@
         class:is--admin={!!userClickHandler}
         on:click={userClickHandler}
       >
-        {#each users as { admin, cardsSubmitted, czar, name, points }}
+        {#each users as { admin, cardsSubmitted, connected, czar, name, points }}
           <User
             class="user"
             admin={admin}
             cardsSubmitted={cardsSubmitted}
+            connected={connected}
             czar={czar}
             name={name}
             points={points}
@@ -719,6 +723,7 @@
           <User
             admin={localUser.admin}
             cardsSubmitted={localUser.cardsSubmitted}
+            connected={localUser.connected}
             czar={localUser.czar}
             name={localUser.name}
             points={localUser.points}

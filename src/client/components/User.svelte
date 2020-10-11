@@ -42,6 +42,10 @@
   .user:not(.is--czar) .user__status-indicator {
     background-color: #393939;
   }
+  .user:not(.is--connected) {
+    opacity: 0.25;
+    background: yellow;
+  }
 
   @keyframes showCard {
     0% {
@@ -75,6 +79,7 @@
   
   export let admin = false;
   export let cardsSubmitted = false;
+  export let connected = false;
   export let czar = false;
   export let name = '';
   export let points = 0;
@@ -84,6 +89,7 @@
 <div
   class={`user ${className}`}
   class:is--admin={admin}
+  class:is--connected={connected}
   class:is--czar={czar}
   class:cards-submitted={cardsSubmitted}
   data-name={name}
