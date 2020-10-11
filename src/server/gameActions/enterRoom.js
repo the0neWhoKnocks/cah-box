@@ -8,6 +8,7 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
   const assignNextCzar = require('../utils/assignNextCzar');
   const getUser = require('../utils/getUser');
   const resetGameRound = require('../utils/resetGameRound');
+  const dealCards = require('./dealCards');
 
   serverSocket.joinRoom(roomID, (room) => {
     if (room) {
@@ -31,7 +32,10 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
               if (admin) assignNextAdmin(room);
               
               // user is Czar, assign next czar
-              if (czar) assignNextCzar(room, true);
+              if (czar) {
+                assignNextCzar(room, true);
+                dealCards(serverSocket)({ newRound: true, roomID });
+              }
               
               // remove the User
               room.data.users = room.data.users.filter(({ name }) => name !== user.name);
