@@ -37,6 +37,18 @@
     align-items: center;
   }
 
+  .czar-waiting-msg {
+    margin-top: 1em;
+  }
+  :global(.czar-waiting-msg mark) {
+    color: #fff;
+    line-height: 1em;
+    padding: 0.25em 0.5em;
+    border-radius: 0.25em;
+    background: black;
+    display: inline-block;
+  }
+
   .user-ui {
     position: absolute;
     top: 0.5em;
@@ -151,6 +163,9 @@
   .cards :global(.card) {
     flex-shrink: 0;
   }
+  .cards .answers {
+    padding-bottom: 1em;
+  }
   .cards .user-cards-wrapper {
     height: 100%;
     overflow: hidden;
@@ -211,6 +226,7 @@
     margin-top: 1em;
     display: flex;
     flex-wrap: wrap;
+    justify-content: space-between;
   }
   .black-card-wrapper nav button {
     font-size: 1.2em;
@@ -224,7 +240,7 @@
   }
   .black-card-wrapper nav .prev-btn,
   .black-card-wrapper nav .next-btn {
-    width: 50%;
+    width: 49%;
   }
   .black-card-wrapper nav .prev-btn {
     border-radius: 0.5em 0 0 0.5em;
@@ -236,9 +252,30 @@
     margin-top: 1em;
   }
 
+  @media (max-width: 500px) {
+    :global(.root .modal .modal__body) {
+      font-size: 1em;
+    }
+
+    .users-ui {
+      width: 100px;
+    }
+    .users-ui,
+    .user-ui {
+      font-size: 0.75em;
+    }
+
+    .cards {
+      padding-top: 2.5em;
+    }
+    .cards .answers :global(.card),
+    .cards .user-cards-wrapper :global(.card) {
+      font-size: 1em;
+    }
+  }
   @media (max-width: 849px) {
-    .cards .answers {
-      width: 100%;
+    .cards {
+      padding-left: 2em;
     }
     .cards .answers :global(.card) {
       box-shadow: 0 2px 8px 0px rgba(0, 0, 0, 0.5);
@@ -258,16 +295,12 @@
     }
     .black-card-wrapper nav .prev-btn,
     .black-card-wrapper nav .next-btn {
-      font-size: 4.5vw;
+      font-size: 1em;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .black-card-wrapper nav .pick-answer-btn {
       margin-top: 2em;
-    }
-
-    :global(.root .modal .modal__body) {
-      font-size: 1em;
     }
   }
   @media (min-width: 850px) {
@@ -357,6 +390,7 @@
   let usernameInputError;
   let usernameInputRef;
   let users = [];
+  let czarWaitingMsg = '';
 
   export let roomID;
 
@@ -412,6 +446,28 @@
           adminInstructionsShown: true,
           username: localUser.name,
         }));
+      }
+
+      if (
+        localUser.czar
+        && room.submittedCards.length < (users.length - 1)
+      ) {
+        const names = users.filter(({ cardsSubmitted, czar }) => !czar && !cardsSubmitted);
+        const multiple = names.length > 1;
+        const answer = multiple ? 'answers' : 'answer';
+        const formattedNames = names.reduce((str, { name }, ndx) => {
+          let prefix = '';
+          let suffix = multiple ? ', ' : '';
+          if (multiple && ndx === names.length - 1) {
+            prefix = ' and ';
+            suffix = '';
+          }
+          return `${str}${prefix}<mark>${name}</mark>${suffix}`;
+        }, '');
+        czarWaitingMsg = `Waiting for ${formattedNames} to submit their ${answer}.`;
+      }
+      else if (czarWaitingMsg) {
+        czarWaitingMsg = '';
       }
 
       if (
@@ -656,6 +712,9 @@
             <div class="answers">
               <div class="black-card-wrapper">
                 <Card type="black" text={blackCard} answer={room.blackCardAnswer.cards} />
+                {#if czarWaitingMsg}
+                  <div class="czar-waiting-msg">{@html czarWaitingMsg}</div>
+                {/if}
                 {#if localUser.reviewingAnswers}
                   <nav>
                     <button
