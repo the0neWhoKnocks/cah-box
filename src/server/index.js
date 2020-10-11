@@ -21,7 +21,7 @@ const { server } = polka()
     res.end(shell({ page: 'room', params: req.params }));
   })
   .get('/', (req, res) => {
-    res.end(shell({ page: 'root' }));
+    res.end(shell({ page: 'home' }));
   })
   .listen(PORT, err => {
     if (err) console.log('error', err);
