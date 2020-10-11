@@ -22,7 +22,7 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
           // if a User refreshed their Browser, `connected` will be set back to
           // `true` fairly quickly. The timeout value is a guesstimate based on a
           // User having assets cached so the reload time should be quick.
-          setTimeout(() => {
+          user.disconnectCheck = setTimeout(() => {
             if (!user.connected) {
               const { cards: { live } } = room.data;
               const { admin, cards, czar } = user;
@@ -70,7 +70,16 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
       // game is running, and User refreshed Browser
       if (username) {
         serverSocket.data.user = getUser(room, username);
-        if (serverSocket.data.user) serverSocket.data.user.connected = true;
+        const { user } = serverSocket.data;
+
+        if (user) {
+          user.connected = true;
+
+          if (user.disconnectCheck) {
+            clearTimeout(user.disconnectCheck);
+            delete user.disconnectCheck;
+          }
+        }
       }
   
       serverSocket.emitToSelf(WS__MSG_TYPE__USER_ENTERED_ROOM, {
