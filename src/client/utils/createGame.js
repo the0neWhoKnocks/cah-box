@@ -1,10 +1,11 @@
-import { WS_MSG__CREATE_GAME } from '../../constants';
+import { WS__MSG_TYPE__CREATE_GAME } from '../../constants';
 
 export default function createGame() {
   window.socketConnected.then(() => {
-    window.socket.on(WS_MSG__CREATE_GAME, ({ roomID }) => {
+    window.clientSocket.on(WS__MSG_TYPE__CREATE_GAME, ({ roomID }) => {
       window.location.assign(`/${roomID}`);
     });
-    window.socket.emit(WS_MSG__CREATE_GAME);
+
+    window.clientSocket.emit(WS__MSG_TYPE__CREATE_GAME);
   });
 }

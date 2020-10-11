@@ -36,7 +36,6 @@ const shell = ({ page, params } = {}) => {
           params: ${JSON.stringify(params || {})},
         };
       </script>
-      <script src="/socket.io/socket.io.js"></script>
     </head>
     <body class="no-js">
       <script>

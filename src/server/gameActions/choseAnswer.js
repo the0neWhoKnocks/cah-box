@@ -1,18 +1,17 @@
-module.exports = () => function choseAnswer({ roomID }) {
-  const { rooms } = require('../socket/store');
+module.exports = (serverSocket) => function choseAnswer({ roomID }) {
   const assignNextCzar = require('../utils/assignNextCzar');
   const dealCards = require('./dealCards');
-  const room = rooms[roomID];
-  const { cards: { dead }, users } = room;
+  const room = serverSocket.getRoom(roomID);
+  const { blackCard, cards: { dead }, submittedCards, users } = room.data;
   let answer;
 
-  dead.black.push(room.blackCard);
+  dead.black.push(blackCard);
 
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
 
     if (user.czar) {
-      answer = room.submittedCards[user.reviewNdx];
+      answer = submittedCards[user.reviewNdx];
       break;
     }
   }
@@ -26,7 +25,7 @@ module.exports = () => function choseAnswer({ roomID }) {
     }
   }
 
-  assignNextCzar(roomID);
+  assignNextCzar(room);
   
-  dealCards()({ newRound: true, roomID });
+  dealCards(serverSocket)({ newRound: true, roomID });
 }
