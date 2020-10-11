@@ -84,7 +84,7 @@
   }
 
   .join-form {
-    width: 300px;
+    max-width: 300px;
   }
   .join-form label + input {
     display: block;
@@ -142,7 +142,7 @@
 
   .cards {
     width: 100%;
-    padding: 4em 1em 1em 1em;
+    padding: 4em 1em 0 1em;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -151,13 +151,16 @@
   .cards :global(.card) {
     flex-shrink: 0;
   }
+  .cards .user-cards-wrapper {
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
   .cards .user-cards {
     width: 100%;
     height: 100%;
-    padding-top: 2em;
-    padding-bottom: 2em;
-    margin-top: -2em;
-    margin-bottom: -3em;
+    padding-top: 4em;
+    padding-bottom: 4em;
     overflow: auto;
   }
   .cards .user-cards.disabled :global(.card) {
@@ -167,15 +170,17 @@
   .cards .sep {
     width: 100%;
     height: 6em;
-    position: relative;
+    position: absolute;
     pointer-events: none;
+    z-index: 1;
   }
   .cards .sep.is--top {
-    margin-top: 1em;
     background: linear-gradient(180deg, #eeeeee 50%, transparent);
+    top: 0;
   }
   .cards .sep.is--btm {
     background: linear-gradient(0deg, #eeeeee 20%, transparent);
+    bottom: 0;
   }
   .cards .sep.is--top::after {
     content: '';
@@ -245,8 +250,24 @@
       margin-top: 0.5em;
     }
 
+    .black-card-wrapper {
+      padding-bottom: 0.5em;
+    }
     .black-card-wrapper :global(.card) {
       width: 100%;
+    }
+    .black-card-wrapper nav .prev-btn,
+    .black-card-wrapper nav .next-btn {
+      font-size: 4.5vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .black-card-wrapper nav .pick-answer-btn {
+      margin-top: 2em;
+    }
+
+    :global(.root .modal .modal__body) {
+      font-size: 1em;
     }
   }
   @media (min-width: 850px) {
@@ -674,16 +695,18 @@
                   {@html `Submit Card${localUser.selectedCards.length > 1 ? 's' : ''}`}
                 </button>
               {/if}
-
-              <div class="sep is--top"></div>
               
-              <div class="user-cards" class:disabled={localUser.maxCardsSelected}>
-                {#each localUser.cards as { ndx, selected, text }}
-                  <Card {ndx} {text} onClick={handleCardSelectionToggle} {selected} />
-                {/each}
+              <div class="user-cards-wrapper">
+                <div class="sep is--top"></div>
+                
+                <div class="user-cards" class:disabled={localUser.maxCardsSelected}>
+                  {#each localUser.cards as { ndx, selected, text }}
+                    <Card {ndx} {text} onClick={handleCardSelectionToggle} {selected} />
+                  {/each}
+                </div>
+  
+                <div class="sep is--btm"></div>
               </div>
-
-              <div class="sep is--btm"></div>
             {/if}
           </div>
         {:else}
