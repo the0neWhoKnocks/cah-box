@@ -1,5 +1,6 @@
 module.exports = {
   APP__TITLE: 'CAH-Box',
+  DISCONNECT_TIMEOUT: 5000,
   DOM__SVELTE_MOUNT_POINT: 'route',
   ERROR_CODE__NAME_TAKEN: 101,
   ERROR_CODE__ROOM_DOES_NOT_EXIST: 100,
@@ -20,6 +21,7 @@ module.exports = {
   WS__MSG_TYPE__SET_CZAR: 'set czar',
   WS__MSG_TYPE__SUBMIT_CARDS: 'submit cards',
   WS__MSG_TYPE__TOGGLE_CARD_SELECTION: 'toggle card selection',
+  WS__MSG_TYPE__USER_DISCONNECTED: 'user disconnected',
   WS__MSG_TYPE__USER_ENTERED_ROOM: 'user entered room',
   WS__MSG_TYPE__USER_JOINED: 'user joined',
   WS__MSG_TYPE__USER_LEFT_ROOM: 'user left room',

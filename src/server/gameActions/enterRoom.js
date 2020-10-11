@@ -1,6 +1,8 @@
 module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
   const {
+    DISCONNECT_TIMEOUT,
     WS__MSG_TYPE__ROOM_DESTROYED,
+    WS__MSG_TYPE__USER_DISCONNECTED,
     WS__MSG_TYPE__USER_ENTERED_ROOM,
     WS__MSG_TYPE__USER_LEFT_ROOM,
   } = require('../../constants');
@@ -19,6 +21,10 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
   
         if (user) {
           user.connected = false;
+
+          serverSocket.emitToOthersInRoom(roomID, WS__MSG_TYPE__USER_DISCONNECTED, {
+            room: room.data,
+          });
   
           // if a User refreshed their Browser, `connected` will be set back to
           // `true` fairly quickly. The timeout value is a guesstimate based on a
@@ -67,7 +73,7 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
                 });
               }
             }
-          }, 1000);
+          }, DISCONNECT_TIMEOUT);
         }
       });
   
@@ -85,8 +91,8 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
           }
         }
       }
-  
-      serverSocket.emitToSelf(WS__MSG_TYPE__USER_ENTERED_ROOM, {
+      
+      serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__USER_ENTERED_ROOM, {
         room: room.data,
         username,
       });
