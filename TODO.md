@@ -21,7 +21,7 @@
      three.
 - [ ] Ability for MC to remove a User
 - [x] Remove `/game` in path to have less for Mobile users to type
-- [ ] Switch from SocketIO to just WebSocket
+- [x] Switch from `socket.io` to just WebSocket
    - https://github.com/websockets/ws
    - https://www.pubnub.com/blog/nodejs-websocket-programming-examples/
    - https://devcenter.heroku.com/articles/node-websockets
@@ -46,7 +46,9 @@
      what's possibly happening. 
    - [ ] Phone going to sleep, causes a User to be removed from room.
    - [ ] User bumped from room during idle
-
+- [ ] On Desktop (maybe Mobile), when you shrink the viewport vertically (while there
+  are cards to be chosen for an answer), the cards sometimes overflow from the
+  top or bottom.
 
 ## Flow
 

@@ -1,8 +1,7 @@
-const getUser = (roomID, username) => {
-  const { rooms } = require('../socket/store');
+const getUser = (room, username) => {
   
-  if (rooms[roomID]) {
-    const { users } = rooms[roomID];
+  if (room) {
+    const { users } = room.data;
     return users.filter(({ name }) => name === username)[0];
   }
 };

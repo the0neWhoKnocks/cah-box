@@ -1,11 +1,11 @@
-module.exports = () => function submitCards({
+module.exports = (serverSocket) => function submitCards({
   roomID,
   username,
 }) {
-  const { WS_MSG__CARDS_SUBMITTED } = require('../../constants');
-  const { io, rooms } = require('../socket/store');
+  const { WS__MSG_TYPE__CARDS_SUBMITTED } = require('../../constants');
+  const room = serverSocket.getRoom(roomID);
   const shuffleArray = require('../utils/shuffleArray');
-  const { cards: { dead }, users } = rooms[roomID];
+  const { cards: { dead }, submittedCards, users } = room.data;
 
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
@@ -21,16 +21,16 @@ module.exports = () => function submitCards({
         return !cardSelected;
       });
       // add cards
-      rooms[roomID].submittedCards.push({ cards: selectedCards, username });
+      submittedCards.push({ cards: selectedCards, username });
     }
   }
   
   // shuffle answers once all Users have submitted
-  if (rooms[roomID].submittedCards.length === (users.length - 1)) {
-    rooms[roomID].submittedCards = shuffleArray(rooms[roomID].submittedCards);
+  if (submittedCards.length === (users.length - 1)) {
+    room.data.submittedCards = shuffleArray(submittedCards);
   }
   
-  io.sockets.in(roomID).emit(WS_MSG__CARDS_SUBMITTED, {
-    room: rooms[roomID],
+  serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__CARDS_SUBMITTED, {
+    room: room.data,
   });
 }

@@ -1,7 +1,5 @@
-const assignNextCzar = (roomID, userLeftRoom) => {
-  const { rooms } = require('../socket/store');
-  const room = rooms[roomID];
-  const { users } = room;
+const assignNextCzar = (room, userLeftRoom) => {
+  const { users } = room.data;
   
   for (let i = 0; i < users.length; i++) {
     const user = users[i];

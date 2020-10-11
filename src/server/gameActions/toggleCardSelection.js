@@ -1,10 +1,10 @@
-module.exports = (socket) => function toggleCardSelection({ ndx, roomID, username }) {
-  const { WS_MSG__CARD_SELECTION_TOGGLED } = require('../../constants');
-  const { rooms } = require('../socket/store');
-  const { requiredWhiteCardsCount, users } = rooms[roomID];
+module.exports = (serverSocket) => function toggleCardSelection({ ndx, roomID, username }) {
+  const { WS__MSG_TYPE__CARD_SELECTION_TOGGLED } = require('../../constants');
+  const room = serverSocket.getRoom(roomID);
+  const { requiredWhiteCardsCount, users } = room.data;
   
   for (let i = 0; i < users.length; i++) {
-    const user = rooms[roomID].users[i];
+    const user = users[i];
 
     if (user.name === username) {
       const card = user.cards[ndx];
@@ -21,7 +21,7 @@ module.exports = (socket) => function toggleCardSelection({ ndx, roomID, usernam
     }
   }
 
-  socket.emit(WS_MSG__CARD_SELECTION_TOGGLED, {
-    room: rooms[roomID],
+  serverSocket.emitToSelf(WS__MSG_TYPE__CARD_SELECTION_TOGGLED, {
+    room: room.data,
   });
 }

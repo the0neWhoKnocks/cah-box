@@ -1,15 +1,14 @@
-module.exports = () => function setAnswerReviewState({
+module.exports = (serverSocket) => function setAnswerReviewState({
   answer = [],
   roomID,
   state,
   username,
 }) {
-  const { WS_MSG__ANSWER_REVIEW_STATE_UPDATED } = require('../../constants');
-  const { io, rooms } = require('../socket/store');
-  const room = rooms[roomID];
-  const { users } = room;
+  const { WS__MSG_TYPE__ANSWER_REVIEW_STATE_UPDATED } = require('../../constants');
+  const room = serverSocket.getRoom(roomID);
+  const { users } = room.data;
 
-  room.blackCardAnswer = answer;
+  room.data.blackCardAnswer = answer;
   
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
@@ -20,5 +19,7 @@ module.exports = () => function setAnswerReviewState({
     }
   }
 
-  io.sockets.in(roomID).emit(WS_MSG__ANSWER_REVIEW_STATE_UPDATED, { room });
+  serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__ANSWER_REVIEW_STATE_UPDATED, {
+    room: room.data,
+  });
 }

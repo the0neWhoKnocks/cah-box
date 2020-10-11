@@ -28,15 +28,21 @@ const { server } = polka()
     console.log(`Server running at: http://localhost:${PORT}`);
   });
 
-socket(server);
+const serverSocket = socket(server);
 
 function handleServerDeath(signal) {
-  const { WS_MSG__SERVER_DOWN } = require('../constants');
-  const { io } = require('./socket/store');
-  
+  const { WS__MSG_TYPE__SERVER_DOWN } = require('../constants');
+
   console.log(`\n[${signal}] Server closing`);
   
-  if (io) io.sockets.emit(WS_MSG__SERVER_DOWN);
+  // NOTE - I've seen this NOT work if there are some zombie WS processes
+  // floating around from a previous bad run. So try killing all `node`
+  // instances and see if things work after.
+  // NOTE - This also only works when the WS isn't being proxied via BrowserSync
+  // while in development. So if you go to the non-proxied port, things will
+  // behave as expected.
+  serverSocket.emitToAll(WS__MSG_TYPE__SERVER_DOWN);
+  serverSocket.serverInstance.close();
   
   server.close(() => {
     console.log(`[${signal}] Server closed`);

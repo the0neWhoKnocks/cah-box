@@ -1,10 +1,8 @@
-function resetGameRound(roomID) {
-  const { rooms } = require('../socket/store');
-  const room = rooms[roomID];
-  const { users } = room;
+function resetGameRound(room) {
+  const { users } = room.data;
 
-  room.blackCardAnswer = [];
-  room.submittedCards = [];
+  room.data.blackCardAnswer = [];
+  room.data.submittedCards = [];
 
   for (let i = 0; i < users.length; i++) {
     const user = users[i];

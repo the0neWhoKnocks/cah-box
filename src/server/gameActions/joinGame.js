@@ -1,10 +1,9 @@
-module.exports = (socket) => function joinGame({ roomID, username }) {
-  const { WS_MSG__USER_JOINED } = require('../../constants');
-  const { io, rooms } = require('../socket/store');
+module.exports = (serverSocket) => function joinGame({ roomID, username }) {
+  const { WS__MSG_TYPE__USER_JOINED } = require('../../constants');
   const getUser = require('../utils/getUser');
-  const room = rooms[roomID];
-  const { users } = room;
-  let user = getUser(roomID, username);
+  const room = serverSocket.getRoom(roomID);
+  const { users } = room.data;
+  let user = getUser(room, username);
 
   if (!user) {
     user = {
@@ -24,8 +23,11 @@ module.exports = (socket) => function joinGame({ roomID, username }) {
 
     users.push(user);
 
-    socket.user = user;
+    serverSocket.data.user = user;
   }
 
-  io.sockets.in(roomID).emit(WS_MSG__USER_JOINED, { room, username });
+  serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__USER_JOINED, {
+    room: room.data,
+    username,
+  });
 }

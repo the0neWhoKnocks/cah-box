@@ -280,25 +280,25 @@
   import {
     ERROR_CODE__NAME_TAKEN,
     ERROR_CODE__ROOM_DOES_NOT_EXIST,
-    WS_MSG__ANSWER_REVIEW_STATE_UPDATED,
-    WS_MSG__CARD_SELECTION_TOGGLED,
-    WS_MSG__CARDS_DEALT,
-    WS_MSG__CARDS_SUBMITTED,
-    WS_MSG__CHECK_USERNAME,
-    WS_MSG__CHOSE_ANSWER,
-    WS_MSG__DEAL_CARDS,
-    WS_MSG__USER_ENTERED_ROOM,
-    WS_MSG__JOIN_GAME,
-    WS_MSG__ROOM_DESTROYED,
-    WS_MSG__SERVER_DOWN,
-    WS_MSG__SET_ADMIN,
-    WS_MSG__SET_ANSWER_REVIEW_STATE,
-    WS_MSG__SET_CZAR,
-    WS_MSG__SUBMIT_CARDS,
-    WS_MSG__TOGGLE_CARD_SELECTION,
-    WS_MSG__USER_JOINED,
-    WS_MSG__USER_LEFT_ROOM,
-    WS_MSG__USER_UPDATE,
+    WS__MSG_TYPE__ANSWER_REVIEW_STATE_UPDATED,
+    WS__MSG_TYPE__CARD_SELECTION_TOGGLED,
+    WS__MSG_TYPE__CARDS_DEALT,
+    WS__MSG_TYPE__CARDS_SUBMITTED,
+    WS__MSG_TYPE__CHECK_USERNAME,
+    WS__MSG_TYPE__CHOSE_ANSWER,
+    WS__MSG_TYPE__DEAL_CARDS,
+    WS__MSG_TYPE__USER_ENTERED_ROOM,
+    WS__MSG_TYPE__JOIN_GAME,
+    WS__MSG_TYPE__ROOM_DESTROYED,
+    WS__MSG_TYPE__SERVER_DOWN,
+    WS__MSG_TYPE__SET_ADMIN,
+    WS__MSG_TYPE__SET_ANSWER_REVIEW_STATE,
+    WS__MSG_TYPE__SET_CZAR,
+    WS__MSG_TYPE__SUBMIT_CARDS,
+    WS__MSG_TYPE__TOGGLE_CARD_SELECTION,
+    WS__MSG_TYPE__USER_JOINED,
+    WS__MSG_TYPE__USER_LEFT_ROOM,
+    WS__MSG_TYPE__USER_UPDATE,
   } from '../../../constants';
   import { title, titleSuffix } from '../../store';
   import Card from '../../components/Card.svelte';
@@ -323,7 +323,6 @@
   let czarSelected = false;
   let localUser = {};
   let minimumNumberOfPlayersJoined = false;
-  let mounted = false;
   let room;
   let showAdminInstructions = false;
   let showUserCards = false;
@@ -341,7 +340,7 @@
   function handleJoinSubmit(ev) {
     ev.preventDefault();
 
-    window.socket.emit(WS_MSG__CHECK_USERNAME, {
+    window.clientSocket.emit(WS__MSG_TYPE__CHECK_USERNAME, {
       roomID,
       username: usernameInputRef.value,
     });
@@ -374,7 +373,6 @@
       }
 
       if (action === ACTION__USER_ENTERED_ROOM) {
-        mounted = true;
         updateTurnProps();
       }
       else if (action === ACTION__USER_LEFT_ROOM) {
@@ -398,7 +396,7 @@
         && room.submittedCards.length === (users.length - 1)
         && !localUser.reviewingAnswers
       ) {
-        window.socket.emit(WS_MSG__SET_ANSWER_REVIEW_STATE, {
+        window.clientSocket.emit(WS__MSG_TYPE__SET_ANSWER_REVIEW_STATE, {
           roomID,
           state: { reviewingAnswers: true },
           username: localUser.name,
@@ -437,7 +435,7 @@
 
         case ACTION__USER_JOINED: {
           if (room && room.blackCard) {
-            window.socket.emit(WS_MSG__DEAL_CARDS, { roomID });
+            window.clientSocket.emit(WS__MSG_TYPE__DEAL_CARDS, { roomID });
 
             if (localUser.reviewingAnswers) resetAnswersReview();
           }
@@ -462,7 +460,7 @@
     }
     else {
       localUser.name = username;
-      window.socket.emit(WS_MSG__JOIN_GAME, { roomID, username });
+      window.clientSocket.emit(WS__MSG_TYPE__JOIN_GAME, { roomID, username });
       window.sessionStorage.setItem(roomID, JSON.stringify({ username }));
     }
   }
@@ -488,22 +486,22 @@
   }
 
   function chooseAnswer() {
-    window.socket.emit(WS_MSG__CHOSE_ANSWER, { roomID });
+    window.clientSocket.emit(WS__MSG_TYPE__CHOSE_ANSWER, { roomID });
     resetAnswersReview();
   }
 
   function setCzar() {
-    window.socket.emit(WS_MSG__SET_CZAR, {
+    window.clientSocket.emit(WS__MSG_TYPE__SET_CZAR, {
       roomID,
       username: userData.name,
     });
     closeUserDataMenu();
     
-    window.socket.emit(WS_MSG__DEAL_CARDS, { newRound: true, roomID });
+    window.clientSocket.emit(WS__MSG_TYPE__DEAL_CARDS, { newRound: true, roomID });
   }
 
   function setAdmin() {
-    window.socket.emit(WS_MSG__SET_ADMIN, {
+    window.clientSocket.emit(WS__MSG_TYPE__SET_ADMIN, {
       roomID,
       username: userData.name,
     });
@@ -511,7 +509,7 @@
   }
 
   function handleCardSelectionToggle(ndx) {
-    window.socket.emit(WS_MSG__TOGGLE_CARD_SELECTION, {
+    window.clientSocket.emit(WS__MSG_TYPE__TOGGLE_CARD_SELECTION, {
       ndx,
       roomID,
       username: localUser.name,
@@ -519,14 +517,14 @@
   }
 
   function handleSubmitCards() {
-    window.socket.emit(WS_MSG__SUBMIT_CARDS, {
+    window.clientSocket.emit(WS__MSG_TYPE__SUBMIT_CARDS, {
       roomID,
       username: localUser.name,
     });
   }
 
   function resetAnswersReview() {
-    window.socket.emit(WS_MSG__SET_ANSWER_REVIEW_STATE, {
+    window.clientSocket.emit(WS__MSG_TYPE__SET_ANSWER_REVIEW_STATE, {
       roomID,
       state: {
         reviewNdx: 0,
@@ -539,7 +537,7 @@
 
   function reviewPreviousAnswer() {
     const reviewNdx = localUser.reviewNdx - 1;
-    window.socket.emit(WS_MSG__SET_ANSWER_REVIEW_STATE, {
+    window.clientSocket.emit(WS__MSG_TYPE__SET_ANSWER_REVIEW_STATE, {
       answer: room.submittedCards[reviewNdx],
       roomID,
       state: { reviewNdx },
@@ -549,7 +547,7 @@
 
   function reviewNextAnswer() {
     const reviewNdx = localUser.reviewNdx + 1;
-    window.socket.emit(WS_MSG__SET_ANSWER_REVIEW_STATE, {
+    window.clientSocket.emit(WS__MSG_TYPE__SET_ANSWER_REVIEW_STATE, {
       answer: room.submittedCards[reviewNdx],
       roomID,
       state: { reviewNdx },
@@ -558,7 +556,7 @@
   }
 
   function startedReviewingAnswers() {
-    window.socket.emit(WS_MSG__SET_ANSWER_REVIEW_STATE, {
+    window.clientSocket.emit(WS__MSG_TYPE__SET_ANSWER_REVIEW_STATE, {
       answer: room.submittedCards[localUser.reviewNdx],
       roomID,
       state: { startedReviewingAnswers: true },
@@ -567,7 +565,7 @@
   }
 
   function handleServerDisconnect() {
-    window.socket.disconnect();
+    window.clientSocket.disconnect();
     socketConnected = false;
   }
 
@@ -588,19 +586,19 @@
       socketConnectedAtLeastOnce = true;
       socketConnected = true;
 
-      window.socket.on(WS_MSG__ANSWER_REVIEW_STATE_UPDATED, updateGameState(ACTION__ANSWER_REVIEW_STATE_UPDATED));
-      window.socket.on(WS_MSG__CARD_SELECTION_TOGGLED, updateGameState(ACTION__CARD_SELECTION_TOGGLED));
-      window.socket.on(WS_MSG__CARDS_DEALT, updateGameState(ACTION__CARDS_DEALT));
-      window.socket.on(WS_MSG__CARDS_SUBMITTED, updateGameState(ACTION__CARDS_SUBMITTED));
-      window.socket.on(WS_MSG__CHECK_USERNAME, handleUsernameCheck);
-      window.socket.on(WS_MSG__ROOM_DESTROYED, handleRoomDestruction);
-      window.socket.on(WS_MSG__SERVER_DOWN, handleServerDisconnect);
-      window.socket.on(WS_MSG__USER_ENTERED_ROOM, updateGameState(ACTION__USER_ENTERED_ROOM));
-      window.socket.on(WS_MSG__USER_JOINED, updateGameState(ACTION__USER_JOINED));
-      window.socket.on(WS_MSG__USER_LEFT_ROOM, updateGameState(ACTION__USER_LEFT_ROOM));
-      window.socket.on(WS_MSG__USER_UPDATE, updateGameState(ACTION__USER_UPDATE));
+      window.clientSocket.on(WS__MSG_TYPE__ANSWER_REVIEW_STATE_UPDATED, updateGameState(ACTION__ANSWER_REVIEW_STATE_UPDATED));
+      window.clientSocket.on(WS__MSG_TYPE__CARD_SELECTION_TOGGLED, updateGameState(ACTION__CARD_SELECTION_TOGGLED));
+      window.clientSocket.on(WS__MSG_TYPE__CARDS_DEALT, updateGameState(ACTION__CARDS_DEALT));
+      window.clientSocket.on(WS__MSG_TYPE__CARDS_SUBMITTED, updateGameState(ACTION__CARDS_SUBMITTED));
+      window.clientSocket.on(WS__MSG_TYPE__CHECK_USERNAME, handleUsernameCheck);
+      window.clientSocket.on(WS__MSG_TYPE__ROOM_DESTROYED, handleRoomDestruction);
+      window.clientSocket.on(WS__MSG_TYPE__SERVER_DOWN, handleServerDisconnect);
+      window.clientSocket.on(WS__MSG_TYPE__USER_ENTERED_ROOM, updateGameState(ACTION__USER_ENTERED_ROOM));
+      window.clientSocket.on(WS__MSG_TYPE__USER_JOINED, updateGameState(ACTION__USER_JOINED));
+      window.clientSocket.on(WS__MSG_TYPE__USER_LEFT_ROOM, updateGameState(ACTION__USER_LEFT_ROOM));
+      window.clientSocket.on(WS__MSG_TYPE__USER_UPDATE, updateGameState(ACTION__USER_UPDATE));
 
-      window.socket.emit(WS_MSG__USER_ENTERED_ROOM, { roomID, username });
+      window.clientSocket.emit(WS__MSG_TYPE__USER_ENTERED_ROOM, { roomID, username });
 
       window.Notification.requestPermission();
     });
@@ -608,7 +606,7 @@
 </script>
 
 <div class="wrapper">
-  {#if mounted && socketConnected}
+  {#if socketConnected}
     {#if room}
       <div
         class="users-ui"

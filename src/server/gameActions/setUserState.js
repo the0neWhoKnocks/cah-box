@@ -1,14 +1,14 @@
-module.exports = (socket, prop) => function setUserState({ roomID, username }) {
-  const { WS_MSG__USER_UPDATE } = require('../../constants');
-  const { io, rooms } = require('../socket/store');
+module.exports = (serverSocket) => function setUserState({ roomID, username }, prop) {
+  const { WS__MSG_TYPE__USER_UPDATE } = require('../../constants');
+  const room = serverSocket.getRoom(roomID);
 
-  for (let i = 0; i < rooms[roomID].users.length; i++) {
-    const user = rooms[roomID].users[i];
+  for (let i = 0; i < room.data.users.length; i++) {
+    const user = room.data.users[i];
 
     user[prop] = user.name === username;
   }
   
-  io.sockets.in(roomID).emit(WS_MSG__USER_UPDATE, {
-    room: rooms[roomID],
+  serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__USER_UPDATE, {
+    room: room.data,
   });
 }
