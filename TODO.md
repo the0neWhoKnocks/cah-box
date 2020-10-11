@@ -46,9 +46,12 @@
      what's possibly happening. 
    - [ ] Phone going to sleep, causes a User to be removed from room.
    - [ ] User bumped from room during idle
-- [ ] On Desktop (maybe Mobile), when you shrink the viewport vertically (while there
+- [x] On Desktop (maybe Mobile), when you shrink the viewport vertically (while there
   are cards to be chosen for an answer), the cards sometimes overflow from the
   top or bottom.
+- [ ] If Users have submitted their cards and the Czar leaves, the Czar gets
+  assigned to someone that had submitted a card. Instead the round should be
+  reset and those cards thrown out.
 
 ## Flow
 
