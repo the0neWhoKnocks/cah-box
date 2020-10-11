@@ -55,8 +55,8 @@
   import getGaps from '../../utils/getGaps';
   import randomNumber from '../utils/randomNumber';
 
-  export let answer;
-  export let onClick;
+  export let answer = undefined;
+  export let onClick = undefined;
   export let rotate = false;
   export let selected = false;
   export let text = '';
