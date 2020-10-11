@@ -36,7 +36,7 @@
   let className = '';
   let modalRef;
 
-  export let focusRef;
+  export let focusRef = undefined;
   export { className as class };
 
   $: if (focusRef) {
