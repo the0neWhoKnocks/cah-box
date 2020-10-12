@@ -14,7 +14,7 @@
   }
 
   .users-ui {
-    width: 130px;
+    width: 200px;
     background: #fff;
     flex-shrink: 0;
     position: relative;
@@ -304,10 +304,6 @@
     }
   }
   @media (min-width: 850px) {
-    .users-ui {
-      width: 200px;
-    }
-
     .cards .answers {
       display: flex;
       justify-content: center;
