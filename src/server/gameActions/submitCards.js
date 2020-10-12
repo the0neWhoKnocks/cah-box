@@ -5,7 +5,10 @@ module.exports = (serverSocket) => function submitCards({
   const { WS__MSG_TYPE__CARDS_SUBMITTED } = require('../../constants');
   const room = serverSocket.getRoom(roomID);
   const shuffleArray = require('../utils/shuffleArray');
-  const { cards: { dead }, submittedCards, users } = room.data;
+  const {
+    private: { cards: { dead } },
+    public: { submittedCards, users },
+  } = room.data;
 
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
@@ -27,10 +30,10 @@ module.exports = (serverSocket) => function submitCards({
   
   // shuffle answers once all Users have submitted
   if (submittedCards.length === (users.length - 1)) {
-    room.data.submittedCards = shuffleArray(submittedCards);
+    room.data.public.submittedCards = shuffleArray(submittedCards);
   }
   
   serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__CARDS_SUBMITTED, {
-    room: room.data,
+    room: room.data.public,
   });
 }

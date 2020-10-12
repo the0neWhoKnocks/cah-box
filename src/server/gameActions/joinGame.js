@@ -2,7 +2,7 @@ module.exports = (serverSocket) => function joinGame({ roomID, username }) {
   const { WS__MSG_TYPE__USER_JOINED } = require('../../constants');
   const getUser = require('../utils/getUser');
   const room = serverSocket.getRoom(roomID);
-  const { users } = room.data;
+  const { public: { users } } = room.data;
   let user = getUser(room, username);
 
   if (!user) {
@@ -27,7 +27,7 @@ module.exports = (serverSocket) => function joinGame({ roomID, username }) {
   }
 
   serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__USER_JOINED, {
-    room: room.data,
+    room: room.data.public,
     username,
   });
 }

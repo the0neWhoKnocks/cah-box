@@ -11,8 +11,8 @@ module.exports = (serverSocket) => function checkUsername({
   const room = serverSocket.getRoom(roomID);
 
   if (room) {
-    for (let i = 0; i<room.data.users.length; i++) {
-      if (room.data.users[i].name === username) {
+    for (let i = 0; i<room.data.public.users.length; i++) {
+      if (room.data.public.users[i].name === username) {
         payload.error = {
           code: ERROR_CODE__NAME_TAKEN,
           msg: 'Username exists',

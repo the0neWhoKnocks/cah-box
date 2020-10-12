@@ -16,16 +16,20 @@ module.exports = (serverSocket) => function createGame() {
   }
 
   serverSocket.createRoom(roomID, {
-    blackCardAnswer: [],
-    cards: {
-      dead: { black: [], white: [] },
-      live: {
-        black: shuffleArray(blackCards),
-        white: shuffleArray(whiteCards),
+    private: {
+      cards: {
+        dead: { black: [], white: [] },
+        live: {
+          black: shuffleArray(blackCards),
+          white: shuffleArray(whiteCards),
+        },
       },
     },
-    submittedCards: [],
-    users: [],
+    public: {
+      blackCardAnswer: [],
+      submittedCards: [],
+      users: [],
+    },
   });
 
   serverSocket.emitToSelf(WS__MSG_TYPE__CREATE_GAME, { roomID });

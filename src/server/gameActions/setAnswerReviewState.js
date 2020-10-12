@@ -6,9 +6,9 @@ module.exports = (serverSocket) => function setAnswerReviewState({
 }) {
   const { WS__MSG_TYPE__ANSWER_REVIEW_STATE_UPDATED } = require('../../constants');
   const room = serverSocket.getRoom(roomID);
-  const { users } = room.data;
+  const { public: { users } } = room.data;
 
-  room.data.blackCardAnswer = answer;
+  room.data.public.blackCardAnswer = answer;
   
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
@@ -20,6 +20,6 @@ module.exports = (serverSocket) => function setAnswerReviewState({
   }
 
   serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__ANSWER_REVIEW_STATE_UPDATED, {
-    room: room.data,
+    room: room.data.public,
   });
 }

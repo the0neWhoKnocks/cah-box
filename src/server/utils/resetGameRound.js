@@ -1,8 +1,8 @@
 function resetGameRound(room) {
-  const { users } = room.data;
+  const { public: { users } } = room.data;
 
-  room.data.blackCardAnswer = [];
-  room.data.submittedCards = [];
+  room.data.public.blackCardAnswer = [];
+  room.data.public.submittedCards = [];
 
   for (let i = 0; i < users.length; i++) {
     const user = users[i];

@@ -27,7 +27,7 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
           user.connected = false;
 
           serverSocket.emitToOthersInRoom(roomID, WS__MSG_TYPE__USER_DISCONNECTED, {
-            room: room.data,
+            room: room.data.public,
           });
   
           // if a User refreshed their Browser, `connected` will be set back to
@@ -37,7 +37,7 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
             delete user.disconnectCheck;
 
             if (!user.connected) {
-              const { cards: { live } } = room.data;
+              const { private: { cards: { live } } } = room.data;
               const { admin, cards, czar } = user;
               
               // user is Admin, assign next admin
@@ -50,10 +50,10 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
               }
               
               // remove the User
-              room.data.users = room.data.users.filter(({ name }) => name !== user.name);
+              room.data.public.users = room.data.public.users.filter(({ name }) => name !== user.name);
   
               // if all Users have left, kill the room
-              if (!room.data.users.length) {
+              if (!room.data.public.users.length) {
                 console.log(`All Users have left, killing room "${roomID}"`);
   
                 // it's possible that a User is in the process of joining when
@@ -68,14 +68,14 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
                 cards.forEach(({ text }) => { live.white.push(text); });
   
                 // if there aren't enough players, put game back into a waiting state
-                if (room.data.users.length === 1) {
-                  room.data.users[0].czar = false;
-                  room.data.users[0].points = 0;
+                if (room.data.public.users.length === 1) {
+                  room.data.public.users[0].czar = false;
+                  room.data.public.users[0].points = 0;
                   resetGameRound(room);
                 }
   
                 serverSocket.emitToOthersInRoom(roomID, WS__MSG_TYPE__USER_LEFT_ROOM, {
-                  room: room.data,
+                  room: room.data.public,
                 });
               }
             }
@@ -103,7 +103,7 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
       }
 
       serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__USER_ENTERED_ROOM, {
-        room: room.data,
+        room: room.data.public,
         username,
       });
     }
