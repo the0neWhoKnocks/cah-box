@@ -1,4 +1,5 @@
 const { resolve } = require('path');
+const webpack = require('webpack');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -80,6 +81,9 @@ module.exports = {
         '!vendor',
         '!vendor/**/*',
       ],
+    }),
+    new webpack.DefinePlugin({
+      'process.env.WP_BUNDLE': JSON.stringify(true),
     }),
     new MiniCssExtractPlugin({
       filename: `[name]_[chunkhash:${HASH_LENGTH}].css`,

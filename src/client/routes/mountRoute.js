@@ -1,4 +1,7 @@
 import { DOM__SVELTE_MOUNT_POINT } from '../../constants';
+import logger from '../../utils/logger';
+
+const log = logger('routes:mountRoute');
 
 window.socketConnected = new Promise((resolve) => {
   const socket = new WebSocket(location.origin.replace(/^https?/, 'ws'));
@@ -20,14 +23,14 @@ window.socketConnected = new Promise((resolve) => {
   socket.onopen = function onWSOpen() {
     socket.onmessage = function onWSMsg({ data: msgData }) {
       const { data, type } = JSON.parse(msgData);
-      console.log(`Message from Server: "${type}"`, data);
+      log(`Message from Server: "${type}"`, data);
       
       if (window.clientSocket.listeners[type]) {
         window.clientSocket.listeners[type].forEach(cb => { cb(data); });
       }
     };
     
-    console.log('Client Socket connected to Server');
+    log('Client Socket connected to Server');
 
     resolve();
   };
