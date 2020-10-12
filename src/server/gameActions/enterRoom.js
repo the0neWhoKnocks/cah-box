@@ -1,3 +1,5 @@
+const log = require('../../utils/logger')('gameAction:enterRoom');
+
 const disconnectChecksForRoom = new Map();
 
 const disconnectKey = (roomID, username) => `${roomID}__${username}`;
@@ -19,11 +21,10 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
   serverSocket.joinRoom(roomID, (room) => {
     if (room) {
       serverSocket.socket.on('close', () => {
-        console.log('Client disconnected');
-  
         const { user } = serverSocket.data;
-  
+        
         if (user) {
+          log(`User "${user.name}" disconnected`);
           user.connected = false;
 
           serverSocket.emitToOthersInRoom(roomID, WS__MSG_TYPE__USER_DISCONNECTED, {
@@ -54,7 +55,7 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
   
               // if all Users have left, kill the room
               if (!room.data.public.users.length) {
-                console.log(`All Users have left, killing room "${roomID}"`);
+                log(`All Users have left, killing room "${roomID}"`);
   
                 // it's possible that a User is in the process of joining when
                 // the Admin left the room, so lets tell them that the room no
@@ -73,6 +74,8 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
                   room.data.public.users[0].points = 0;
                   resetGameRound(room);
                 }
+
+                log(`User "${user.name}" left room "${roomID}"`);
   
                 serverSocket.emitToOthersInRoom(roomID, WS__MSG_TYPE__USER_LEFT_ROOM, {
                   room: room.data.public,
@@ -87,7 +90,7 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
         }
       });
   
-      // game is running, and User refreshed Browser
+      // game is running, and User re-connected
       if (username) {
         serverSocket.data.user = getUser(room, username);
         const { user } = serverSocket.data;
@@ -100,6 +103,8 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
           clearTimeout(disconnectCheck);
           disconnectChecksForRoom.delete(dKey);
         }
+
+        log(`User "${user.name}" reconnected`);
       }
 
       serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__USER_ENTERED_ROOM, {
@@ -108,6 +113,7 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
       });
     }
     else {
+      log(`Room "${roomID}" doesn't exist`);
       serverSocket.emitToSelf(WS__MSG_TYPE__ROOM_DESTROYED);
     }
   });
