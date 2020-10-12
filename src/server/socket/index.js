@@ -1,4 +1,5 @@
 const { OPEN, Server } = require('ws');
+const log = require('../../utils/logger')('socket');
 const rooms = new Map();
 
 // NOTE - wrapping API in case I need to refactor again in the future
@@ -22,7 +23,7 @@ class ServerSocket {
 
   deleteRoom(roomID) {
     rooms.delete(roomID);
-    console.log(`Room "${roomID}" deleted`);
+    log(`Room "${roomID}" deleted`);
   }
 
   emitToAll(type, data = {}) {
@@ -84,7 +85,7 @@ module.exports = function socket(server) {
   const connectionHandlers = require('./connectionHandlers');
 
   wss.on('connection', function connected(currentUserSocket) {
-    console.log('Server Socket connected to Client');
+    log('Server Socket connected to Client');
     connectionHandlers(currentUserSocket, new ServerSocket(currentUserSocket, wss));
   });
 

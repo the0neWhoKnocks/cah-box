@@ -15,8 +15,10 @@
   "dependencies": {
     "bufferutil": "^4.0.1",
     "compression": "^1.7.1",
+    "debug": "^4.2.0",
     "polka": "^1.0.0-next.11",
     "sirv": "^0.4.0",
+    "supports-color": "^7.2.0",
     "utf-8-validate": "^5.0.2",
     "ws": "^7.3.1"
   },

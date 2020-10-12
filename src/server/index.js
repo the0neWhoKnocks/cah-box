@@ -2,6 +2,7 @@ const compression = require('compression');
 const polka = require('polka');
 const sirv = require('sirv');
 const { SERVER__PORT } = require('../constants');
+const log = require('../utils/logger')('server');
 const socket = require('./socket');
 const shell = require('./shell');
 
@@ -24,8 +25,8 @@ const { server } = polka()
     res.end(shell({ page: 'home' }));
   })
   .listen(PORT, err => {
-    if (err) console.log('error', err);
-    console.log(`Server running at: http://localhost:${PORT}`);
+    if (err) log('Error', err);
+    log(`Server running at: http://localhost:${PORT}`);
   });
 
 const serverSocket = socket(server);
@@ -33,7 +34,7 @@ const serverSocket = socket(server);
 function handleServerDeath(signal) {
   const { WS__MSG_TYPE__SERVER_DOWN } = require('../constants');
 
-  console.log(`\n[${signal}] Server closing`);
+  log(`\n[${signal}] Server closing`);
   
   // NOTE - I've seen this NOT work if there are some zombie WS processes
   // floating around from a previous bad run. So try killing all `node`
@@ -45,7 +46,7 @@ function handleServerDeath(signal) {
   serverSocket.serverInstance.close();
   
   server.close(() => {
-    console.log(`[${signal}] Server closed`);
+    log(`[${signal}] Server closed`);
     process.exit(0);
   });
 }

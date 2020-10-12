@@ -1,3 +1,5 @@
+const log = require('../../utils/logger')('socket:connectionHandlers');
+
 module.exports = function connection(socket, serverSocket) {
   const {
     WS__MSG_TYPE__CHECK_USERNAME,
@@ -25,7 +27,7 @@ module.exports = function connection(socket, serverSocket) {
   
   socket.on('message', (payload) => {
     const { data, type } = JSON.parse(payload);
-    console.log(`[SERVER_SOCKET] Received ${payload}`);
+    log(`Received ${payload}`);
     
     switch (type) {
       case WS__MSG_TYPE__CHECK_USERNAME: checkUsername(data); break;
@@ -40,7 +42,7 @@ module.exports = function connection(socket, serverSocket) {
       case WS__MSG_TYPE__SUBMIT_CARDS: submitCards(data); break;
       case WS__MSG_TYPE__TOGGLE_CARD_SELECTION: toggleCardSelection(data); break;
       default: {
-        console.log(`[WARN] Message type "${type}" is not valid, no action taken data:`, data);
+        log(`[WARN] Message type "${type}" is not valid, no action taken data:`, data);
       }
     }
   });
