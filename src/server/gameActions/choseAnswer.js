@@ -2,7 +2,16 @@ module.exports = (serverSocket) => function choseAnswer({ roomID }) {
   const assignNextCzar = require('../utils/assignNextCzar');
   const dealCards = require('./dealCards');
   const room = serverSocket.getRoom(roomID);
-  const { blackCard, cards: { dead }, submittedCards, users } = room.data;
+  const {
+    private: {
+      cards: { dead },
+    },
+    public: {
+      blackCard,
+      submittedCards,
+      users,
+    },
+  } = room.data;
   let answer;
 
   dead.black.push(blackCard);

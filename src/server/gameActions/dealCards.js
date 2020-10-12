@@ -9,7 +9,10 @@ module.exports = (serverSocket) => function dealCards({ newRound, roomID }) {
   const { WS__MSG_TYPE__CARDS_DEALT } = require('../../constants');
   const resetGameRound = require('../utils/resetGameRound');
   const room = serverSocket.getRoom(roomID);
-  const { cards, users } = room.data;
+  const {
+    private: { cards },
+    public: { users },
+  } = room.data;
   const { live } = cards;
   const MAX_CARDS = 10;
   
@@ -17,8 +20,8 @@ module.exports = (serverSocket) => function dealCards({ newRound, roomID }) {
     resetGameRound(room);
 
     const blackCard = live.black.shift();
-    room.data.blackCard = blackCard;
-    room.data.requiredWhiteCardsCount = getRequiredCount(blackCard);
+    room.data.public.blackCard = blackCard;
+    room.data.public.requiredWhiteCardsCount = getRequiredCount(blackCard);
   }
   
   // ensure all users have the required number of cards
@@ -46,6 +49,6 @@ module.exports = (serverSocket) => function dealCards({ newRound, roomID }) {
   }
 
   serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__CARDS_DEALT, {
-    room: room.data,
+    room: room.data.public,
   });
 }

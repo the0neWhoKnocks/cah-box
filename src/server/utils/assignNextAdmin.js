@@ -1,5 +1,5 @@
 const assignNextAdmin = (room) => {
-  const { users } = room.data;
+  const { public: { users } } = room.data;
   
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
