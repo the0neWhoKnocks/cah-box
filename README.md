@@ -12,6 +12,14 @@ https://cahbox.herokuapp.com/
 1. Install `npm i`
 1. Run `npm run dev`
 
+### Logging
+
+The App utilizes [debug](https://www.npmjs.com/package/debug) and Server logs
+are always enabled, but Client logs are only enabled in Development and if
+`verbose` logs are enabled (the latter is a quirk of `debug` not my choosing).
+When on the Client I tend to just filter by `cahbox` since the `verbose` logs
+can be noisy.
+
 ---
 
 ## Deploy to Heroku
