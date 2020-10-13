@@ -681,6 +681,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>{`${$title}${($title && $titleSuffix) ? ' | ' : ''}${$titleSuffix ? $titleSuffix : ''}`}</title>
+</svelte:head>
+
 <div class="wrapper">
   {#if socketConnected}
     {#if room}
