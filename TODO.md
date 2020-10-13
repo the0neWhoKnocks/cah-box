@@ -26,7 +26,7 @@
    - https://www.pubnub.com/blog/nodejs-websocket-programming-examples/
    - https://devcenter.heroku.com/articles/node-websockets
    - https://www.hackdoor.io/articles/6xQkgQo4/differences-between-websockets-and-socketio
-- [ ] Change root path to display
+- [ ] Change Home modal to display
    ```
       Enter Code for Game
            [    ]
@@ -43,6 +43,13 @@
 - [ ] Ensure the Answers section on Mobile can't vertically overflow. Hasn't
   been an issue yet, but could be with a card that requires multiple answers,
   and those answers are long.
+- [ ] Ensure a room is torn down if no one ever joins it. So, when a User creates
+  a game, then leaves, currently the room just sits in memory.
+- [ ] Possibly simplify the `Room` component by moving all `state` to `store`, and
+  all the handling of that state to an `engine` file.
+   - Still dispatch unique events, but only listen for `ROOM_UPDATED` events.
+   - Maybe instead of having a bunch of handlers on the Server, just have one
+     file that processes everything, big maybe.
 
 ## Bugs
 
@@ -59,6 +66,7 @@
 - [x] If Users have submitted their cards and the Czar leaves, the Czar gets
   assigned to someone that had submitted a card. Instead the round should be
   reset and those cards thrown out.
+- [x] Flashing <title> for "time to review answers" not working
 
 ## Flow
 
