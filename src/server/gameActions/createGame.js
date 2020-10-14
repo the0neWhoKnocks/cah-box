@@ -1,3 +1,5 @@
+const log = require('../../utils/logger')('gameActions:createGame');
+
 module.exports = (serverSocket) => function createGame() {
   const { WS__MSG_TYPE__CREATE_GAME } = require('../../constants');
   const {
@@ -31,6 +33,8 @@ module.exports = (serverSocket) => function createGame() {
       users: [],
     },
   });
+
+  log(`Created new room "${roomID}"`);
 
   serverSocket.emitToSelf(WS__MSG_TYPE__CREATE_GAME, { roomID });
 }

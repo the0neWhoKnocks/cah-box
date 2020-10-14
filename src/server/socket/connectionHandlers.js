@@ -27,7 +27,7 @@ module.exports = function connection(socket, serverSocket) {
   
   socket.on('message', (payload) => {
     const { data, type } = JSON.parse(payload);
-    log(`Received ${payload}`);
+    log(`[HANDLE] "${type}"`);
     
     switch (type) {
       case WS__MSG_TYPE__CHECK_USERNAME: checkUsername(data); break;

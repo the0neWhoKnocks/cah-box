@@ -1,4 +1,4 @@
-const log = require('../../utils/logger')('gameAction:enterRoom');
+const log = require('../../utils/logger')('gameActions:enterRoom');
 
 const disconnectChecksForRoom = new Map();
 
@@ -113,7 +113,7 @@ module.exports = (serverSocket) => function enterRoom({ roomID, username }) {
       });
     }
     else {
-      log(`Room "${roomID}" doesn't exist`);
+      log(`Tried to join room "${roomID}", but it doesn't exist`);
       serverSocket.emitToSelf(WS__MSG_TYPE__ROOM_DESTROYED);
     }
   });
