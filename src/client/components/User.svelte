@@ -8,6 +8,14 @@
     pointer-events: none;
   }
 
+  .user :global(.disconnect-indicator) {
+    width: 1.25em;
+    position: absolute;
+    top: 50%;
+    left: 0.15em;
+    transform: translateY(-50%) scale(1);
+  }
+
   .user__icon,
   .user__status-indicator,
   .user__name {
@@ -43,8 +51,15 @@
     background-color: #393939;
   }
   .user:not(.is--connected) {
-    opacity: 0.25;
     background: yellow;
+  }
+  .user:not(.is--connected) .user__icon {
+    opacity: 0;
+  }
+  .user:not(.is--connected) .user__name,
+  .user:not(.is--connected) .user__points,
+  .user:not(.is--connected) .user__status-indicator {
+    opacity: 0.25;
   }
 
   @keyframes showCard {
@@ -75,6 +90,8 @@
 </style>
 
 <script>
+  import DisconnectIndicator from './DisconnectIndicator.svelte';
+
   let className = '';
   
   export let admin = false;
@@ -83,6 +100,7 @@
   export let czar = false;
   export let name = '';
   export let points = 0;
+  export let showDisconnectIndicator = false;
   export { className as class };
 </script>
 
@@ -102,6 +120,9 @@
       ></use>
     </svg>
   </span>
+  {#if showDisconnectIndicator && !connected}
+    <DisconnectIndicator />
+  {/if}
   <span class="user__name">{name}</span>
   <span class="user__points">{points}</span>
   <span class="user__status-indicator"></span>

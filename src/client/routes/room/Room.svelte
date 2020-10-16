@@ -702,6 +702,7 @@
             czar={czar}
             name={name}
             points={points}
+            showDisconnectIndicator
           />
         {/each}
       </div>
