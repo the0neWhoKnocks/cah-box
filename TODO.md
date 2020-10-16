@@ -6,8 +6,9 @@
       - https://www.kirupa.com/canvas/sprite_animations_canvas.htm
       - https://www.mrspeaker.net/2012/02/02/colorising-sprites-2/
       - https://spicyyoghurt.com/tutorials/html5-javascript-game-development/images-and-sprite-animations
-- [ ] Add confirmation to card selection, or make it harder for Users on Mobile
-  devices to accidentally click it.
+- User's on Mobile sometimes click Pick Answer on accident
+   - [ ] Add confirmation to card selection
+   - [x] Or make it harder for Users on Mobile devices to accidentally click it.
 - Optional Rules:
    - [ ] Spend a point to discard X amount of cards, and get the same number of
      new cards back. (requires they have points of course)
