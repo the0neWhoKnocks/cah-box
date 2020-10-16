@@ -50,6 +50,9 @@
    - Still dispatch unique events, but only listen for `ROOM_UPDATED` events.
    - Maybe instead of having a bunch of handlers on the Server, just have one
      file that processes everything, big maybe.
+- [x] When a User goes into a disconnected state, maybe have a spinning
+  hourglass icon to symbolize time's running out? Would be cool to have it flip
+  over and the sand fills up based on the `DISCONNECT_TIMEOUT`.
 
 ## Bugs
 
