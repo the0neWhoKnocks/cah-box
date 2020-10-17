@@ -1,4 +1,5 @@
 module.exports = (serverSocket) => function choseAnswer({ roomID }) {
+  const { WS__MSG_TYPE__POINTS_AWARDED } = require('../../constants');
   const assignNextCzar = require('../utils/assignNextCzar');
   const dealCards = require('./dealCards');
   const room = serverSocket.getRoom(roomID);
@@ -12,6 +13,7 @@ module.exports = (serverSocket) => function choseAnswer({ roomID }) {
       users,
     },
   } = room.data;
+  const winner = {};
   let answer;
 
   dead.black.push(blackCard);
@@ -29,6 +31,10 @@ module.exports = (serverSocket) => function choseAnswer({ roomID }) {
     const user = users[i];
 
     if (user.name === answer.username) {
+      winner.answer = [...answer.cards];
+      winner.blackCard = blackCard;
+      winner.name = user.name;
+      winner.points = answer.cards.length;
       user.points += answer.cards.length;
       break;
     }
@@ -37,4 +43,6 @@ module.exports = (serverSocket) => function choseAnswer({ roomID }) {
   assignNextCzar(room);
   
   dealCards(serverSocket)({ newRound: true, roomID });
+
+  serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__POINTS_AWARDED, { ...winner });
 }

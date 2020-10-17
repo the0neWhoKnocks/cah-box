@@ -1,6 +1,6 @@
 ## Features/Changes
 
-- [ ] Make the chosen card more obvious
+- [x] Make the chosen card more obvious
    - Once chosen it displays the card, then a point zips over to the player?
    - Sprites for explosions
       - https://www.kirupa.com/canvas/sprite_animations_canvas.htm
