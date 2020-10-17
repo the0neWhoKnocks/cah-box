@@ -136,6 +136,7 @@ fileGate
 
     nodemon({
       delay: 500,
+      exec: 'node --inspect',
       ext: 'js json',
       script: './dist/server',
       // verbose: true,
