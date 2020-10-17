@@ -23,7 +23,7 @@
 </script>
 
 {#if mounted}
-  <Modal focusRef={createGameBtnRef}>
+  <Modal focusRef={createGameBtnRef} open>
     <form class="start-form">
       <p>
         Welcome to CAH-Box, a mashup of Cards Against Humanity and Jackbox games.

@@ -103,74 +103,74 @@
     margin-bottom: 1em;
   }
 
-  :global(.modal.room-error .modal__body) {
+  :global(body .modal.room-error .modal__body) {
     width: 440px;
     text-align: center;
     background: #ffffa9;
   }
-  :global(.modal.room-error button) {
+  :global(body .modal.room-error button) {
     border: solid 1px;
     border-radius: 0.25em;
     margin-top: 1em;
     background: #00ff95;
   }
 
-  :global(.modal.admin-instructions .modal__body) {
+  :global(body .modal.admin-instructions .modal__body) {
     width: 500px;
     font-size: 1.3em;
   }
 
-  :global(.modal.user-data-menu .modal__body) {
+  :global(body .modal.user-data-menu .modal__body) {
     max-width: 400px;
   }
-  :global(.modal.user-data-menu button) {
+  :global(body .modal.user-data-menu button) {
     word-break: break-word;
   }
-  :global(.modal.user-data-menu button:not(:first-of-type)) {
+  :global(body .modal.user-data-menu button:not(:first-of-type)) {
     margin-top: 1em;
   }
-  :global(.modal.user-data-menu button q) {
+  :global(body .modal.user-data-menu button q) {
     color: #ff00b1;
     background: transparent;
   }
-  :global(.modal.user-data-menu button:disabled q) {
+  :global(body .modal.user-data-menu button:disabled q) {
     color: currentColor;
   }
-  :global(.modal.user-data-menu .help) {
+  :global(body .modal.user-data-menu .help) {
     color: #666;
     font-size: 0.6em;
     padding: 0.25em 0.5em 0 0.5em;
   }
 
-  :global(body .modal.points-awarded) {
+  :global(body .modal.points-awarded .modal__mask) {
     background: rgba(255,255,255,0.85);
   }
-  :global(.modal.points-awarded .modal__body) {
+  :global(body .modal.points-awarded .modal__body) {
     font-size: 1em;
     text-align: center;
     border: none;
     background: transparent;
   }
-  :global(.modal.points-awarded .username) {
+  :global(body .modal.points-awarded .username) {
     font-size: 1.5em;
     font-weight: bold;
     padding: 0.25em 1em;
     border-radius: 0.25em;
   }
-  :global(.modal.points-awarded p) {
+  :global(body .modal.points-awarded p) {
     font-size: 1.25em;
     font-weight: bold;
     margin-top: 0.5em;
   }
-  :global(.modal.points-awarded .points) {
+  :global(body .modal.points-awarded .points) {
     color: #00c78f;
     border-radius: 1em;
     background-color: transparent;
   }
-  :global(.modal.points-awarded .card) {
+  :global(body .modal.points-awarded .card) {
     text-align: left;
   }
-  :global(.modal.points-awarded button) {
+  :global(body .modal.points-awarded button) {
     padding: 1em;
     border-radius: 0.5em;
     border: solid 1px;
@@ -430,6 +430,8 @@
   let czarWaitingMsg = '';
   let showPointsAwarded = false;
   let pointsAwardedData = {};
+  let mounted = false;
+  let roomCheckComplete = false;
   
   export let roomID;
   
@@ -469,6 +471,7 @@
       }
 
       if (action === ACTION__USER_ENTERED_ROOM) {
+        roomCheckComplete = true;
         updateTurnProps();
       }
       else if (action === ACTION__USER_LEFT_ROOM) {
@@ -588,12 +591,15 @@
   }
 
   function openUserDataMenu(username) {
-    showUserDataMenu = true;
     userData = users.filter(({ name }) => name === username)[0];
+    showUserDataMenu = true;
   }
 
   function closeUserDataMenu() {
     showUserDataMenu = false;
+  }
+
+  function handleUserDataMenuClose() {
     userData = undefined;
   }
 
@@ -695,6 +701,7 @@
 
   function handleRoomDestruction() {
     room = undefined;
+    roomCheckComplete = true;
   }
 
   function handlePointsAwarded({ answer, blackCard, name, points }) {
@@ -703,8 +710,10 @@
     showPointsAwarded = true;
     pointsAwardedData = { answer, blackCard, msg };
   }
-  function handlePointsAwardedClose() {
+  function closePointsAwarded() {
     showPointsAwarded = false;
+  }
+  function handlePointsAwardedClose() {
     pointsAwardedData = {};
   }
 
@@ -718,6 +727,7 @@
     localUser.name = username;
 
     window.socketConnected.then(() => {
+      mounted = true;
       socketConnectedAtLeastOnce = true;
       socketConnected = true;
 
@@ -747,114 +757,114 @@
   <title>{`${$title}${($title && $titleSuffix) ? ' | ' : ''}${$titleSuffix ? $titleSuffix : ''}`}</title>
 </svelte:head>
 
-<div class="wrapper">
-  {#if socketConnected}
-    {#if room}
-      <div
-        class="users-ui"
-        class:is--admin={!!userClickHandler}
-        on:click={userClickHandler}
-      >
-        {#each users as { admin, cardsSubmitted, connected, czar, name, points }}
-          <User
-            class="user"
-            admin={admin}
-            cardsSubmitted={cardsSubmitted}
-            connected={connected}
-            czar={czar}
-            name={name}
-            points={points}
-            showDisconnectIndicator
-          />
-        {/each}
-      </div>
+{#if mounted}
+  <div class="wrapper">
+    {#if socketConnected}
+      {#if room}
+        <div
+          class="users-ui"
+          class:is--admin={!!userClickHandler}
+          on:click={userClickHandler}
+        >
+          {#each users as { admin, cardsSubmitted, connected, czar, name, points }}
+            <User
+              class="user"
+              admin={admin}
+              cardsSubmitted={cardsSubmitted}
+              connected={connected}
+              czar={czar}
+              name={name}
+              points={points}
+              showDisconnectIndicator
+            />
+          {/each}
+        </div>
 
-      {#if localUser.cards}
-        {#if (localUser.cards.length && czarSelected)}
-          <div class="cards">
-            <div class="answers">
-              <div class="black-card-wrapper">
-                <Card type="black" text={blackCard} answer={room.blackCardAnswer.cards} />
-                {#if czarWaitingMsg}
-                  <div class="czar-waiting-msg">{@html czarWaitingMsg}</div>
-                {/if}
-                {#if localUser.reviewingAnswers}
-                  <nav>
-                    <button
-                      class="prev-btn"
-                      class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
-                      disabled={localUser.reviewNdx === 0}
-                      on:click={reviewPreviousAnswer}
-                    >Previous</button>
-                    <button
-                      class="next-btn"
-                      class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
-                      disabled={localUser.reviewNdx === room.submittedCards.length - 1}
-                      on:click={reviewNextAnswer}
-                    >Next</button>
-                    <button
-                      class="show-answer-btn"
-                      class:hidden={localUser.startedReviewingAnswers}
-                      on:click={startedReviewingAnswers}
-                    >Show Answer</button>
-                    <button
-                      class="pick-answer-btn"
-                      disabled={!localUser.startedReviewingAnswers}
-                      on:click={chooseAnswer}
-                    >Pick Answer</button>
-                  </nav>
+        {#if localUser.cards}
+          {#if (localUser.cards.length && czarSelected)}
+            <div class="cards">
+              <div class="answers">
+                <div class="black-card-wrapper">
+                  <Card type="black" text={blackCard} answer={room.blackCardAnswer.cards} />
+                  {#if czarWaitingMsg}
+                    <div class="czar-waiting-msg">{@html czarWaitingMsg}</div>
+                  {/if}
+                  {#if localUser.reviewingAnswers}
+                    <nav>
+                      <button
+                        class="prev-btn"
+                        class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
+                        disabled={localUser.reviewNdx === 0}
+                        on:click={reviewPreviousAnswer}
+                      >Previous</button>
+                      <button
+                        class="next-btn"
+                        class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
+                        disabled={localUser.reviewNdx === room.submittedCards.length - 1}
+                        on:click={reviewNextAnswer}
+                      >Next</button>
+                      <button
+                        class="show-answer-btn"
+                        class:hidden={localUser.startedReviewingAnswers}
+                        on:click={startedReviewingAnswers}
+                      >Show Answer</button>
+                      <button
+                        class="pick-answer-btn"
+                        disabled={!localUser.startedReviewingAnswers}
+                        on:click={chooseAnswer}
+                      >Pick Answer</button>
+                    </nav>
+                  {/if}
+                </div>
+                {#if showUserCards}
+                  {#each localUser.selectedCards as { ndx, text } (`answer_${ndx}`)}
+                    <Card {ndx} {text} onClick={handleCardSelectionToggle} rotate />
+                  {/each}
                 {/if}
               </div>
+
               {#if showUserCards}
-                {#each localUser.selectedCards as { ndx, text } (`answer_${ndx}`)}
-                  <Card {ndx} {text} onClick={handleCardSelectionToggle} rotate />
-                {/each}
+                {#if localUser.maxCardsSelected}
+                  <button
+                    class="submit-cards-btn"
+                    on:click={handleSubmitCards}
+                  >
+                    {@html `Submit Card${localUser.selectedCards.length > 1 ? 's' : ''}`}
+                  </button>
+                {/if}
+                
+                <div class="user-cards-wrapper">
+                  <div class="sep is--top"></div>
+                  
+                  <div class="user-cards" class:disabled={localUser.maxCardsSelected}>
+                    {#each localUser.cards as { ndx, selected, text }}
+                      <Card {ndx} {text} onClick={handleCardSelectionToggle} {selected} />
+                    {/each}
+                  </div>
+    
+                  <div class="sep is--btm"></div>
+                </div>
               {/if}
             </div>
-
-            {#if showUserCards}
-              {#if localUser.maxCardsSelected}
-                <button
-                  class="submit-cards-btn"
-                  on:click={handleSubmitCards}
-                >
-                  {@html `Submit Card${localUser.selectedCards.length > 1 ? 's' : ''}`}
-                </button>
-              {/if}
-              
-              <div class="user-cards-wrapper">
-                <div class="sep is--top"></div>
-                
-                <div class="user-cards" class:disabled={localUser.maxCardsSelected}>
-                  {#each localUser.cards as { ndx, selected, text }}
-                    <Card {ndx} {text} onClick={handleCardSelectionToggle} {selected} />
-                  {/each}
-                </div>
-  
-                <div class="sep is--btm"></div>
-              </div>
-            {/if}
-          </div>
-        {:else}
-          <div class="czar-pending-msg">
-            Waiting for the Card Czar to be chosen.
+          {:else}
+            <div class="czar-pending-msg">
+              Waiting for the Card Czar to be chosen.
+            </div>
+          {/if}
+          
+          <div class="user-ui">
+            <User
+              admin={localUser.admin}
+              cardsSubmitted={localUser.cardsSubmitted}
+              connected={localUser.connected}
+              czar={localUser.czar}
+              name={localUser.name}
+              points={localUser.points}
+            />
           </div>
         {/if}
         
-        <div class="user-ui">
-          <User
-            admin={localUser.admin}
-            cardsSubmitted={localUser.cardsSubmitted}
-            connected={localUser.connected}
-            czar={localUser.czar}
-            name={localUser.name}
-            points={localUser.points}
-          />
-        </div>
-      {/if}
-
-      {#if !localUser.name}
-        <Modal focusRef={usernameInputRef}>
+        <Modal focusRef={usernameInputRef} open={!localUser.name}>
           <form class="join-form" autocomplete="off" on:submit={handleJoinSubmit}>
             <label for="username">Enter Username</label>
             <input 
@@ -870,12 +880,11 @@
             <button>Join Game</button>
           </form>
         </Modal>
-      {/if}
 
-      {#if showAdminInstructions}
         <Modal
           class="admin-instructions"
           focusRef={closeAdminInstructionsBtnRef}
+          open={showAdminInstructions}
         >
           <p>
             Congrats! You're the MC, so you're running the game. In order for
@@ -898,10 +907,8 @@
             bind:this={closeAdminInstructionsBtnRef}
           >Close</button>
         </Modal>
-      {/if}
-
-      {#if showUserDataMenu}
-        <Modal class="user-data-menu">
+        
+        <Modal class="user-data-menu" onClose={handleUserDataMenuClose} open={showUserDataMenu}>
           <button
             type="button"
             on:click={setCzar}
@@ -940,28 +947,26 @@
             on:click={closeUserDataMenu}
           >Cancel</button>
         </Modal>
-      {/if}
-      
-      {#if showPointsAwarded}
-        <Modal class="points-awarded">
+        
+        <Modal class="points-awarded" onClose={handlePointsAwardedClose} open={showPointsAwarded}>
           {@html pointsAwardedData.msg}
           <Card type="black" text={pointsAwardedData.blackCard} answer={pointsAwardedData.answer} />
-          <button on:click={handlePointsAwardedClose}>Close</button>
+          <button on:click={closePointsAwarded}>Close</button>
         </Modal>
       {/if}
-    {:else}
-      <Modal class="room-error" focusRef={createGameBtnRef}>
+
+      <Modal class="room-error" focusRef={createGameBtnRef} open={roomCheckComplete && !room}>
         Sorry, it looks like this room doesn't exist anymore.
         <button on:click={createGame} bind:this={createGameBtnRef}>
           Click here to create a new game.
         </button>
       </Modal>
     {/if}
-  {:else if !socketConnected && socketConnectedAtLeastOnce}
-    <Modal class="room-error">
+    
+    <Modal class="room-error" open={!socketConnected && socketConnectedAtLeastOnce}>
       Sorry, it looks like the game has lost connection to the Server. You can 
       try refreshing the page, but it's likely the Server went down for 
       maintainence and you'll have to start a new game.
     </Modal>
-  {/if}
-</div>
+  </div>
+{/if}

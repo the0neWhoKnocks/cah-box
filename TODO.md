@@ -54,6 +54,7 @@
 - [x] When a User goes into a disconnected state, maybe have a spinning
   hourglass icon to symbolize time's running out? Would be cool to have it flip
   over and the sand fills up based on the `DISCONNECT_TIMEOUT`.
+- [x] Transition the Modal more smoothly instead of just popping on.
 
 ## Bugs
 
