@@ -15,10 +15,6 @@ else {
     : rootLogger;
   
   debug.enable(`${ROOT_NAMESPACE}:*`);
-  
-  if (typeof window !== 'undefined') {
-    window.localStorage.debug = `${ROOT_NAMESPACE}:*`;
-  }
 }
 
 module.exports = logger;
