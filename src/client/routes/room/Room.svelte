@@ -49,46 +49,6 @@
     display: inline-block;
   }
 
-  .user-ui {
-    position: absolute;
-    top: 0.5em;
-    right: 0.5em;
-  }
-  .user-ui :global(.user) {
-    overflow: hidden;
-    padding: 0 0 0 0.25em;
-    border: solid 2px;
-    border-radius: 0.75em;
-  }
-  .user-ui :global(.user .user__name) {
-    width: auto;
-    max-width: 35vw;
-    padding-right: 1em;
-    padding-left: 0.75em;
-    border-radius: 0 0.6em 0.6em 0;
-    margin-right: -2em;
-    background: #eee;
-    position: relative;
-  }
-  .user-ui :global(.user.is--czar .user__name) {
-    margin-right: -1.25em;
-    box-shadow: 0 0 5px 2px;
-  }
-  .user-ui :global(.user .user__status-indicator) {
-    width: 2em;
-  }
-  .user-ui :global(.user:not(.is--admin):not(.is--czar) .user__icon),
-  .user-ui :global(.user .user__points) {
-    display: none;
-  }
-  .user-ui :global(.user .user__icon) {
-    margin-right: -0.5em;
-    background: #eee;
-    display: inline-block;
-    position: relative;
-    z-index: 1;
-  }
-
   .join-form,
   :global(.modal.room-error .modal__body) {
     display: flex;
@@ -152,10 +112,13 @@
     background: transparent;
   }
   :global(body .modal.points-awarded .username) {
+    max-width: 10.5em;
     font-size: 1.5em;
     font-weight: bold;
+    word-break: break-all;
     padding: 0.25em 1em;
     border-radius: 0.25em;
+    display: inline-block;
   }
   :global(body .modal.points-awarded p) {
     font-size: 1.25em;
@@ -191,7 +154,7 @@
 
   .cards {
     width: 100%;
-    padding: 4em 1em 0 1em;
+    padding: 1em 1em 0 1em;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -201,7 +164,12 @@
     flex-shrink: 0;
   }
   .cards .answers {
-    padding-bottom: 1em;
+    max-width: 100%;
+  }
+  .cards .answers-wrapper {
+    display: flex;
+    overflow: auto;
+    padding: 0.5em 1em;
   }
   .cards .user-cards-wrapper {
     height: 100%;
@@ -296,15 +264,9 @@
 
     .users-ui {
       width: 100px;
-    }
-    .users-ui,
-    .user-ui {
       font-size: 0.75em;
     }
 
-    .cards {
-      padding-top: 2.5em;
-    }
     .cards .answers :global(.card),
     .cards .user-cards-wrapper :global(.card) {
       font-size: 1em;
@@ -319,6 +281,11 @@
     }
     .cards .answers :global(.card:not(:first-child)) {
       margin-top: -0.5em;
+    }
+    .cards .answers-wrapper {
+      max-height: 60vh;
+      padding: 1em 0.5em;
+      flex-direction: column;
     }
     .cards .user-cards :global(.card:not(:first-child)) {
       margin-top: 0.5em;
@@ -341,10 +308,6 @@
     }
   }
   @media (min-width: 850px) {
-    .cards .answers {
-      display: flex;
-      justify-content: center;
-    }
     .cards .answers :global(.card) {
       box-shadow: 2px 0 8px 0px rgba(0, 0, 0, 0.5);
     }
@@ -773,6 +736,7 @@
               cardsSubmitted={cardsSubmitted}
               connected={connected}
               czar={czar}
+              local={name === localUser.name}
               name={name}
               points={points}
               showDisconnectIndicator
@@ -784,43 +748,45 @@
           {#if (localUser.cards.length && czarSelected)}
             <div class="cards">
               <div class="answers">
-                <div class="black-card-wrapper">
-                  <Card type="black" text={blackCard} answer={room.blackCardAnswer.cards} />
-                  {#if czarWaitingMsg}
-                    <div class="czar-waiting-msg">{@html czarWaitingMsg}</div>
-                  {/if}
-                  {#if localUser.reviewingAnswers}
-                    <nav>
-                      <button
-                        class="prev-btn"
-                        class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
-                        disabled={localUser.reviewNdx === 0}
-                        on:click={reviewPreviousAnswer}
-                      >Previous</button>
-                      <button
-                        class="next-btn"
-                        class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
-                        disabled={localUser.reviewNdx === room.submittedCards.length - 1}
-                        on:click={reviewNextAnswer}
-                      >Next</button>
-                      <button
-                        class="show-answer-btn"
-                        class:hidden={localUser.startedReviewingAnswers}
-                        on:click={startedReviewingAnswers}
-                      >Show Answer</button>
-                      <button
-                        class="pick-answer-btn"
-                        disabled={!localUser.startedReviewingAnswers}
-                        on:click={chooseAnswer}
-                      >Pick Answer</button>
-                    </nav>
+                <div class="answers-wrapper">
+                  <div class="black-card-wrapper">
+                    <Card type="black" text={blackCard} answer={room.blackCardAnswer.cards} />
+                    {#if czarWaitingMsg}
+                      <div class="czar-waiting-msg">{@html czarWaitingMsg}</div>
+                    {/if}
+                    {#if localUser.reviewingAnswers}
+                      <nav>
+                        <button
+                          class="prev-btn"
+                          class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
+                          disabled={localUser.reviewNdx === 0}
+                          on:click={reviewPreviousAnswer}
+                        >Previous</button>
+                        <button
+                          class="next-btn"
+                          class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
+                          disabled={localUser.reviewNdx === room.submittedCards.length - 1}
+                          on:click={reviewNextAnswer}
+                        >Next</button>
+                        <button
+                          class="show-answer-btn"
+                          class:hidden={localUser.startedReviewingAnswers}
+                          on:click={startedReviewingAnswers}
+                        >Show Answer</button>
+                        <button
+                          class="pick-answer-btn"
+                          disabled={!localUser.startedReviewingAnswers}
+                          on:click={chooseAnswer}
+                        >Pick Answer</button>
+                      </nav>
+                    {/if}
+                  </div>
+                  {#if showUserCards}
+                    {#each localUser.selectedCards as { ndx, text } (`answer_${ndx}`)}
+                      <Card {ndx} {text} onClick={handleCardSelectionToggle} rotate />
+                    {/each}
                   {/if}
                 </div>
-                {#if showUserCards}
-                  {#each localUser.selectedCards as { ndx, text } (`answer_${ndx}`)}
-                    <Card {ndx} {text} onClick={handleCardSelectionToggle} rotate />
-                  {/each}
-                {/if}
               </div>
 
               {#if showUserCards}
@@ -851,17 +817,6 @@
               Waiting for the Card Czar to be chosen.
             </div>
           {/if}
-          
-          <div class="user-ui">
-            <User
-              admin={localUser.admin}
-              cardsSubmitted={localUser.cardsSubmitted}
-              connected={localUser.connected}
-              czar={localUser.czar}
-              name={localUser.name}
-              points={localUser.points}
-            />
-          </div>
         {/if}
         
         <Modal focusRef={usernameInputRef} open={!localUser.name}>

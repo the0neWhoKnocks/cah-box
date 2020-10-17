@@ -7,6 +7,10 @@
   .user * {
     pointer-events: none;
   }
+  .user.is--local {
+    font-weight: bold;
+    font-size: 1.4em;
+  }
 
   .user :global(.disconnect-indicator) {
     width: 1.25em;
@@ -98,6 +102,7 @@
   export let cardsSubmitted = false;
   export let connected = false;
   export let czar = false;
+  export let local = false;
   export let name = '';
   export let points = 0;
   export let showDisconnectIndicator = false;
@@ -109,6 +114,7 @@
   class:is--admin={admin}
   class:is--connected={connected}
   class:is--czar={czar}
+  class:is--local={local}
   class:cards-submitted={cardsSubmitted}
   data-name={name}
 >
