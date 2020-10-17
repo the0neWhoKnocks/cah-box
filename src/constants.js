@@ -16,6 +16,7 @@ module.exports = {
   WS__MSG_TYPE__CREATE_GAME: 'create game',
   WS__MSG_TYPE__DEAL_CARDS: 'deal cards',
   WS__MSG_TYPE__JOIN_GAME: 'join game',
+  WS__MSG_TYPE__POINTS_AWARDED: 'points awarded',
   WS__MSG_TYPE__REMOVE_USER_FROM_ROOM: 'remove user from room',
   WS__MSG_TYPE__ROOM_DESTROYED: 'room destroyed',
   WS__MSG_TYPE__SERVER_DOWN: 'server down',

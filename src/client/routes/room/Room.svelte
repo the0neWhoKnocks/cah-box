@@ -142,6 +142,43 @@
     padding: 0.25em 0.5em 0 0.5em;
   }
 
+  :global(body .modal.points-awarded) {
+    background: rgba(255,255,255,0.85);
+  }
+  :global(.modal.points-awarded .modal__body) {
+    font-size: 1em;
+    text-align: center;
+    border: none;
+    background: transparent;
+  }
+  :global(.modal.points-awarded .username) {
+    font-size: 1.5em;
+    font-weight: bold;
+    padding: 0.25em 1em;
+    border-radius: 0.25em;
+  }
+  :global(.modal.points-awarded p) {
+    font-size: 1.25em;
+    font-weight: bold;
+    margin-top: 0.5em;
+  }
+  :global(.modal.points-awarded .points) {
+    color: #00c78f;
+    border-radius: 1em;
+    background-color: transparent;
+  }
+  :global(.modal.points-awarded .card) {
+    text-align: left;
+  }
+  :global(.modal.points-awarded button) {
+    padding: 1em;
+    border-radius: 0.5em;
+    border: solid 1px;
+    margin-top: 1em;
+    background-color: #fff;
+    box-shadow: 0 0.1em;
+  }
+
   .error-msg {
     color: #7d0000;
     line-height: 1.2em;
@@ -338,6 +375,7 @@
     WS__MSG_TYPE__CHOSE_ANSWER,
     WS__MSG_TYPE__DEAL_CARDS,
     WS__MSG_TYPE__JOIN_GAME,
+    WS__MSG_TYPE__POINTS_AWARDED,
     WS__MSG_TYPE__REMOVE_USER_FROM_ROOM,
     WS__MSG_TYPE__ROOM_DESTROYED,
     WS__MSG_TYPE__SERVER_DOWN,
@@ -390,9 +428,11 @@
   let usernameInputRef;
   let users = [];
   let czarWaitingMsg = '';
-
+  let showPointsAwarded = false;
+  let pointsAwardedData = {};
+  
   export let roomID;
-
+  
   function handleJoinSubmit(ev) {
     ev.preventDefault();
 
@@ -657,6 +697,17 @@
     room = undefined;
   }
 
+  function handlePointsAwarded({ answer, blackCard, name, points }) {
+    const p = (points > 1) ? 'points' : 'point';
+    const msg = `<mark class="username">${name}</mark><p>got <mark class="points">${points}</mark> ${p} for</p>`;
+    showPointsAwarded = true;
+    pointsAwardedData = { answer, blackCard, msg };
+  }
+  function handlePointsAwardedClose() {
+    showPointsAwarded = false;
+    pointsAwardedData = {};
+  }
+
   titleSuffix.set(`Game ${roomID}`);
 
   $: minimumNumberOfPlayersJoined = users.length > 1;
@@ -675,6 +726,7 @@
       window.clientSocket.on(WS__MSG_TYPE__CARDS_DEALT, updateGameState(ACTION__CARDS_DEALT));
       window.clientSocket.on(WS__MSG_TYPE__CARDS_SUBMITTED, updateGameState(ACTION__CARDS_SUBMITTED));
       window.clientSocket.on(WS__MSG_TYPE__CHECK_USERNAME, handleUsernameCheck);
+      window.clientSocket.on(WS__MSG_TYPE__POINTS_AWARDED, handlePointsAwarded);
       window.clientSocket.on(WS__MSG_TYPE__ROOM_DESTROYED, handleRoomDestruction);
       window.clientSocket.on(WS__MSG_TYPE__SERVER_DOWN, handleServerDisconnect);
       window.clientSocket.on(WS__MSG_TYPE__USER_DISCONNECTED, updateGameState(ACTION__USER_DISCONNECTED));
@@ -887,6 +939,14 @@
             type="button"
             on:click={closeUserDataMenu}
           >Cancel</button>
+        </Modal>
+      {/if}
+      
+      {#if showPointsAwarded}
+        <Modal class="points-awarded">
+          {@html pointsAwardedData.msg}
+          <Card type="black" text={pointsAwardedData.blackCard} answer={pointsAwardedData.answer} />
+          <button on:click={handlePointsAwardedClose}>Close</button>
         </Modal>
       {/if}
     {:else}
