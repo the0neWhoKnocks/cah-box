@@ -41,7 +41,7 @@
 - [x] Add a "Waiting for players to submit answers" message for the Czar. Maybe
   have it be dynamic "Waiting for 'name', 'name', and 'name' to submit answers".
 - [x] Increase disconnect to 5 seconds, display user as disconnected, then as left room.
-- [ ] Ensure the Answers section on Mobile can't vertically overflow. Hasn't
+- [x] Ensure the Answers section on Mobile can't vertically overflow. Hasn't
   been an issue yet, but could be with a card that requires multiple answers,
   and those answers are long.
 - [x] Ensure a room is torn down if no one ever joins it. So, when a User creates
