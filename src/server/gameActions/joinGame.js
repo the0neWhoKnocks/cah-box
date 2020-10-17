@@ -24,6 +24,7 @@ module.exports = (serverSocket) => function joinGame({ roomID, username }) {
     users.push(user);
 
     serverSocket.data.user = user;
+    serverSocket.socket._username = username;
   }
 
   serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__USER_JOINED, {
