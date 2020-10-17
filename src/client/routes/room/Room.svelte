@@ -338,6 +338,7 @@
     WS__MSG_TYPE__CHOSE_ANSWER,
     WS__MSG_TYPE__DEAL_CARDS,
     WS__MSG_TYPE__JOIN_GAME,
+    WS__MSG_TYPE__REMOVE_USER_FROM_ROOM,
     WS__MSG_TYPE__ROOM_DESTROYED,
     WS__MSG_TYPE__SERVER_DOWN,
     WS__MSG_TYPE__SET_ADMIN,
@@ -349,6 +350,7 @@
     WS__MSG_TYPE__USER_ENTERED_ROOM,
     WS__MSG_TYPE__USER_JOINED,
     WS__MSG_TYPE__USER_LEFT_ROOM,
+    WS__MSG_TYPE__USER_REMOVED,
     WS__MSG_TYPE__USER_UPDATE,
   } from '../../../constants';
   import { title, titleSuffix } from '../../store';
@@ -367,6 +369,7 @@
   const ACTION__USER_ENTERED_ROOM = 'userEnteredRoom';
   const ACTION__USER_JOINED = 'userJoined';
   const ACTION__USER_LEFT_ROOM = 'userLeftRoom';
+  const ACTION__USER_REMOVED = 'userRemoved';
   const ACTION__USER_UPDATE = 'userUpdate';
   let adminInstructionsShown = false;
   let blackCard;
@@ -583,6 +586,12 @@
     closeUserDataMenu();
   }
 
+  function removeUserFromGame(ev) {
+    const { username } = ev.currentTarget.dataset;
+    window.clientSocket.emit(WS__MSG_TYPE__REMOVE_USER_FROM_ROOM, { admin: localUser.name, roomID, username });
+    closeUserDataMenu();
+  }
+
   function handleCardSelectionToggle(ndx) {
     window.clientSocket.emit(WS__MSG_TYPE__TOGGLE_CARD_SELECTION, {
       ndx,
@@ -672,6 +681,7 @@
       window.clientSocket.on(WS__MSG_TYPE__USER_ENTERED_ROOM, updateGameState(ACTION__USER_ENTERED_ROOM));
       window.clientSocket.on(WS__MSG_TYPE__USER_JOINED, updateGameState(ACTION__USER_JOINED));
       window.clientSocket.on(WS__MSG_TYPE__USER_LEFT_ROOM, updateGameState(ACTION__USER_LEFT_ROOM));
+      window.clientSocket.on(WS__MSG_TYPE__USER_REMOVED, updateGameState(ACTION__USER_REMOVED));
       window.clientSocket.on(WS__MSG_TYPE__USER_UPDATE, updateGameState(ACTION__USER_UPDATE));
 
       window.clientSocket.emit(WS__MSG_TYPE__USER_ENTERED_ROOM, { roomID, username });
@@ -867,6 +877,12 @@
               You're already the MC, yuh silly goose.
             </div>
           {/if}
+          <button
+            type="button"
+            on:click={removeUserFromGame}
+            disabled={userData.admin}
+            data-username={userData.name}
+          >{@html `Remove <q>${userData.name}</q> from game`}</button>
           <button
             type="button"
             on:click={closeUserDataMenu}

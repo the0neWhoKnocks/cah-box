@@ -20,7 +20,7 @@
      Card Czar can choose three winners. Award three points to the Czar's
      favorite answer, two points to the second best, and one point to number
      three.
-- [ ] Ability for MC to remove a User
+- [x] Ability for MC to remove a User
 - [x] Remove `/game` in path to have less for Mobile users to type
 - [x] Switch from `socket.io` to just WebSocket
    - https://github.com/websockets/ws

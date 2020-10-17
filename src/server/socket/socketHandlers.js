@@ -8,6 +8,7 @@ module.exports = function connection(socket, serverSocket) {
     WS__MSG_TYPE__DEAL_CARDS,
     WS__MSG_TYPE__USER_ENTERED_ROOM,
     WS__MSG_TYPE__JOIN_GAME,
+    WS__MSG_TYPE__REMOVE_USER_FROM_ROOM,
     WS__MSG_TYPE__SET_ADMIN,
     WS__MSG_TYPE__SET_ANSWER_REVIEW_STATE,
     WS__MSG_TYPE__SET_CZAR,
@@ -20,6 +21,7 @@ module.exports = function connection(socket, serverSocket) {
   const dealCards = require('../gameActions/dealCards')(serverSocket);
   const enterRoom = require('../gameActions/enterRoom')(serverSocket);
   const joinGame = require('../gameActions/joinGame')(serverSocket);
+  const removeUserFromRoom = require('../gameActions/removeUserFromRoom')(serverSocket);
   const setAnswerReviewState = require('../gameActions/setAnswerReviewState')(serverSocket);
   const setUserState = require('../gameActions/setUserState')(serverSocket);
   const submitCards = require('../gameActions/submitCards')(serverSocket);
@@ -34,22 +36,24 @@ module.exports = function connection(socket, serverSocket) {
       case WS__MSG_TYPE__CHOSE_ANSWER: choseAnswer(data); break;
       case WS__MSG_TYPE__CREATE_GAME: createGame(data); break;
       case WS__MSG_TYPE__DEAL_CARDS: dealCards(data); break;
-      case WS__MSG_TYPE__USER_ENTERED_ROOM: enterRoom(data); break;
       case WS__MSG_TYPE__JOIN_GAME: joinGame(data); break;
+      case WS__MSG_TYPE__REMOVE_USER_FROM_ROOM: removeUserFromRoom(data); break;
       case WS__MSG_TYPE__SET_ADMIN: setUserState(data, 'admin'); break;
       case WS__MSG_TYPE__SET_ANSWER_REVIEW_STATE: setAnswerReviewState(data); break;
       case WS__MSG_TYPE__SET_CZAR: setUserState(data, 'czar'); break;
       case WS__MSG_TYPE__SUBMIT_CARDS: submitCards(data); break;
       case WS__MSG_TYPE__TOGGLE_CARD_SELECTION: toggleCardSelection(data); break;
+      case WS__MSG_TYPE__USER_ENTERED_ROOM: enterRoom(data); break;
       default: {
         log(`[WARN] Message type "${type}" is not valid, no action taken data:`, data);
       }
     }
   });
 
-  socket.on('close', () => {
+  socket.on('close', (code, reason) => {
     const {
       DISCONNECT_TIMEOUT,
+      WS__CLOSE_CODE__USER_REMOVED,
       WS__MSG_TYPE__ROOM_DESTROYED,
       WS__MSG_TYPE__USER_DISCONNECTED,
       WS__MSG_TYPE__USER_LEFT_ROOM,
@@ -69,6 +73,10 @@ module.exports = function connection(socket, serverSocket) {
         serverSocket.emitToOthersInRoom(roomID, WS__MSG_TYPE__USER_DISCONNECTED, {
           room: room.data.public,
         });
+
+        const timeoutDuration = (code === WS__CLOSE_CODE__USER_REMOVED)
+          ? 0
+          : DISCONNECT_TIMEOUT;
   
         // if a User refreshed their Browser, `connected` will be set back to
         // `true` fairly quickly. The timeout value is a guesstimate based on a
@@ -112,14 +120,21 @@ module.exports = function connection(socket, serverSocket) {
                 resetGameRound(room);
               }
   
-              log(`User "${user.name}" left room "${roomID}" due to disconnection`);
+              log(
+                code === WS__CLOSE_CODE__USER_REMOVED
+                  ? reason
+                  : `User "${user.name}" left room "${roomID}" due to disconnection`
+              );
+              
+              const socketNdx = room.sockets.indexOf(serverSocket.socket);
+              if (socketNdx > -1) room.sockets.splice(socketNdx, 1);
   
               serverSocket.emitToOthersInRoom(roomID, WS__MSG_TYPE__USER_LEFT_ROOM, {
                 room: room.data.public,
               });
             }
           }
-        }, DISCONNECT_TIMEOUT);
+        }, timeoutDuration);
 
         serverSocket.leaveRoom(roomID, user.name, disconnectCheck);
 
