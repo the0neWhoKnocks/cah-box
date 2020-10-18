@@ -41,9 +41,21 @@ module.exports = {
           // Svelte compiler options: https://svelte.dev/docs#svelte_compile
           options: {
             dev,
+            emitCss: true,
             hotReload: false // pending https://github.com/sveltejs/svelte/issues/2377
           }
         }
+      },
+      {
+        test: /\.css$/, // For any CSS files that are extracted and inlined by Svelte
+        use: [
+          MiniCssExtractPlugin.loader,
+          // translates CSS into CommonJS
+          {
+            loader: 'css-loader',
+            options: { sourceMap: dev },
+          },
+        ],
       },
     ]
   },
@@ -101,7 +113,7 @@ module.exports = {
       filter: ({ isChunk, isInitial, path }) => {
         return (
           (isChunk && isInitial)
-          // ignore CSS & source-map files
+          // ignore Stylus (`global` JS files) & source-map files
           && !/(global.+\.js|\.map)$/.test(path)
         );
       },
@@ -114,5 +126,9 @@ module.exports = {
     }),
   ],
   resolve: { alias, extensions, mainFields },
+  stats: {
+    children: false,
+    entrypoints: false,
+  },
   watch: dev,
 };
