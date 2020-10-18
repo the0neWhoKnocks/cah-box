@@ -27,7 +27,7 @@
    - https://www.pubnub.com/blog/nodejs-websocket-programming-examples/
    - https://devcenter.heroku.com/articles/node-websockets
    - https://www.hackdoor.io/articles/6xQkgQo4/differences-between-websockets-and-socketio
-- [ ] Change Home modal to display
+- [x] Change Home modal to display
    ```
       Enter Code for Game
            [    ]
