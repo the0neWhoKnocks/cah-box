@@ -31,6 +31,7 @@
   .czar-pending-msg {
     width: 100%;
     height: 100%;
+    text-align: center;
     padding: 2em;
     display: flex;
     justify-content: center;
@@ -40,6 +41,8 @@
   .czar-waiting-msg {
     margin-top: 1em;
   }
+
+  .czar-pending-msg mark,
   :global(.czar-waiting-msg mark) {
     color: #fff;
     line-height: 1em;
@@ -404,6 +407,7 @@
   let pointsAwardedData = {};
   let mounted = false;
   let roomCheckComplete = false;
+  let gameMC;
   
   export let roomID;
   
@@ -431,7 +435,8 @@
       if (users.length) {
         let someoneIsCzar = false;
         
-        const user = users.filter(({ czar, name }) => {
+        const user = users.filter(({ admin, czar, name }) => {
+          if (admin) gameMC = name;
           if (czar) someoneIsCzar = true;
           return name === localUser.name;
         })[0];
@@ -823,7 +828,15 @@
             </div>
           {:else}
             <div class="czar-pending-msg">
-              Waiting for the Card Czar to be chosen.
+              <p>
+                {#if localUser.admin}
+                  You need to pick the Card Czar.
+                  <br>
+                  To do so, just click on a User in the side menu.
+                {:else}
+                  Waiting for <mark>{gameMC}</mark> to pick the Card Czar.
+                {/if}
+              </p>
             </div>
           {/if}
         {/if}
