@@ -7,10 +7,6 @@
   .user * {
     pointer-events: none;
   }
-  .user.is--local {
-    font-weight: bold;
-    font-size: 1.4em;
-  }
 
   .user :global(.disconnect-indicator) {
     width: 1.25em;
@@ -21,8 +17,9 @@
   }
 
   .user__icon,
-  .user__status-indicator,
-  .user__name {
+  .user__name,
+  .user__points,
+  .user__status-indicator {
     line-height: 1em;
     padding: 0.25em;
     display: inline-block;
@@ -44,10 +41,11 @@
 
   .user__points {
     font-family: monospace;
-    padding: 0 0.25em;
+    font-size: 1.09em;
   }
 
   .user__status-indicator {
+    border-left: solid 2px #fff;
     background-color: #27cfb6;
     transition: background-color 300ms;
   }
@@ -80,7 +78,7 @@
     content: '';
     width: 1em;
     height: 100%;
-    border: solid 1px;
+    border: solid 1px #000;
     border-radius: 0.1em;
     background: #fff;
     position: absolute;
@@ -102,10 +100,8 @@
   export let cardsSubmitted = false;
   export let connected = false;
   export let czar = false;
-  export let local = false;
   export let name = '';
   export let points = 0;
-  export let showDisconnectIndicator = false;
   export { className as class };
 </script>
 
@@ -114,7 +110,6 @@
   class:is--admin={admin}
   class:is--connected={connected}
   class:is--czar={czar}
-  class:is--local={local}
   class:cards-submitted={cardsSubmitted}
   data-name={name}
 >
@@ -126,7 +121,7 @@
       ></use>
     </svg>
   </span>
-  {#if showDisconnectIndicator && !connected}
+  {#if !connected}
     <DisconnectIndicator />
   {/if}
   <span class="user__name">{name}</span>
