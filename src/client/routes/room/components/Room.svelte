@@ -425,7 +425,10 @@
       }
 
       if (
+        (
         localUser.czar
+          || localUser.cardsSubmitted
+        )
         && room.submittedCards.length < (users.length - 1)
       ) {
         const names = users.filter(({ cardsSubmitted, czar }) => !czar && !cardsSubmitted);
