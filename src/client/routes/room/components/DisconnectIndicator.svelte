@@ -6,7 +6,7 @@
 
 <script>
   import { onDestroy, onMount } from 'svelte';
-  import { DISCONNECT_TIMEOUT } from '../../constants';
+  import { DISCONNECT_TIMEOUT } from '../../../../constants';
 
   let topMaskRef;
   let btmMaskRef;
