@@ -42,7 +42,8 @@
 <script>
   import { WS__MSG_TYPE__CREATE_GAME } from '../../constants';
 
-  const nonAlphaNumericChars = /[^a-z0-9]+/i;
+  const MAX_CODE_LENGTH = 4;
+  const NON_ALPHA_NUMERIC_CHARS = /[^a-z0-9]+/i;
   let userCode = '';
 
   function createGame() {
@@ -64,8 +65,8 @@
   }
 
   $: {
-    if (nonAlphaNumericChars.test(userCode)) userCode = userCode.replace(nonAlphaNumericChars, '');
-    if (userCode.length > 4) userCode = userCode.substring(0, 4);
+    if (NON_ALPHA_NUMERIC_CHARS.test(userCode)) userCode = userCode.replace(NON_ALPHA_NUMERIC_CHARS, '');
+    if (userCode.length > MAX_CODE_LENGTH) userCode = userCode.substring(0, MAX_CODE_LENGTH);
   }
 </script>
 

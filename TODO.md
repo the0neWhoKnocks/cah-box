@@ -56,7 +56,7 @@
   over and the sand fills up based on the `DISCONNECT_TIMEOUT`.
 - [x] Transition the Modal more smoothly instead of just popping on.
 - [ ] Order the Local User at the top of the `users` list.
-- [ ] Limit the length of a User's name.
+- [x] Limit the length of a User's name.
 - [x] Add "Waiting for <MC_NAME> to pick the Czar"
 
 ## Bugs
