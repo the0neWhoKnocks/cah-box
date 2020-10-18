@@ -105,7 +105,7 @@
   }
 
   :global(body .modal.points-awarded .modal__mask) {
-    background: rgba(255,255,255,0.85);
+    background: rgba(199, 199, 199, 0.85);
   }
   :global(body .modal.points-awarded .modal__body) {
     font-size: 1em;
@@ -113,22 +113,30 @@
     border: none;
     background: transparent;
   }
+  :global(body .modal.points-awarded .points-awarded__msg) {
+    padding: 0.75em;
+    border: solid 1px;
+    border-radius: 0.5em;
+    margin-bottom: 1em;
+    background: #fff;
+  }
+  :global(body .modal.points-awarded mark) {
+    font-family: monospace;
+    line-height: 1em;
+    padding: 0 0.5em;
+    background: transparent;
+  }
   :global(body .modal.points-awarded .username) {
     max-width: 10.5em;
     font-size: 1.5em;
     font-weight: bold;
     word-break: break-all;
-    padding: 0.25em 1em;
-    border-radius: 0.25em;
     display: inline-block;
   }
   :global(body .modal.points-awarded p) {
     font-size: 1.25em;
-    font-weight: bold;
-    margin-top: 0.5em;
   }
   :global(body .modal.points-awarded .points) {
-    color: #00c78f;
     border-radius: 1em;
     background-color: transparent;
   }
@@ -908,7 +916,9 @@
         </Modal>
         
         <Modal class="points-awarded" onClose={handlePointsAwardedClose} open={showPointsAwarded}>
-          {@html pointsAwardedData.msg}
+          <div class="points-awarded__msg">
+            {@html pointsAwardedData.msg}
+          </div>
           <Card type="black" text={pointsAwardedData.blackCard} answer={pointsAwardedData.answer} />
           <button on:click={closePointsAwarded}>Close</button>
         </Modal>
