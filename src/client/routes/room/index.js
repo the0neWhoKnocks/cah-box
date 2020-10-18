@@ -1,4 +1,4 @@
 import mountRoute from '../mountRoute';
-import Room from './Room.svelte';
+import Room from './components/Room.svelte';
 
 mountRoute(Room, { ...window.app.params });

@@ -355,13 +355,13 @@
     WS__MSG_TYPE__USER_LEFT_ROOM,
     WS__MSG_TYPE__USER_REMOVED,
     WS__MSG_TYPE__USER_UPDATE,
-  } from '../../../constants';
-  import { title, titleSuffix } from '../../store';
-  import Card from '../../components/Card.svelte';
-  import Copyable from '../../components/Copyable.svelte';
-  import GameEntry from '../../components/GameEntry.svelte';
-  import Modal from '../../components/Modal.svelte';
-  import User from '../../components/User.svelte';
+  } from '../../../../constants';
+  import { title, titleSuffix } from '../../../store';
+  import GameEntry from '../../../components/GameEntry.svelte';
+  import Modal from '../../../components/Modal.svelte';
+  import Card from './Card.svelte';
+  import Copyable from './Copyable.svelte';
+  import User from './User.svelte';
   
   const MSG__SET_CZAR = 'Make <User> the Czar';
   const ACTION__ANSWER_REVIEW_STATE_UPDATED = 'answerReviewStateUpdated';
