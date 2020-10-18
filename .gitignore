@@ -1,12 +1,13 @@
 # Files
 *.log
+*.patch
 *.zip
 
 # Folders
 .git
 .ignore
 .vscode
-__sapper__
+dist
 node_modules
 tests/cypress/fixtures
 tests/cypress/integration/examples

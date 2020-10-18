@@ -1,0 +1,140 @@
+*, *::after, *::before {
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  color: #333;
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+	font-size: 16px;
+	line-height: 1.5;
+	margin: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	margin: 0 0 0.5em 0;
+	font-weight: 400;
+	line-height: 1.2;
+}
+
+h1 {
+	font-size: 2em;
+}
+
+a {
+	color: inherit;
+}
+
+code {
+	font-family: menlo, inconsolata, monospace;
+	font-size: calc(1em - 2px);
+	color: #555;
+	background-color: #f0f0f0;
+	padding: 0.2em 0.4em;
+	border-radius: 2px;
+}
+
+button {
+  width: 100%;
+  font-size: 1em;
+  padding: 0.5em;
+  display: block;
+}
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+input {
+  font-size: 1em;
+}
+input[type="text"] {
+  padding: 0.25em;
+}
+
+p {
+  margin: 0;
+}
+p:not(:last-child) {
+  margin-bottom: 1em;
+}
+
+q {
+  color: #501600;
+  font-style: italic;
+  font-family: serif;
+  font-weight: bold;
+  padding: 0 0.5em;
+  border-radius: 0.25em;
+  background: #ffeb00;
+  display: inline-block;
+}
+
+@keyframes showMsg {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.icon {
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+}
+
+.loading-msg {
+  width: 100%;
+  height: 100%;
+  padding: 2em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation-name: showMsg;
+  animation-duration: 300ms;
+  animation-delay: 300ms;
+  animation-fill-mode: both;
+}
+body.no-js .loading-msg .msg,
+body.route-loaded .loading-msg,
+body:not(.route-loaded) #route {
+  display: none;
+}
+
+.root,
+#portal,
+#route {
+  width: 100%;
+  height: 100%;
+}
+
+#portal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+@media (min-width: 400px) {
+	body {
+		font-size: 16px;
+	}
+}
+
+@media (max-width: 500px) {
+  .root .modal .modal__body {
+    /*
+    Svelte sometimes appends the same class countless times, so no matter how
+    specific I get, it always takes precedence.
+    https://github.com/sveltejs/svelte/issues/4374
+    */
+    font-size: 1em !important; 
+  }
+}
