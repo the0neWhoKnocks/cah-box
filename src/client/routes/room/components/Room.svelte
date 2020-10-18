@@ -6,19 +6,8 @@
     display: flex;
   }
 
-  .users-ui {
+  :global(.users-list) {
     width: 200px;
-    background: #fff;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 1;
-  }
-  .users-ui :global(.user) {
-    margin: 0.25em 0;
-  }
-  .users-ui.is--admin :global(.user:hover) {
-    cursor: pointer;
-    background: rgba(255, 255, 0, 0.5);
   }
 
   .czar-pending-msg {
@@ -245,7 +234,7 @@
   }
 
   @media (max-width: 500px) {
-    .users-ui {
+    :global(.users-list) {
       width: 100px;
       font-size: 0.75em;
     }
@@ -340,7 +329,7 @@
   import Card from './Card.svelte';
   import Copyable from './Copyable.svelte';
   import EnterUsername from './EnterUsername.svelte';
-  import User from './User.svelte';
+  import UsersList from './UsersList.svelte';
   
   const MSG__SET_CZAR = 'Make <User> the Czar';
   const ACTION__ANSWER_REVIEW_STATE_UPDATED = 'answerReviewStateUpdated';
@@ -426,7 +415,7 @@
 
       if (
         (
-        localUser.czar
+          localUser.czar
           || localUser.cardsSubmitted
         )
         && room.submittedCards.length < (users.length - 1)
@@ -684,25 +673,12 @@
   <div class="wrapper">
     {#if socketConnected}
       {#if room}
-        <div
-          class="users-ui"
-          class:is--admin={!!userClickHandler}
-          on:click={userClickHandler}
-        >
-          {#each users as { admin, cardsSubmitted, connected, czar, name, points }}
-            <User
-              class="user"
-              admin={admin}
-              cardsSubmitted={cardsSubmitted}
-              connected={connected}
-              czar={czar}
-              local={name === localUser.name}
-              name={name}
-              points={points}
-              showDisconnectIndicator
-            />
-          {/each}
-        </div>
+        <UsersList
+          isAdmin={localUser.admin}
+          localUsername={localUser.name}
+          onUserClick={userClickHandler}
+          users={users}
+        />
 
         {#if localUser.cards}
           {#if (localUser.cards.length && czarSelected)}
