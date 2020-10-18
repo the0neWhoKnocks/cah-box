@@ -8,6 +8,9 @@ const shell = ({ page, params } = {}) => {
   if (process.env.NODE_ENV !== 'production') delete require.cache[require.resolve(MANIFEST_PATH)];
   const manifest = require(MANIFEST_PATH);
   const buildNumber = process.env.SOURCE_VERSION; // exposed by Heroku during build
+  const pageCSS = (manifest[`${page}.css`])
+    ? `<link rel="stylesheet" href="${manifest[`${page}.css`]}">`
+    : '';
 
   return `
     <!doctype html>
@@ -29,6 +32,7 @@ const shell = ({ page, params } = {}) => {
       <meta name="theme-color" content="#000000">
 
       <link rel="stylesheet" href="${manifest['global.css']}">
+      ${pageCSS}
 
       <script>
         window.app = {
