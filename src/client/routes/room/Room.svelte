@@ -71,13 +71,15 @@
   :global(body .modal.room-error button) {
     border: solid 1px;
     border-radius: 0.25em;
-    margin-top: 1em;
     background: #00ff95;
   }
 
   :global(body .modal.admin-instructions .modal__body) {
     width: 500px;
     font-size: 1.3em;
+  }
+  :global(body .modal.admin-instructions li) {
+    margin: 0.5em 0;
   }
 
   :global(body .modal.user-data-menu .modal__body) {
@@ -357,9 +359,9 @@
   import { title, titleSuffix } from '../../store';
   import Card from '../../components/Card.svelte';
   import Copyable from '../../components/Copyable.svelte';
+  import GameEntry from '../../components/GameEntry.svelte';
   import Modal from '../../components/Modal.svelte';
   import User from '../../components/User.svelte';
-  import createGame from '../../utils/createGame';
   
   const MSG__SET_CZAR = 'Make <User> the Czar';
   const ACTION__ANSWER_REVIEW_STATE_UPDATED = 'answerReviewStateUpdated';
@@ -375,7 +377,6 @@
   let adminInstructionsShown = false;
   let blackCard;
   let closeAdminInstructionsBtnRef;
-  let createGameBtnRef;
   let czarSelected = false;
   let localUser = {};
   let minimumNumberOfPlayersJoined = false;
@@ -843,9 +844,12 @@
         >
           <p>
             Congrats! You're the MC, so you're running the game. In order for
-            others to join, just send them this URL:
-            <Copyable text={window.location.href} />
+            others to join, just send them
           </p>
+          <ul>
+            <li>this URL: <Copyable text={window.location.href} /></li>
+            <li>or this code: <Copyable text={roomID} /></li>
+          </ul>
           <p>
             When starting a new CAH game it's up to the group to choose the Card
             Czar. Y'all can do that via the typical <q>Who was the last to poop?</q>
@@ -910,11 +914,9 @@
         </Modal>
       {/if}
 
-      <Modal class="room-error" focusRef={createGameBtnRef} open={roomCheckComplete && !room}>
+      <Modal class="room-error" open={roomCheckComplete && !room}>
         Sorry, it looks like this room doesn't exist anymore.
-        <button on:click={createGame} bind:this={createGameBtnRef}>
-          Click here to create a new game.
-        </button>
+        <GameEntry />
       </Modal>
     {/if}
     
