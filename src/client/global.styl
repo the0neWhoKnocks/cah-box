@@ -40,6 +40,12 @@ code {
 	border-radius: 2px;
 }
 
+button {
+  width: 100%;
+  font-size: 1em;
+  padding: 0.5em;
+  display: block;
+}
 button:not(:disabled) {
   cursor: pointer;
 }
@@ -109,8 +115,6 @@ body:not(.route-loaded) #route {
   height: 100%;
 }
 
-
-
 #portal {
   position: absolute;
   top: 0;
@@ -118,10 +122,19 @@ body:not(.route-loaded) #route {
   pointer-events: none;
 }
 
-
 @media (min-width: 400px) {
 	body {
 		font-size: 16px;
 	}
 }
 
+@media (max-width: 500px) {
+  .root .modal .modal__body {
+    /*
+    Svelte sometimes appends the same class countless times, so no matter how
+    specific I get, it always takes precedence.
+    https://github.com/sveltejs/svelte/issues/4374
+    */
+    font-size: 1em !important; 
+  }
+}

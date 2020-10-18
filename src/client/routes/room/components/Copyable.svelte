@@ -49,6 +49,7 @@
   }
 
   .copyable-item {
+    width: auto;
     font-size: 0.8em;
     text-align: left;
     padding: 0;

@@ -1,11 +1,4 @@
 <style>
-  button {
-    width: 100%;
-    font-size: 1em;
-    padding: 0.5em;
-    display: block;
-  }
-
   .wrapper {
     width: 100%;
     height: 100%;
@@ -52,18 +45,9 @@
     display: inline-block;
   }
 
-  .join-form,
   :global(.modal.room-error .modal__body) {
     display: flex;
     flex-direction: column;
-  }
-
-  .join-form {
-    max-width: 300px;
-  }
-  .join-form label + input {
-    display: block;
-    margin-bottom: 1em;
   }
 
   :global(body .modal.room-error .modal__body) {
@@ -153,16 +137,6 @@
     margin-top: 1em;
     background-color: #fff;
     box-shadow: 0 0.1em;
-  }
-
-  .error-msg {
-    color: #7d0000;
-    line-height: 1.2em;
-    padding: 0.5em;
-    border: solid 2px;
-    border-radius: 0.25em;
-    margin-bottom: 1em;
-    background: #ffbcbc;
   }
 
   .cards {
@@ -271,10 +245,6 @@
   }
 
   @media (max-width: 500px) {
-    :global(.root .modal .modal__body) {
-      font-size: 1em;
-    }
-
     .users-ui {
       width: 100px;
       font-size: 0.75em;
@@ -341,13 +311,10 @@
 <script>
   import { onMount } from 'svelte';
   import {
-    ERROR_CODE__NAME_TAKEN,
-    ERROR_CODE__ROOM_DOES_NOT_EXIST,
     WS__MSG_TYPE__ANSWER_REVIEW_STATE_UPDATED,
     WS__MSG_TYPE__CARD_SELECTION_TOGGLED,
     WS__MSG_TYPE__CARDS_DEALT,
     WS__MSG_TYPE__CARDS_SUBMITTED,
-    WS__MSG_TYPE__CHECK_USERNAME,
     WS__MSG_TYPE__CHOSE_ANSWER,
     WS__MSG_TYPE__DEAL_CARDS,
     WS__MSG_TYPE__JOIN_GAME,
@@ -372,6 +339,7 @@
   import Modal from '../../../components/Modal.svelte';
   import Card from './Card.svelte';
   import Copyable from './Copyable.svelte';
+  import EnterUsername from './EnterUsername.svelte';
   import User from './User.svelte';
   
   const MSG__SET_CZAR = 'Make <User> the Czar';
@@ -399,8 +367,6 @@
   let socketConnectedAtLeastOnce = false;
   let userClickHandler;
   let userData;
-  let usernameInputError;
-  let usernameInputRef;
   let users = [];
   let czarWaitingMsg = '';
   let showPointsAwarded = false;
@@ -410,15 +376,6 @@
   let gameMC;
   
   export let roomID;
-  
-  function handleJoinSubmit(ev) {
-    ev.preventDefault();
-
-    window.clientSocket.emit(WS__MSG_TYPE__CHECK_USERNAME, {
-      roomID,
-      username: usernameInputRef.value,
-    });
-  }
 
   function updateTurnProps() {
     if (room && room.blackCard) blackCard = room.blackCard;
@@ -542,25 +499,6 @@
         }
       }
     };
-  }
-
-  function handleUsernameCheck({ error, username }) {
-    if (error) {
-      switch (error.code) {
-        case ERROR_CODE__NAME_TAKEN:
-          usernameInputError = 'Sorry, it looks like that username is taken';
-          break;
-
-        case ERROR_CODE__ROOM_DOES_NOT_EXIST:
-          handleRoomDestruction();
-          break;
-      }
-    }
-    else {
-      localUser.name = username;
-      window.clientSocket.emit(WS__MSG_TYPE__JOIN_GAME, { roomID, username });
-      window.sessionStorage.setItem(roomID, JSON.stringify({ username }));
-    }
   }
 
   function closeAdminInstructions() {
@@ -694,6 +632,12 @@
     pointsAwardedData = {};
   }
 
+  function handleUsernameSuccess(username) {
+    localUser.name = username;
+    window.clientSocket.emit(WS__MSG_TYPE__JOIN_GAME, { roomID, username });
+    window.sessionStorage.setItem(roomID, JSON.stringify({ username }));
+  }
+
   titleSuffix.set(`Game ${roomID}`);
 
   $: minimumNumberOfPlayersJoined = users.length > 1;
@@ -712,7 +656,6 @@
       window.clientSocket.on(WS__MSG_TYPE__CARD_SELECTION_TOGGLED, updateGameState(ACTION__CARD_SELECTION_TOGGLED));
       window.clientSocket.on(WS__MSG_TYPE__CARDS_DEALT, updateGameState(ACTION__CARDS_DEALT));
       window.clientSocket.on(WS__MSG_TYPE__CARDS_SUBMITTED, updateGameState(ACTION__CARDS_SUBMITTED));
-      window.clientSocket.on(WS__MSG_TYPE__CHECK_USERNAME, handleUsernameCheck);
       window.clientSocket.on(WS__MSG_TYPE__POINTS_AWARDED, handlePointsAwarded);
       window.clientSocket.on(WS__MSG_TYPE__ROOM_DESTROYED, handleRoomDestruction);
       window.clientSocket.on(WS__MSG_TYPE__SERVER_DOWN, handleServerDisconnect);
@@ -841,22 +784,11 @@
           {/if}
         {/if}
         
-        <Modal focusRef={usernameInputRef} open={!localUser.name}>
-          <form class="join-form" autocomplete="off" on:submit={handleJoinSubmit}>
-            <label for="username">Enter Username</label>
-            <input 
-              id="username"
-              type="text" 
-              name="username"
-              required
-              bind:this={usernameInputRef}
-            />
-            {#if usernameInputError}
-              <div class="error-msg">{usernameInputError}</div>
-            {/if}
-            <button>Join Game</button>
-          </form>
-        </Modal>
+        <EnterUsername
+          onUsernameSuccess={handleUsernameSuccess}
+          open={!localUser.name}
+          roomID={roomID}
+        />
 
         <Modal
           class="admin-instructions"
