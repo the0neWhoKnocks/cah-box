@@ -62,7 +62,6 @@
       class="is--local"
       connected={localUser.connected}
       czar={localUser.czar}
-      local
       name={localUser.name}
       points={localUser.points}
     />
