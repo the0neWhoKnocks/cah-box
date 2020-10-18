@@ -57,7 +57,7 @@
 - [x] Transition the Modal more smoothly instead of just popping on.
 - [ ] Order the Local User at the top of the `users` list.
 - [ ] Limit the length of a User's name.
-- [ ] Add "Waiting for <MC_NAME> to pick the Czar"
+- [x] Add "Waiting for <MC_NAME> to pick the Czar"
 
 ## Bugs
 
