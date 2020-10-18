@@ -10,7 +10,7 @@
    - [ ] Add confirmation to card selection
    - [x] Or make it harder for Users on Mobile devices to accidentally click it.
 - Optional Rules:
-   - [ ] Spend a point to discard X amount of cards, and get the same number of
+   - [x] Spend a point to discard X amount of cards, and get the same number of
      new cards back. (requires they have points of course)
    - [ ] Everyone can discard any number of cards and draw up to ten when the
      haiku card is played (before answering)

@@ -152,6 +152,18 @@
     overflow: hidden;
     position: relative;
   }
+  .cards .cards-nav {
+    position: absolute;
+    top: 0.25em;
+    right: 0;
+    z-index: 1;
+  }
+  .cards .cards-nav button {
+    border: solid 1px #000;
+    border-radius: 0.25em;
+    padding: 0.5em 0.75em;
+    background: #fff;
+  }
   .cards .user-cards {
     width: 100%;
     height: 100%;
@@ -302,6 +314,7 @@
   import {
     WS__MSG_TYPE__ANSWER_REVIEW_STATE_UPDATED,
     WS__MSG_TYPE__CARD_SELECTION_TOGGLED,
+    WS__MSG_TYPE__CARD_SWAPPED,
     WS__MSG_TYPE__CARDS_DEALT,
     WS__MSG_TYPE__CARDS_SUBMITTED,
     WS__MSG_TYPE__CHOSE_ANSWER,
@@ -315,6 +328,7 @@
     WS__MSG_TYPE__SET_ANSWER_REVIEW_STATE,
     WS__MSG_TYPE__SET_CZAR,
     WS__MSG_TYPE__SUBMIT_CARDS,
+    WS__MSG_TYPE__SWAP_CARD,
     WS__MSG_TYPE__TOGGLE_CARD_SELECTION,
     WS__MSG_TYPE__USER_DISCONNECTED,
     WS__MSG_TYPE__USER_ENTERED_ROOM,
@@ -334,6 +348,7 @@
   const MSG__SET_CZAR = 'Make <User> the Czar';
   const ACTION__ANSWER_REVIEW_STATE_UPDATED = 'answerReviewStateUpdated';
   const ACTION__CARD_SELECTION_TOGGLED = 'cardSelectionToggled';
+  const ACTION__CARD_SWAPPED = 'cardSwapped';
   const ACTION__CARDS_DEALT = 'cardsDealt';
   const ACTION__CARDS_SUBMITTED = 'cardsSubmitted';
   const ACTION__USER_DISCONNECTED = 'userDisconnected';
@@ -363,6 +378,7 @@
   let mounted = false;
   let roomCheckComplete = false;
   let gameMC;
+  let swappingCards = false;
   
   export let roomID;
 
@@ -399,6 +415,9 @@
       }
       else if (action === ACTION__USER_LEFT_ROOM) {
         updateTurnProps();
+      }
+      else if (action === ACTION__CARD_SWAPPED) {
+        swappingCards = false;
       }
 
       userClickHandler = (localUser.admin) ? handleUserClick : undefined;
@@ -630,6 +649,18 @@
     window.sessionStorage.setItem(roomID, JSON.stringify({ username }));
   }
 
+  function toggleCardSwap() {
+    swappingCards = !swappingCards;
+  }
+
+  function handleSwapClick(cardNdx) {
+    window.clientSocket.emit(WS__MSG_TYPE__SWAP_CARD, {
+      cardNdx,
+      roomID,
+      username: localUser.name,
+    });
+  }
+
   titleSuffix.set(`Game ${roomID}`);
 
   $: minimumNumberOfPlayersJoined = users.length > 1;
@@ -646,6 +677,7 @@
 
       window.clientSocket.on(WS__MSG_TYPE__ANSWER_REVIEW_STATE_UPDATED, updateGameState(ACTION__ANSWER_REVIEW_STATE_UPDATED));
       window.clientSocket.on(WS__MSG_TYPE__CARD_SELECTION_TOGGLED, updateGameState(ACTION__CARD_SELECTION_TOGGLED));
+      window.clientSocket.on(WS__MSG_TYPE__CARD_SWAPPED, updateGameState(ACTION__CARD_SWAPPED));
       window.clientSocket.on(WS__MSG_TYPE__CARDS_DEALT, updateGameState(ACTION__CARDS_DEALT));
       window.clientSocket.on(WS__MSG_TYPE__CARDS_SUBMITTED, updateGameState(ACTION__CARDS_SUBMITTED));
       window.clientSocket.on(WS__MSG_TYPE__POINTS_AWARDED, handlePointsAwarded);
@@ -737,10 +769,28 @@
                 
                 <div class="user-cards-wrapper">
                   <div class="sep is--top"></div>
+                  {#if localUser.points}
+                    <nav class="cards-nav">
+                      <button on:click={toggleCardSwap}>
+                        {#if swappingCards}
+                          Cancel Card Swap
+                        {:else}
+                          Swap Card
+                        {/if}
+                      </button>
+                    </nav>
+                  {/if}
                   
                   <div class="user-cards" class:disabled={localUser.maxCardsSelected}>
                     {#each localUser.cards as { ndx, selected, text }}
-                      <Card {ndx} {text} onClick={handleCardSelectionToggle} {selected} />
+                      <Card
+                        {ndx}
+                        onClick={handleCardSelectionToggle}
+                        onSwapClick={handleSwapClick}
+                        {selected}
+                        {text}
+                        swappable={swappingCards}
+                      />
                     {/each}
                   </div>
     

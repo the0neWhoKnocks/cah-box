@@ -26,6 +26,10 @@
     opacity: 0.25;
     pointer-events: none;
   }
+  .card.is--swappable {
+    border-color: #27cfb6;
+    border-width: 4px;
+  }
 
   .card__text {
     font-size: 0.85em;
@@ -57,13 +61,18 @@
 
   export let answer = undefined;
   export let onClick = undefined;
+  export let onSwapClick = undefined;
   export let rotate = false;
   export let selected = false;
+  export let swappable = false;
   export let text = '';
   export let type = 'white';
 
   function handleClick() {
-    if (onClick) {
+    if (swappable && onSwapClick) {
+      onSwapClick($$props.ndx);
+    }
+    else if (onClick) {
       selected = !selected;
       onClick($$props.ndx);
     }
@@ -95,6 +104,7 @@
   class:is--black={type === 'black'}
   class:is--selected={selected}
   class:is--selectedable={!!onClick}
+  class:is--swappable={swappable}
   style={rotate ? `transform: rotate(${randomNumber(-2, 2)}deg);` : undefined}
   on:click={handleClick}
 >

@@ -24,6 +24,7 @@ module.exports = {
   WS__MSG_TYPE__SET_ANSWER_REVIEW_STATE: 'set answer review state',
   WS__MSG_TYPE__SET_CZAR: 'set czar',
   WS__MSG_TYPE__SUBMIT_CARDS: 'submit cards',
+  WS__MSG_TYPE__SWAP_CARD: 'swap card',
   WS__MSG_TYPE__TOGGLE_CARD_SELECTION: 'toggle card selection',
   WS__MSG_TYPE__USER_DISCONNECTED: 'user disconnected',
   WS__MSG_TYPE__USER_ENTERED_ROOM: 'user entered room',

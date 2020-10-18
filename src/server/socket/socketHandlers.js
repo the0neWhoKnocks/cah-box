@@ -13,6 +13,7 @@ module.exports = function connection(socket, serverSocket) {
     WS__MSG_TYPE__SET_ANSWER_REVIEW_STATE,
     WS__MSG_TYPE__SET_CZAR,
     WS__MSG_TYPE__SUBMIT_CARDS,
+    WS__MSG_TYPE__SWAP_CARD,
     WS__MSG_TYPE__TOGGLE_CARD_SELECTION,
   } = require('../../constants');
   const checkUsername = require('../gameActions/checkUsername')(serverSocket);
@@ -25,6 +26,7 @@ module.exports = function connection(socket, serverSocket) {
   const setAnswerReviewState = require('../gameActions/setAnswerReviewState')(serverSocket);
   const setUserState = require('../gameActions/setUserState')(serverSocket);
   const submitCards = require('../gameActions/submitCards')(serverSocket);
+  const swapCard = require('../gameActions/swapCard')(serverSocket);
   const toggleCardSelection = require('../gameActions/toggleCardSelection')(serverSocket);
 
   socket.on('message', (payload) => {
@@ -42,6 +44,7 @@ module.exports = function connection(socket, serverSocket) {
       case WS__MSG_TYPE__SET_ANSWER_REVIEW_STATE: setAnswerReviewState(data); break;
       case WS__MSG_TYPE__SET_CZAR: setUserState(data, 'czar'); break;
       case WS__MSG_TYPE__SUBMIT_CARDS: submitCards(data); break;
+      case WS__MSG_TYPE__SWAP_CARD: swapCard(data); break;
       case WS__MSG_TYPE__TOGGLE_CARD_SELECTION: toggleCardSelection(data); break;
       case WS__MSG_TYPE__USER_ENTERED_ROOM: enterRoom(data); break;
       default: {
