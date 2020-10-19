@@ -687,8 +687,6 @@
     roomID,
     username: sessionData.username,
   });
-
-  window.Notification.requestPermission();
 </script>
 
 <svelte:head>
