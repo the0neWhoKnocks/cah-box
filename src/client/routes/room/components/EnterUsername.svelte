@@ -24,13 +24,13 @@
 </style>
 
 <script>
-  import { onMount } from 'svelte';
   import {
     ERROR_CODE__NAME_TAKEN,
     ERROR_CODE__ROOM_DOES_NOT_EXIST,
     WS__MSG_TYPE__CHECK_USERNAME,
   } from '../../../../constants';
   import Modal from '../../../components/Modal.svelte';
+  import addSocketListeners from '../../../utils/addSocketListeners';
 
   const MAX_USERNAME_LENGTH = 15;
   const NON_ALPHA_NUMERIC_CHARS = /[^a-z0-9]+/i;
@@ -71,10 +71,8 @@
     if (username.length > MAX_USERNAME_LENGTH) username = username.substring(0, MAX_USERNAME_LENGTH);
   }
 
-  onMount(() => {
-    window.socketConnected.then(() => {
-      window.clientSocket.on(WS__MSG_TYPE__CHECK_USERNAME, handleUsernameCheck);
-    });
+  addSocketListeners({
+    [WS__MSG_TYPE__CHECK_USERNAME]: handleUsernameCheck,
   });
 </script>
 

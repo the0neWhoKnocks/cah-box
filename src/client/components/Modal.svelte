@@ -16,12 +16,18 @@
   let mounted = false;
 
   export let focusRef = undefined;
+  export let force = false;
   export let open = false;
   export let onClose = undefined;
   export { className as class };
 
   function renderModal() {
-    if (!window.pendingModalCloses) window.pendingModalCloses = [Promise.resolve()];
+    if (force && window.currentModal) window.currentModal.forceClose();
+
+    if (
+      !window.pendingModalCloses
+      || !window.pendingModalCloses.length
+    ) window.pendingModalCloses = [Promise.resolve()];
     
     if (!window.modalResolvers) window.modalResolvers = [];
 
@@ -34,6 +40,17 @@
       const portal = document.getElementById('portal');
       portal.appendChild(modalRef);
       document.body.classList.add(MODIFIER__OPEN);
+
+      window.currentModal = {
+        forceClose() {
+          if (portal.contains(this.modalRef)) portal.removeChild(this.modalRef);
+          if (window.modalResolvers.length) window.modalResolvers.splice(0, 1)[0]();
+
+          document.body.classList.remove(MODIFIER__OPEN);
+          window.modalCount--;
+        },
+        modalRef,
+      };
   
       if (focusRef) {
         setTimeout(() => {
