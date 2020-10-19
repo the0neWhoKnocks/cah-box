@@ -345,6 +345,8 @@
   import EnterUsername from './EnterUsername.svelte';
   import UsersList from './UsersList.svelte';
   
+  export let roomID;
+
   const MSG__SET_CZAR = 'Make <User> the Czar';
   const ACTION__ANSWER_REVIEW_STATE_UPDATED = 'answerReviewStateUpdated';
   const ACTION__CARD_SELECTION_TOGGLED = 'cardSelectionToggled';
@@ -357,30 +359,28 @@
   const ACTION__USER_LEFT_ROOM = 'userLeftRoom';
   const ACTION__USER_REMOVED = 'userRemoved';
   const ACTION__USER_UPDATE = 'userUpdate';
-  let adminInstructionsShown = false;
+  const sessionData = JSON.parse(window.sessionStorage.getItem(roomID) || '{}');
+  let adminInstructionsShown = sessionData.adminInstructionsShown;
   let blackCard;
   let closeAdminInstructionsBtnRef;
   let czarSelected = false;
-  let localUser = {};
+  let localUser = { name: sessionData.username };
   let minimumNumberOfPlayersJoined = false;
   let room;
   let showAdminInstructions = false;
   let showUserCards = false;
   let showUserDataMenu = false;
-  let socketConnected = false;
-  let socketConnectedAtLeastOnce = false;
+  let socketConnected = true;
+  let socketConnectedAtLeastOnce = true;
   let userClickHandler;
   let userData;
   let users = [];
   let czarWaitingMsg = '';
   let showPointsAwarded = false;
   let pointsAwardedData = {};
-  let mounted = false;
   let roomCheckComplete = false;
   let gameMC;
   let swappingCards = false;
-  
-  export let roomID;
 
   function updateTurnProps() {
     if (room && room.blackCard) blackCard = room.blackCard;
@@ -628,6 +628,7 @@
   function handleRoomDestruction() {
     room = undefined;
     roomCheckComplete = true;
+    window.sessionStorage.removeItem(roomID);
   }
 
   function handlePointsAwarded({ answer, blackCard, name, points }) {
@@ -665,249 +666,238 @@
 
   $: minimumNumberOfPlayersJoined = users.length > 1;
 
-  onMount(() => {
-    const { username, ...rest } = JSON.parse(window.sessionStorage.getItem(roomID) || '{}');
-    adminInstructionsShown = rest.adminInstructionsShown;
-    localUser.name = username;
+  window.clientSocket.on(WS__MSG_TYPE__ANSWER_REVIEW_STATE_UPDATED, updateGameState(ACTION__ANSWER_REVIEW_STATE_UPDATED));
+  window.clientSocket.on(WS__MSG_TYPE__CARD_SELECTION_TOGGLED, updateGameState(ACTION__CARD_SELECTION_TOGGLED));
+  window.clientSocket.on(WS__MSG_TYPE__CARD_SWAPPED, updateGameState(ACTION__CARD_SWAPPED));
+  window.clientSocket.on(WS__MSG_TYPE__CARDS_DEALT, updateGameState(ACTION__CARDS_DEALT));
+  window.clientSocket.on(WS__MSG_TYPE__CARDS_SUBMITTED, updateGameState(ACTION__CARDS_SUBMITTED));
+  window.clientSocket.on(WS__MSG_TYPE__POINTS_AWARDED, handlePointsAwarded);
+  window.clientSocket.on(WS__MSG_TYPE__ROOM_DESTROYED, handleRoomDestruction);
+  window.clientSocket.on(WS__MSG_TYPE__SERVER_DOWN, handleServerDisconnect);
+  window.clientSocket.on(WS__MSG_TYPE__USER_DISCONNECTED, updateGameState(ACTION__USER_DISCONNECTED));
+  window.clientSocket.on(WS__MSG_TYPE__USER_ENTERED_ROOM, updateGameState(ACTION__USER_ENTERED_ROOM));
+  window.clientSocket.on(WS__MSG_TYPE__USER_JOINED, updateGameState(ACTION__USER_JOINED));
+  window.clientSocket.on(WS__MSG_TYPE__USER_LEFT_ROOM, updateGameState(ACTION__USER_LEFT_ROOM));
+  window.clientSocket.on(WS__MSG_TYPE__USER_REMOVED, updateGameState(ACTION__USER_REMOVED));
+  window.clientSocket.on(WS__MSG_TYPE__USER_UPDATE, updateGameState(ACTION__USER_UPDATE));
 
-    window.socketConnected.then(() => {
-      mounted = true;
-      socketConnectedAtLeastOnce = true;
-      socketConnected = true;
-
-      window.clientSocket.on(WS__MSG_TYPE__ANSWER_REVIEW_STATE_UPDATED, updateGameState(ACTION__ANSWER_REVIEW_STATE_UPDATED));
-      window.clientSocket.on(WS__MSG_TYPE__CARD_SELECTION_TOGGLED, updateGameState(ACTION__CARD_SELECTION_TOGGLED));
-      window.clientSocket.on(WS__MSG_TYPE__CARD_SWAPPED, updateGameState(ACTION__CARD_SWAPPED));
-      window.clientSocket.on(WS__MSG_TYPE__CARDS_DEALT, updateGameState(ACTION__CARDS_DEALT));
-      window.clientSocket.on(WS__MSG_TYPE__CARDS_SUBMITTED, updateGameState(ACTION__CARDS_SUBMITTED));
-      window.clientSocket.on(WS__MSG_TYPE__POINTS_AWARDED, handlePointsAwarded);
-      window.clientSocket.on(WS__MSG_TYPE__ROOM_DESTROYED, handleRoomDestruction);
-      window.clientSocket.on(WS__MSG_TYPE__SERVER_DOWN, handleServerDisconnect);
-      window.clientSocket.on(WS__MSG_TYPE__USER_DISCONNECTED, updateGameState(ACTION__USER_DISCONNECTED));
-      window.clientSocket.on(WS__MSG_TYPE__USER_ENTERED_ROOM, updateGameState(ACTION__USER_ENTERED_ROOM));
-      window.clientSocket.on(WS__MSG_TYPE__USER_JOINED, updateGameState(ACTION__USER_JOINED));
-      window.clientSocket.on(WS__MSG_TYPE__USER_LEFT_ROOM, updateGameState(ACTION__USER_LEFT_ROOM));
-      window.clientSocket.on(WS__MSG_TYPE__USER_REMOVED, updateGameState(ACTION__USER_REMOVED));
-      window.clientSocket.on(WS__MSG_TYPE__USER_UPDATE, updateGameState(ACTION__USER_UPDATE));
-
-      window.clientSocket.emit(WS__MSG_TYPE__USER_ENTERED_ROOM, { roomID, username });
-
-      window.Notification.requestPermission();
-    });
+  window.clientSocket.emit(WS__MSG_TYPE__USER_ENTERED_ROOM, {
+    roomID,
+    username: sessionData.username,
   });
+
+  window.Notification.requestPermission();
 </script>
 
 <svelte:head>
   <title>{`${$title}${($title && $titleSuffix) ? ' | ' : ''}${$titleSuffix ? $titleSuffix : ''}`}</title>
 </svelte:head>
 
-{#if mounted}
-  <div class="wrapper">
-    {#if socketConnected}
-      {#if room}
-        <UsersList
-          isAdmin={localUser.admin}
-          localUsername={localUser.name}
-          onUserClick={userClickHandler}
-          users={users}
-        />
+<div class="wrapper">
+  {#if socketConnected}
+    {#if room}
+      <UsersList
+        isAdmin={localUser.admin}
+        localUsername={localUser.name}
+        onUserClick={userClickHandler}
+        users={users}
+      />
 
-        {#if localUser.cards}
-          {#if (localUser.cards.length && czarSelected)}
-            <div class="cards">
-              <div class="answers">
-                <div class="answers-wrapper">
-                  <div class="black-card-wrapper">
-                    <Card type="black" text={blackCard} answer={room.blackCardAnswer.cards} />
-                    {#if czarWaitingMsg}
-                      <div class="czar-waiting-msg">{@html czarWaitingMsg}</div>
-                    {/if}
-                    {#if localUser.reviewingAnswers}
-                      <nav>
-                        <button
-                          class="prev-btn"
-                          class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
-                          disabled={localUser.reviewNdx === 0}
-                          on:click={reviewPreviousAnswer}
-                        >Previous</button>
-                        <button
-                          class="next-btn"
-                          class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
-                          disabled={localUser.reviewNdx === room.submittedCards.length - 1}
-                          on:click={reviewNextAnswer}
-                        >Next</button>
-                        <button
-                          class="show-answer-btn"
-                          class:hidden={localUser.startedReviewingAnswers}
-                          on:click={startedReviewingAnswers}
-                        >Show Answer</button>
-                        <button
-                          class="pick-answer-btn"
-                          disabled={!localUser.startedReviewingAnswers}
-                          on:click={chooseAnswer}
-                        >Pick Answer</button>
-                      </nav>
-                    {/if}
-                  </div>
-                  {#if showUserCards}
-                    {#each localUser.selectedCards as { ndx, text } (`answer_${ndx}`)}
-                      <Card {ndx} {text} onClick={handleCardSelectionToggle} rotate />
-                    {/each}
+      {#if localUser.cards}
+        {#if (localUser.cards.length && czarSelected)}
+          <div class="cards">
+            <div class="answers">
+              <div class="answers-wrapper">
+                <div class="black-card-wrapper">
+                  <Card type="black" text={blackCard} answer={room.blackCardAnswer.cards} />
+                  {#if czarWaitingMsg}
+                    <div class="czar-waiting-msg">{@html czarWaitingMsg}</div>
                   {/if}
-                </div>
-              </div>
-
-              {#if showUserCards}
-                {#if localUser.maxCardsSelected}
-                  <button
-                    class="submit-cards-btn"
-                    on:click={handleSubmitCards}
-                  >
-                    {@html `Submit Card${localUser.selectedCards.length > 1 ? 's' : ''}`}
-                  </button>
-                {/if}
-                
-                <div class="user-cards-wrapper">
-                  <div class="sep is--top"></div>
-                  {#if localUser.points}
-                    <nav class="cards-nav">
-                      <button on:click={toggleCardSwap}>
-                        {#if swappingCards}
-                          Cancel Card Swap
-                        {:else}
-                          Swap Card
-                        {/if}
-                      </button>
+                  {#if localUser.reviewingAnswers}
+                    <nav>
+                      <button
+                        class="prev-btn"
+                        class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
+                        disabled={localUser.reviewNdx === 0}
+                        on:click={reviewPreviousAnswer}
+                      >Previous</button>
+                      <button
+                        class="next-btn"
+                        class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
+                        disabled={localUser.reviewNdx === room.submittedCards.length - 1}
+                        on:click={reviewNextAnswer}
+                      >Next</button>
+                      <button
+                        class="show-answer-btn"
+                        class:hidden={localUser.startedReviewingAnswers}
+                        on:click={startedReviewingAnswers}
+                      >Show Answer</button>
+                      <button
+                        class="pick-answer-btn"
+                        disabled={!localUser.startedReviewingAnswers}
+                        on:click={chooseAnswer}
+                      >Pick Answer</button>
                     </nav>
                   {/if}
-                  
-                  <div class="user-cards" class:disabled={localUser.maxCardsSelected}>
-                    {#each localUser.cards as { ndx, selected, text }}
-                      <Card
-                        {ndx}
-                        onClick={handleCardSelectionToggle}
-                        onSwapClick={handleSwapClick}
-                        {selected}
-                        {text}
-                        swappable={swappingCards}
-                      />
-                    {/each}
-                  </div>
-    
-                  <div class="sep is--btm"></div>
                 </div>
-              {/if}
-            </div>
-          {:else}
-            <div class="czar-pending-msg">
-              <p>
-                {#if localUser.admin}
-                  You need to pick the Card Czar.
-                  <br>
-                  To do so, just click on a User in the side menu.
-                {:else}
-                  Waiting for <mark>{gameMC}</mark> to pick the Card Czar.
+                {#if showUserCards}
+                  {#each localUser.selectedCards as { ndx, text } (`answer_${ndx}`)}
+                    <Card {ndx} {text} onClick={handleCardSelectionToggle} rotate />
+                  {/each}
                 {/if}
-              </p>
+              </div>
             </div>
-          {/if}
-        {/if}
-        
-        <EnterUsername
-          onUsernameSuccess={handleUsernameSuccess}
-          open={!localUser.name}
-          roomID={roomID}
-        />
 
-        <Modal
-          class="admin-instructions"
-          focusRef={closeAdminInstructionsBtnRef}
-          open={showAdminInstructions}
-        >
-          <p>
-            Congrats! You're the MC, so you're running the game. In order for
-            others to join, just send them
-          </p>
-          <ul>
-            <li>this URL: <Copyable text={window.location.href} /></li>
-            <li>or this code: <Copyable text={roomID} /></li>
-          </ul>
-          <p>
-            When starting a new CAH game it's up to the group to choose the Card
-            Czar. Y'all can do that via the typical <q>Who was the last to poop?</q>
-            question, or by what ever means you choose.
-          </p>
-          <p>
-            Once the group's chosen the Czar, you just have to click on that
-            User and choose <q>{MSG__SET_CZAR}</q>. Once you do so, the game
-            will start.
-          </p>
-          <button 
-            type="button"
-            on:click={closeAdminInstructions}
-            bind:this={closeAdminInstructionsBtnRef}
-          >Close</button>
-        </Modal>
-        
-        <Modal class="user-data-menu" onClose={handleUserDataMenuClose} open={showUserDataMenu}>
-          <button
-            type="button"
-            on:click={setCzar}
-            disabled={userData.czar || !minimumNumberOfPlayersJoined}
-          >
-            {@html MSG__SET_CZAR.replace('<User>', `<q>${userData.name}</q>`)}
-          </button>
-          {#if !minimumNumberOfPlayersJoined}
-            <div class="help">
-              There has to be at least 2 players before you can assign a Czar.
-            </div>
-          {/if}
-          {#if userData.czar}
-            <div class="help">
-              You're already the Czar, yuh silly goose.
-            </div>
-          {/if}
-          <button
-            type="button"
-            on:click={setAdmin}
-            disabled={userData.admin}
-          >{@html `Make <q>${userData.name}</q> the MC`}</button>
-          {#if userData.admin}
-            <div class="help">
-              You're already the MC, yuh silly goose.
-            </div>
-          {/if}
-          <button
-            type="button"
-            on:click={removeUserFromGame}
-            disabled={userData.admin}
-            data-username={userData.name}
-          >{@html `Remove <q>${userData.name}</q> from game`}</button>
-          <button
-            type="button"
-            on:click={closeUserDataMenu}
-          >Cancel</button>
-        </Modal>
-        
-        <Modal class="points-awarded" onClose={handlePointsAwardedClose} open={showPointsAwarded}>
-          <div class="points-awarded__msg">
-            {@html pointsAwardedData.msg}
+            {#if showUserCards}
+              {#if localUser.maxCardsSelected}
+                <button
+                  class="submit-cards-btn"
+                  on:click={handleSubmitCards}
+                >
+                  {@html `Submit Card${localUser.selectedCards.length > 1 ? 's' : ''}`}
+                </button>
+              {/if}
+              
+              <div class="user-cards-wrapper">
+                <div class="sep is--top"></div>
+                {#if localUser.points}
+                  <nav class="cards-nav">
+                    <button on:click={toggleCardSwap}>
+                      {#if swappingCards}
+                        Cancel Card Swap
+                      {:else}
+                        Swap Card
+                      {/if}
+                    </button>
+                  </nav>
+                {/if}
+                
+                <div class="user-cards" class:disabled={localUser.maxCardsSelected}>
+                  {#each localUser.cards as { ndx, selected, text }}
+                    <Card
+                      {ndx}
+                      onClick={handleCardSelectionToggle}
+                      onSwapClick={handleSwapClick}
+                      {selected}
+                      {text}
+                      swappable={swappingCards}
+                    />
+                  {/each}
+                </div>
+  
+                <div class="sep is--btm"></div>
+              </div>
+            {/if}
           </div>
-          <Card type="black" text={pointsAwardedData.blackCard} answer={pointsAwardedData.answer} />
-          <button on:click={closePointsAwarded}>Close</button>
-        </Modal>
+        {:else}
+          <div class="czar-pending-msg">
+            <p>
+              {#if localUser.admin}
+                You need to pick the Card Czar.
+                <br>
+                To do so, just click on a User in the side menu.
+              {:else}
+                Waiting for <mark>{gameMC}</mark> to pick the Card Czar.
+              {/if}
+            </p>
+          </div>
+        {/if}
       {/if}
+      
+      <EnterUsername
+        onUsernameSuccess={handleUsernameSuccess}
+        open={!localUser.name}
+        roomID={roomID}
+      />
 
-      <Modal class="room-error" open={roomCheckComplete && !room}>
-        Sorry, it looks like this room doesn't exist anymore.
-        <GameEntry />
+      <Modal
+        class="admin-instructions"
+        focusRef={closeAdminInstructionsBtnRef}
+        open={showAdminInstructions}
+      >
+        <p>
+          Congrats! You're the MC, so you're running the game. In order for
+          others to join, just send them
+        </p>
+        <ul>
+          <li>this URL: <Copyable text={window.location.href} /></li>
+          <li>or this code: <Copyable text={roomID} /></li>
+        </ul>
+        <p>
+          When starting a new CAH game it's up to the group to choose the Card
+          Czar. Y'all can do that via the typical <q>Who was the last to poop?</q>
+          question, or by what ever means you choose.
+        </p>
+        <p>
+          Once the group's chosen the Czar, you just have to click on that
+          User and choose <q>{MSG__SET_CZAR}</q>. Once you do so, the game
+          will start.
+        </p>
+        <button 
+          type="button"
+          on:click={closeAdminInstructions}
+          bind:this={closeAdminInstructionsBtnRef}
+        >Close</button>
+      </Modal>
+      
+      <Modal class="user-data-menu" onClose={handleUserDataMenuClose} open={showUserDataMenu}>
+        <button
+          type="button"
+          on:click={setCzar}
+          disabled={userData.czar || !minimumNumberOfPlayersJoined}
+        >
+          {@html MSG__SET_CZAR.replace('<User>', `<q>${userData.name}</q>`)}
+        </button>
+        {#if !minimumNumberOfPlayersJoined}
+          <div class="help">
+            There has to be at least 2 players before you can assign a Czar.
+          </div>
+        {/if}
+        {#if userData.czar}
+          <div class="help">
+            You're already the Czar, yuh silly goose.
+          </div>
+        {/if}
+        <button
+          type="button"
+          on:click={setAdmin}
+          disabled={userData.admin}
+        >{@html `Make <q>${userData.name}</q> the MC`}</button>
+        {#if userData.admin}
+          <div class="help">
+            You're already the MC, yuh silly goose.
+          </div>
+        {/if}
+        <button
+          type="button"
+          on:click={removeUserFromGame}
+          disabled={userData.admin}
+          data-username={userData.name}
+        >{@html `Remove <q>${userData.name}</q> from game`}</button>
+        <button
+          type="button"
+          on:click={closeUserDataMenu}
+        >Cancel</button>
+      </Modal>
+      
+      <Modal class="points-awarded" onClose={handlePointsAwardedClose} open={showPointsAwarded}>
+        <div class="points-awarded__msg">
+          {@html pointsAwardedData.msg}
+        </div>
+        <Card type="black" text={pointsAwardedData.blackCard} answer={pointsAwardedData.answer} />
+        <button on:click={closePointsAwarded}>Close</button>
       </Modal>
     {/if}
-    
-    <Modal class="room-error" open={!socketConnected && socketConnectedAtLeastOnce}>
-      Sorry, it looks like the game has lost connection to the Server. You can 
-      try refreshing the page, but it's likely the Server went down for 
-      maintainence and you'll have to start a new game.
+
+    <Modal class="room-error" open={roomCheckComplete && !room}>
+      Sorry, it looks like this room doesn't exist anymore.
+      <GameEntry />
     </Modal>
-  </div>
-{/if}
+  {/if}
+  
+  <Modal class="room-error" open={!socketConnected && socketConnectedAtLeastOnce}>
+    Sorry, it looks like the game has lost connection to the Server. You can 
+    try refreshing the page, but it's likely the Server went down for 
+    maintainence and you'll have to start a new game.
+  </Modal>
+</div>
