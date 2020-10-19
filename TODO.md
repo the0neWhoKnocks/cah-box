@@ -100,7 +100,7 @@
   assigned to someone that had submitted a card. Instead the round should be
   reset and those cards thrown out.
 - [x] Flashing <title> for "time to review answers" not working
-- [ ] If I had a card selected, but not submitted, and the Czar left the game,
+- [x] If I had a card selected, but not submitted, and the Czar left the game,
   then a second User joins, I make them the Czar, then I try to submit a card -
   some of the cards are grayed out, and I can't select a new card.
 
