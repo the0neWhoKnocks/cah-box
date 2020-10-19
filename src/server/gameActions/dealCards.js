@@ -38,13 +38,15 @@ module.exports = (serverSocket) => function dealCards({ newRound, roomID }) {
     }
   }
 
-  // ensure the cards have the proper indexing
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
-
+    
     for (let j = 0; j < user.cards.length; j++) {
       const card = user.cards[j];
+      // Ensure the cards have the proper indexing
       card.ndx = j;
+      // Ensure cards have been reset to a default state.
+      card.selected = false;
     }
   }
 
