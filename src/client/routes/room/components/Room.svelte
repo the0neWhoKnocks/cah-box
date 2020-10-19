@@ -310,7 +310,6 @@
 </style>
 
 <script>
-  import { onMount } from 'svelte';
   import {
     WS__MSG_TYPE__ANSWER_REVIEW_STATE_UPDATED,
     WS__MSG_TYPE__CARD_SELECTION_TOGGLED,
@@ -340,6 +339,7 @@
   import { title, titleSuffix } from '../../../store';
   import GameEntry from '../../../components/GameEntry.svelte';
   import Modal from '../../../components/Modal.svelte';
+  import addSocketListeners from '../../../utils/addSocketListeners';
   import Card from './Card.svelte';
   import Copyable from './Copyable.svelte';
   import EnterUsername from './EnterUsername.svelte';
@@ -666,20 +666,22 @@
 
   $: minimumNumberOfPlayersJoined = users.length > 1;
 
-  window.clientSocket.on(WS__MSG_TYPE__ANSWER_REVIEW_STATE_UPDATED, updateGameState(ACTION__ANSWER_REVIEW_STATE_UPDATED));
-  window.clientSocket.on(WS__MSG_TYPE__CARD_SELECTION_TOGGLED, updateGameState(ACTION__CARD_SELECTION_TOGGLED));
-  window.clientSocket.on(WS__MSG_TYPE__CARD_SWAPPED, updateGameState(ACTION__CARD_SWAPPED));
-  window.clientSocket.on(WS__MSG_TYPE__CARDS_DEALT, updateGameState(ACTION__CARDS_DEALT));
-  window.clientSocket.on(WS__MSG_TYPE__CARDS_SUBMITTED, updateGameState(ACTION__CARDS_SUBMITTED));
-  window.clientSocket.on(WS__MSG_TYPE__POINTS_AWARDED, handlePointsAwarded);
-  window.clientSocket.on(WS__MSG_TYPE__ROOM_DESTROYED, handleRoomDestruction);
-  window.clientSocket.on(WS__MSG_TYPE__SERVER_DOWN, handleServerDisconnect);
-  window.clientSocket.on(WS__MSG_TYPE__USER_DISCONNECTED, updateGameState(ACTION__USER_DISCONNECTED));
-  window.clientSocket.on(WS__MSG_TYPE__USER_ENTERED_ROOM, updateGameState(ACTION__USER_ENTERED_ROOM));
-  window.clientSocket.on(WS__MSG_TYPE__USER_JOINED, updateGameState(ACTION__USER_JOINED));
-  window.clientSocket.on(WS__MSG_TYPE__USER_LEFT_ROOM, updateGameState(ACTION__USER_LEFT_ROOM));
-  window.clientSocket.on(WS__MSG_TYPE__USER_REMOVED, updateGameState(ACTION__USER_REMOVED));
-  window.clientSocket.on(WS__MSG_TYPE__USER_UPDATE, updateGameState(ACTION__USER_UPDATE));
+  addSocketListeners({
+    [WS__MSG_TYPE__ANSWER_REVIEW_STATE_UPDATED]: updateGameState(ACTION__ANSWER_REVIEW_STATE_UPDATED),
+    [WS__MSG_TYPE__CARD_SELECTION_TOGGLED]: updateGameState(ACTION__CARD_SELECTION_TOGGLED),
+    [WS__MSG_TYPE__CARD_SWAPPED]: updateGameState(ACTION__CARD_SWAPPED),
+    [WS__MSG_TYPE__CARDS_DEALT]: updateGameState(ACTION__CARDS_DEALT),
+    [WS__MSG_TYPE__CARDS_SUBMITTED]: updateGameState(ACTION__CARDS_SUBMITTED),
+    [WS__MSG_TYPE__POINTS_AWARDED]: handlePointsAwarded,
+    [WS__MSG_TYPE__ROOM_DESTROYED]: handleRoomDestruction,
+    [WS__MSG_TYPE__SERVER_DOWN]: handleServerDisconnect,
+    [WS__MSG_TYPE__USER_DISCONNECTED]: updateGameState(ACTION__USER_DISCONNECTED),
+    [WS__MSG_TYPE__USER_ENTERED_ROOM]: updateGameState(ACTION__USER_ENTERED_ROOM),
+    [WS__MSG_TYPE__USER_JOINED]: updateGameState(ACTION__USER_JOINED),
+    [WS__MSG_TYPE__USER_LEFT_ROOM]: updateGameState(ACTION__USER_LEFT_ROOM),
+    [WS__MSG_TYPE__USER_REMOVED]: updateGameState(ACTION__USER_REMOVED),
+    [WS__MSG_TYPE__USER_UPDATE]: updateGameState(ACTION__USER_UPDATE),
+  });
 
   window.clientSocket.emit(WS__MSG_TYPE__USER_ENTERED_ROOM, {
     roomID,

@@ -1,4 +1,5 @@
 const log = require('../../utils/logger')('socket:socketHandlers');
+const logHeartbeat = require('../../utils/logger')('socket:socketHandlers:heartbeat');
 
 module.exports = function connection(socket, serverSocket) {
   const {
@@ -8,6 +9,8 @@ module.exports = function connection(socket, serverSocket) {
     WS__MSG_TYPE__DEAL_CARDS,
     WS__MSG_TYPE__USER_ENTERED_ROOM,
     WS__MSG_TYPE__JOIN_GAME,
+    WS__MSG_TYPE__PING,
+    WS__MSG_TYPE__PONG,
     WS__MSG_TYPE__REMOVE_USER_FROM_ROOM,
     WS__MSG_TYPE__SET_ADMIN,
     WS__MSG_TYPE__SET_ANSWER_REVIEW_STATE,
@@ -31,14 +34,20 @@ module.exports = function connection(socket, serverSocket) {
 
   socket.on('message', (payload) => {
     const { data, type } = JSON.parse(payload);
-    log(`[HANDLE] "${type}"`);
+    const _log = (type === WS__MSG_TYPE__PING) ? logHeartbeat : log;
     
+    _log(`[HANDLE] "${type}"`);
+
     switch (type) {
       case WS__MSG_TYPE__CHECK_USERNAME: checkUsername(data); break;
       case WS__MSG_TYPE__CHOSE_ANSWER: choseAnswer(data); break;
       case WS__MSG_TYPE__CREATE_GAME: createGame(data); break;
       case WS__MSG_TYPE__DEAL_CARDS: dealCards(data); break;
       case WS__MSG_TYPE__JOIN_GAME: joinGame(data); break;
+      case WS__MSG_TYPE__PING: {
+        serverSocket.emitToSelf(WS__MSG_TYPE__PONG);
+        break;
+      }
       case WS__MSG_TYPE__REMOVE_USER_FROM_ROOM: removeUserFromRoom(data); break;
       case WS__MSG_TYPE__SET_ADMIN: setUserState(data, 'admin'); break;
       case WS__MSG_TYPE__SET_ANSWER_REVIEW_STATE: setAnswerReviewState(data); break;

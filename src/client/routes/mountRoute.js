@@ -1,8 +1,12 @@
-import { DOM__SVELTE_MOUNT_POINT } from '../../constants';
+import {
+  DOM__SVELTE_MOUNT_POINT,
+  WS__MSG_TYPE__PONG,
+} from '../../constants';
 import logger from '../../utils/logger';
 import Shell from './Shell';
 
 const log = logger('routes:mountRoute');
+const logHeartbeat = logger('routes:mountRoute:heartbeat');
 
 window.socketConnected = new Promise((resolve, reject) => {
   const WS_URL = location.origin.replace(/^https?/, 'ws');
@@ -17,6 +21,14 @@ window.socketConnected = new Promise((resolve, reject) => {
       socket.send(JSON.stringify({ data, type }));
     },
     listeners: {},
+    off(type, cb) {
+      for (let i = window.clientSocket.listeners[type].length - 1; i >= 0; i--) {
+        const handler = window.clientSocket.listeners[type][i];
+        if (handler === cb) {
+          window.clientSocket.listeners[type].splice(i, 1);
+        }
+      }
+    },
     on(type, cb) {
       if (!window.clientSocket.listeners[type]) window.clientSocket.listeners[type] = [];
       window.clientSocket.listeners[type].push(cb);
@@ -26,7 +38,9 @@ window.socketConnected = new Promise((resolve, reject) => {
   socket.onopen = function onWSOpen() {
     socket.onmessage = function onWSMsg({ data: msgData }) {
       const { data, type } = JSON.parse(msgData);
-      log(`Message from Server: "${type}"`, data);
+      const _log = (type === WS__MSG_TYPE__PONG) ? logHeartbeat : log;
+
+      _log(`Message from Server: "${type}"`, data);
       
       if (window.clientSocket.listeners[type]) {
         window.clientSocket.listeners[type].forEach(cb => { cb(data); });
