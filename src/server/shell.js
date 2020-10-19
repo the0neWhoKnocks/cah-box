@@ -39,6 +39,10 @@ const shell = ({ page, params } = {}) => {
           buildNumber: ${buildNumber},
           params: ${JSON.stringify(params || {})},
         };
+
+        // The request won't be made on all Browsers unless it's made before
+        // \`DOMContentLoaded\` is fired.
+        window.Notification.requestPermission();
       </script>
     </head>
     <body class="no-js">

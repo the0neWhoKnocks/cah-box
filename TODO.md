@@ -103,6 +103,8 @@
 - [x] If I had a card selected, but not submitted, and the Czar left the game,
   then a second User joins, I make them the Czar, then I try to submit a card -
   some of the cards are grayed out, and I can't select a new card.
+- [x] Notification permissions aren't requested on Mobile
+   - https://stackoverflow.com/a/62450722/5156659 
 
 ## Flow
 
