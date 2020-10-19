@@ -58,6 +58,12 @@
 - [x] Order the Local User at the top of the `users` list.
 - [x] Limit the length of a User's name.
 - [x] Add "Waiting for <MC_NAME> to pick the Czar"
+- [ ] Figure out HTTPS on Heroku. For now using `http` works, but I can't use
+  `ws//`, instead I have to use `wss` (a secure WS), which would mean I'd have
+  to have ship the Server with certs... or use LetsEncrypt
+  - https://devcenter.heroku.com/articles/ssl
+  - https://blog.heroku.com/announcing-automated-certificate-management
+  - (no LetsEncrypt) https://stackoverflow.com/a/57793405/5156659
 
 ## Bugs
 
@@ -68,6 +74,25 @@
    - [ ] Phone going to sleep, causes a User to be removed from room.
       - https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API
    - [ ] User bumped from room during idle
+   - Logs from Heroku
+   ```sh
+   2020-10-18T21:46:48.472964+00:00 heroku[router]: at=error code=H15 desc="Idle connection" method=GET path="/" host=cahbox.herokuapp.com request_id=0e56538f-8558-4833-8da1-0823ff4000bc fwd="24.20.217.243" dyno=web.1 connect=1ms service=102336ms status=503 bytes= protocol=http
+   2020-10-18T21:46:48.474511+00:00 heroku[router]: at=error code=H15 desc="Idle connection" method=GET path="/" host=cahbox.herokuapp.com request_id=03df43e7-c0e1-4da3-8bff-467c92ea0c89 fwd="24.20.217.243" dyno=web.1 connect=0ms service=55133ms status=503 bytes= protocol=http
+   2020-10-18T21:46:48.477160+00:00 app[web.1]: 2020-10-18T21:46:48.477Z cahbox:socket:socketHandlers User "test" disconnected from room "CB47" while a game was running
+   2020-10-18T21:46:48.477375+00:00 app[web.1]: 2020-10-18T21:46:48.477Z cahbox:socket:socketHandlers User "Cb47" disconnected from room "CB47" while a game was running
+   2020-10-18T21:46:53.481209+00:00 app[web.1]: 2020-10-18T21:46:53.481Z cahbox:socket:socketHandlers User "test" left room "CB47" due to disconnection
+   2020-10-18T21:46:53.481303+00:00 app[web.1]: 2020-10-18T21:46:53.481Z cahbox:socket:socketHandlers All Users have left, killing room "CB47"
+   2020-10-18T21:46:53.481384+00:00 app[web.1]: 2020-10-18T21:46:53.481Z cahbox:socket Room "CB47" deleted
+   ```
+   > The dyno did not send a full response and was terminated due to 55 seconds
+   > of inactivity.
+   - https://devcenter.heroku.com/articles/error-codes#h15-idle-connection
+   - https://stackoverflow.com/questions/41202207/how-to-keep-a-websocket-connection-to-heroku-alive
+   - https://devcenter.heroku.com/articles/websockets#timeouts
+     > Either client or server can prevent the connection from idling by sending
+     > an occasional ping packet over the connection.
+      - https://github.com/heroku-examples/node-ws-test/blob/master/index.js
+   
 - [x] On Desktop (maybe Mobile), when you shrink the viewport vertically (while there
   are cards to be chosen for an answer), the cards sometimes overflow from the
   top or bottom.
@@ -75,6 +100,9 @@
   assigned to someone that had submitted a card. Instead the round should be
   reset and those cards thrown out.
 - [x] Flashing <title> for "time to review answers" not working
+- [ ] If I had a card selected, but not submitted, and the Czar left the game,
+  then a second User joins, I make them the Czar, then I try to submit a card -
+  some of the cards are grayed out, and I can't select a new card.
 
 ## Flow
 
