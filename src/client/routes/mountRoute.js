@@ -1,12 +1,15 @@
 import { DOM__SVELTE_MOUNT_POINT } from '../../constants';
 import logger from '../../utils/logger';
+import Shell from './Shell';
 
 const log = logger('routes:mountRoute');
 
-window.socketConnected = new Promise((resolve) => {
-  const socket = new WebSocket(location.origin.replace(/^https?/, 'ws'));
+window.socketConnected = new Promise((resolve, reject) => {
+  const WS_URL = location.origin.replace(/^https?/, 'ws');
+  const socket = new WebSocket(WS_URL);
 
   window.clientSocket = {
+    connected: false,
     disconnect() {
       socket.close();
     },
@@ -32,17 +35,32 @@ window.socketConnected = new Promise((resolve) => {
     
     log('Client Socket connected to Server');
 
+    window.clientSocket.connected = true;
     resolve();
   };
+
+  socket.onerror = function onWSError(ev) {
+    let err = 'An unknown error has occurred with your WebSocket';
+
+    if (
+      !window.clientSocket.connected
+      && ev.currentTarget.readyState === WebSocket.CLOSED
+    ) err = `WebSocket error, could not connect to ${WS_URL}`;
+    
+    reject(err);
+  }
 });
 
 // NOTE - Webpack@4 doesn't have `iife` support yet, so this boilerplate is required.
 const mountRoute = (Route, props = {}) => {
-  new Route({
+  new Shell({
     target: document.getElementById(DOM__SVELTE_MOUNT_POINT),
-    props,
+    props: {
+      Route,
+      routeProps: props,
+    },
   });
-
+  
   document.body.classList.add('route-loaded');
 }
 export default mountRoute;
