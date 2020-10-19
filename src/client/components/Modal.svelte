@@ -224,12 +224,6 @@
   }
 
   :global(body.modal--open #route) {
-    animation: blurBG var(--modalAnimationDuration);
-    animation-fill-mode: forwards;
-  }
-
-  :global(body.modal--closing #route) {
-    animation: restoreBG var(--modalAnimationDuration);
-    animation-fill-mode: forwards;
+    filter: blur(6px);
   }
 </style>
