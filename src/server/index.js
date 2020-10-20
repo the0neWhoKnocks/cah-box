@@ -18,6 +18,16 @@ const middleware = [
 
 const { server } = polka()
   .use(...middleware)
+  .all('*', (req, res, next) => {
+    console.log('headers', req.headers);
+    if (process.env.HEROKU) {
+      const forwardedProtoHeader = req.headers['x-forwarded-proto'];
+      log(`X-Forwarded-Proto header: "${forwardedProtoHeader}"`);
+
+      next();
+    }
+    else next();
+  })
   .get('/:roomID', (req, res) => {
     res.end(shell({ page: 'room', params: req.params }));
   })
