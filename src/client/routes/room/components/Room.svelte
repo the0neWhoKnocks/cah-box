@@ -855,7 +855,7 @@
                 
                 <div class="user-cards-wrapper">
                   <div class="sep is--top"></div>
-                  {#if localUser.points}
+                  {#if localUser.points && !localUser.maxCardsSelected}
                     <nav class="cards-nav">
                       <button on:click={toggleCardSwap}>
                         {#if swappingCards}
