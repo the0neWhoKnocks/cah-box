@@ -58,12 +58,22 @@
 - [x] Order the Local User at the top of the `users` list.
 - [x] Limit the length of a User's name.
 - [x] Add "Waiting for <MC_NAME> to pick the Czar"
-- [ ] Figure out HTTPS on Heroku. For now using `http` works, but I can't use
+- [x] Figure out HTTPS on Heroku. For now using `http` works, but I can't use
   `ws//`, instead I have to use `wss` (a secure WS), which would mean I'd have
   to have ship the Server with certs... or use LetsEncrypt
-  - https://devcenter.heroku.com/articles/ssl
-  - https://blog.heroku.com/announcing-automated-certificate-management
-  - (no LetsEncrypt) https://stackoverflow.com/a/57793405/5156659
+   - https://devcenter.heroku.com/articles/ssl
+   - https://blog.heroku.com/announcing-automated-certificate-management
+   - (no LetsEncrypt) https://stackoverflow.com/a/57793405/5156659
+   - handle piggyback-ssl https://stackoverflow.com/a/25007872/5156659
+   - https://stackoverflow.com/a/15215838/5156659
+   - https://stackoverflow.com/a/18392161/5156659
+   - Apps using free dynos can use the *.herokuapp.com certificate if they need SSL.
+   - Check if on Heroku https://stackoverflow.com/a/28474482/5156659
+      - https://devcenter.heroku.com/articles/config-vars#using-the-heroku-dashboard
+- [ ] Add Room code at top in monospace font so it's easy to read
+- [ ] After User has submitted an answer, the `Swap Card` button should go away
+- [ ] The "You need to pick the Card Czar." message should read "Waiting for
+  more players to join", when there's no one else in the room.
 
 ## Bugs
 
@@ -104,7 +114,7 @@
   then a second User joins, I make them the Czar, then I try to submit a card -
   some of the cards are grayed out, and I can't select a new card.
 - [x] Notification permissions aren't requested on Mobile
-   - https://stackoverflow.com/a/62450722/5156659 
+   - https://stackoverflow.com/a/62450722/5156659
 
 ## Flow
 
