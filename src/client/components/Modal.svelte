@@ -19,6 +19,7 @@
   export let force = false;
   export let open = false;
   export let onClose = undefined;
+  export let onMaskClick = undefined;
   export { className as class };
 
   function renderModal() {
@@ -125,7 +126,7 @@
     class:modal--reveal={modalIsOpen}
     bind:this={modalRef}
   >
-    <div class="modal__mask"></div>
+    <div class="modal__mask" on:click={onMaskClick}></div>
     <div class="modal__body">
       <slot></slot>
     </div>

@@ -70,7 +70,7 @@
    - Apps using free dynos can use the *.herokuapp.com certificate if they need SSL.
    - Check if on Heroku https://stackoverflow.com/a/28474482/5156659
       - https://devcenter.heroku.com/articles/config-vars#using-the-heroku-dashboard
-- [ ] Add Room code at top in monospace font so it's easy to read
+- [x] Add Room code at top in monospace font so it's easy to read
 - [ ] After User has submitted an answer, the `Swap Card` button should go away
 - [ ] The "You need to pick the Card Czar." message should read "Waiting for
   more players to join", when there's no one else in the room.

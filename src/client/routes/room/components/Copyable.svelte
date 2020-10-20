@@ -2,9 +2,12 @@
   const cssVars = {
     copiedMsgDuration: 2000,
   };
+  let className = '';
   let copied = false;
 
+  export let onCopy = undefined;
   export let text = '';
+  export { className as class };
 
   function addValueToClipboard() {
     if (!copied) {
@@ -17,13 +20,18 @@
       document.body.removeChild(temp);
 
       copied = true;
+      
+      if (onCopy) {
+        setTimeout(() => { onCopy(); }, cssVars.copiedMsgDuration / 4);
+      }
+
       setTimeout(() => { copied = false; }, cssVars.copiedMsgDuration);
     }
   }
 </script>
 
 <button
-  class="copyable-item"
+  class={`copyable-item ${className}`}
   class:copied
   style="--copiedMsgDuration: {cssVars.copiedMsgDuration}ms;"
   title="Click to copy game URL"
@@ -78,9 +86,6 @@
     animation: copiedMsg var(--copiedMsgDuration);
     animation-fill-mode: forwards;
   }
-  .copyable-item:not(:first-child) {
-    margin-top: 0.5em;
-  }
   .copyable-item > * {
     margin: 0 0.5em;
     user-select: none;
@@ -96,10 +101,18 @@
     border-top: dashed 1px #eee;
   }
   .copyable-item__clipboard-icon {
+    margin: 0;
+    margin-left: 0.25em;
     display: flex;
     align-items: center;
-    transform: scale(2.5) translate(1px, -10%);
     position: relative;
     z-index: 1;
+  }
+  .copyable-item__clipboard-icon .icon {
+    width: 2.25em;
+    height: 2.25em;
+    margin-right: -0.4em;
+    margin-left: -0.4em;
+    margin-top: -0.25em;
   }
 </style>
