@@ -4,6 +4,49 @@
     height: 100%;
     background: #eee;
     display: flex;
+    flex-direction: column;
+  }
+
+  .top-nav {
+    color: #ccc;
+    margin-bottom: 1px;
+    background: #000;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .top-nav button {
+    width: auto;
+    color: #fff;
+    line-height: 1em;
+    padding: 0.25em 0.5em;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    outline: none;
+  }
+  .top-nav button:focus {
+    box-shadow: 0px 0px 6px inset #fffcd5;
+  }
+  .top-nav button .icon {
+    width: 1.5em;
+    height: 1.5em;
+    margin-left: 0.25em;
+  }
+
+  .game-ui {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+  }
+
+  :global(.root .copyable-item.for--url .copyable-item__text) {
+    max-width: 30vw;
+  }
+  :global(.root .copyable-item.for--code.copied::after) {
+    font-size: 0.75em;
+    justify-content: normal;
   }
 
   :global(.users-list) {
@@ -126,6 +169,22 @@
     margin-top: 1em;
     background-color: #fff;
     box-shadow: 0 0.1em;
+  }
+
+  :global(body .modal.game-menu .modal__body) {
+    font-size: 1em;
+  }
+  :global(body .modal.game-menu section h3) {
+    border-bottom: solid 1px;
+  }
+  :global(body .modal.game-menu .row) {
+    display: flex;
+  }
+  :global(body .modal.game-menu .row:not(:first-of-type)) {
+    margin-top: 0.75em;
+  }
+  :global(body .modal.game-menu .label) {
+    width: 6em;
   }
 
   .cards {
@@ -251,6 +310,15 @@
       font-size: 0.75em;
     }
 
+    .top-nav {
+      font-size: 0.7em;
+    }
+    .top-nav button .icon {
+      width: 1.25em;
+      height: 1.25em;
+      margin-top: -0.05em;
+    }
+
     .cards .answers :global(.card),
     .cards .user-cards-wrapper :global(.card) {
       font-size: 1em;
@@ -267,9 +335,12 @@
       margin-top: -0.5em;
     }
     .cards .answers-wrapper {
-      max-height: 60vh;
+      max-height: 90vh;
       padding: 1em 0.5em;
       flex-direction: column;
+    }
+    .cards .answers-wrapper.displaying-users-cards {
+      max-height: 60vh;
     }
     .cards .user-cards :global(.card:not(:first-child)) {
       margin-top: 0.5em;
@@ -381,6 +452,7 @@
   let roomCheckComplete = false;
   let gameMC;
   let swappingCards = false;
+  let showGameMenu = false;
 
   function updateTurnProps() {
     if (room && room.blackCard) blackCard = room.blackCard;
@@ -527,6 +599,13 @@
 
   function handleUserDataMenuClose() {
     userData = undefined;
+  }
+
+  function openGameMenu() {
+    showGameMenu = true;
+  }
+  function closeGameMenu() {
+    showGameMenu = false;
   }
 
   function handleUserClick(ev) {
@@ -696,113 +775,130 @@
 <div class="wrapper">
   {#if socketConnected}
     {#if room}
-      <UsersList
-        isAdmin={localUser.admin}
-        localUsername={localUser.name}
-        onUserClick={userClickHandler}
-        users={users}
-      />
+      <nav class="top-nav">
+        <button on:click={openGameMenu}>
+          Menu
+          <svg class="icon">
+            <use
+              xmlns:xlink="http://www.w3.org/1999/xlink"
+              xlink:href="#ui-icon__menu"
+            ></use>
+          </svg>
+        </button>
+      </nav>
 
-      {#if localUser.cards}
-        {#if (localUser.cards.length && czarSelected)}
-          <div class="cards">
-            <div class="answers">
-              <div class="answers-wrapper">
-                <div class="black-card-wrapper">
-                  <Card type="black" text={blackCard} answer={room.blackCardAnswer.cards} />
-                  {#if czarWaitingMsg}
-                    <div class="czar-waiting-msg">{@html czarWaitingMsg}</div>
-                  {/if}
-                  {#if localUser.reviewingAnswers}
-                    <nav>
-                      <button
-                        class="prev-btn"
-                        class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
-                        disabled={localUser.reviewNdx === 0}
-                        on:click={reviewPreviousAnswer}
-                      >Previous</button>
-                      <button
-                        class="next-btn"
-                        class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
-                        disabled={localUser.reviewNdx === room.submittedCards.length - 1}
-                        on:click={reviewNextAnswer}
-                      >Next</button>
-                      <button
-                        class="show-answer-btn"
-                        class:hidden={localUser.startedReviewingAnswers}
-                        on:click={startedReviewingAnswers}
-                      >Show Answer</button>
-                      <button
-                        class="pick-answer-btn"
-                        disabled={!localUser.startedReviewingAnswers}
-                        on:click={chooseAnswer}
-                      >Pick Answer</button>
-                    </nav>
+      <div class="game-ui">
+        <UsersList
+          isAdmin={localUser.admin}
+          localUsername={localUser.name}
+          onUserClick={userClickHandler}
+          users={users}
+        />
+
+        {#if localUser.cards}
+          {#if (localUser.cards.length && czarSelected)}
+            <div class="cards">
+              <div class="answers">
+                <div
+                  class="answers-wrapper"
+                  class:displaying-users-cards={showUserCards}
+                >
+                  <div class="black-card-wrapper">
+                    <Card type="black" text={blackCard} answer={room.blackCardAnswer.cards} />
+                    {#if czarWaitingMsg}
+                      <div class="czar-waiting-msg">{@html czarWaitingMsg}</div>
+                    {/if}
+                    {#if localUser.reviewingAnswers}
+                      <nav>
+                        <button
+                          class="prev-btn"
+                          class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
+                          disabled={localUser.reviewNdx === 0}
+                          on:click={reviewPreviousAnswer}
+                        >Previous</button>
+                        <button
+                          class="next-btn"
+                          class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
+                          disabled={localUser.reviewNdx === room.submittedCards.length - 1}
+                          on:click={reviewNextAnswer}
+                        >Next</button>
+                        <button
+                          class="show-answer-btn"
+                          class:hidden={localUser.startedReviewingAnswers}
+                          on:click={startedReviewingAnswers}
+                        >Show Answer</button>
+                        <button
+                          class="pick-answer-btn"
+                          disabled={!localUser.startedReviewingAnswers}
+                          on:click={chooseAnswer}
+                        >Pick Answer</button>
+                      </nav>
+                    {/if}
+                  </div>
+                  {#if showUserCards}
+                    {#each localUser.selectedCards as { ndx, text } (`answer_${ndx}`)}
+                      <Card {ndx} {text} onClick={handleCardSelectionToggle} rotate />
+                    {/each}
                   {/if}
                 </div>
-                {#if showUserCards}
-                  {#each localUser.selectedCards as { ndx, text } (`answer_${ndx}`)}
-                    <Card {ndx} {text} onClick={handleCardSelectionToggle} rotate />
-                  {/each}
-                {/if}
               </div>
-            </div>
 
-            {#if showUserCards}
-              {#if localUser.maxCardsSelected}
-                <button
-                  class="submit-cards-btn"
-                  on:click={handleSubmitCards}
-                >
-                  {@html `Submit Card${localUser.selectedCards.length > 1 ? 's' : ''}`}
-                </button>
-              {/if}
-              
-              <div class="user-cards-wrapper">
-                <div class="sep is--top"></div>
-                {#if localUser.points}
-                  <nav class="cards-nav">
-                    <button on:click={toggleCardSwap}>
-                      {#if swappingCards}
-                        Cancel Card Swap
-                      {:else}
-                        Swap Card
-                      {/if}
-                    </button>
-                  </nav>
+              {#if showUserCards}
+                {#if localUser.maxCardsSelected}
+                  <button
+                    class="submit-cards-btn"
+                    on:click={handleSubmitCards}
+                  >
+                    {@html `Submit Card${localUser.selectedCards.length > 1 ? 's' : ''}`}
+                  </button>
                 {/if}
                 
-                <div class="user-cards" class:disabled={localUser.maxCardsSelected}>
-                  {#each localUser.cards as { ndx, selected, text }}
-                    <Card
-                      {ndx}
-                      onClick={handleCardSelectionToggle}
-                      onSwapClick={handleSwapClick}
-                      {selected}
-                      {text}
-                      swappable={swappingCards}
-                    />
-                  {/each}
+                <div class="user-cards-wrapper">
+                  <div class="sep is--top"></div>
+                  {#if localUser.points}
+                    <nav class="cards-nav">
+                      <button on:click={toggleCardSwap}>
+                        {#if swappingCards}
+                          Cancel Card Swap
+                        {:else}
+                          Swap Card
+                        {/if}
+                      </button>
+                    </nav>
+                  {/if}
+                  
+                  <div class="user-cards" class:disabled={localUser.maxCardsSelected}>
+                    {#each localUser.cards as { ndx, selected, text }}
+                      <Card
+                        {ndx}
+                        onClick={handleCardSelectionToggle}
+                        onSwapClick={handleSwapClick}
+                        {selected}
+                        {text}
+                        swappable={swappingCards}
+                      />
+                    {/each}
+                  </div>
+    
+                  <div class="sep is--btm"></div>
                 </div>
-  
-                <div class="sep is--btm"></div>
-              </div>
-            {/if}
-          </div>
-        {:else}
-          <div class="czar-pending-msg">
-            <p>
-              {#if localUser.admin}
-                You need to pick the Card Czar.
-                <br>
-                To do so, just click on a User in the side menu.
-              {:else}
-                Waiting for <mark>{gameMC}</mark> to pick the Card Czar.
               {/if}
-            </p>
-          </div>
+            </div>
+          {:else}
+            <div class="czar-pending-msg">
+              <p>
+                {#if localUser.admin}
+                  You need to pick the Card Czar.
+                  <br>
+                  To do so, just click on a User in the side menu.
+                {:else}
+                  Waiting for <mark>{gameMC}</mark> to pick the Card Czar.
+                {/if}
+              </p>
+            </div>
+          {/if}
         {/if}
-      {/if}
+      </div>
       
       <EnterUsername
         onUsernameSuccess={handleUsernameSuccess}
@@ -820,8 +916,8 @@
           others to join, just send them
         </p>
         <ul>
-          <li>this URL: <Copyable text={window.location.href} /></li>
-          <li>or this code: <Copyable text={roomID} /></li>
+          <li>this URL: <Copyable class="for--url" text={window.location.href} /></li>
+          <li>or this code: <Copyable class="for--code" text={roomID} /></li>
         </ul>
         <p>
           When starting a new CAH game it's up to the group to choose the Card
@@ -886,6 +982,18 @@
         </div>
         <Card type="black" text={pointsAwardedData.blackCard} answer={pointsAwardedData.answer} />
         <button on:click={closePointsAwarded}>Close</button>
+      </Modal>
+      
+      <Modal class="game-menu" onMaskClick={closeGameMenu} open={showGameMenu}>
+        <section>
+          <h3>Copy</h3>
+          <div class="row">
+            <div class="label">Game URL:</div><Copyable class="for--url" onCopy={closeGameMenu} text={window.location.href} />
+          </div>
+          <div class="row">
+            <div class="label">Game Code:</div><Copyable class="for--code" onCopy={closeGameMenu} text={roomID} />
+          </div>
+        </section>
       </Modal>
     {/if}
 
