@@ -9,7 +9,7 @@ const log = logger('routes:mountRoute');
 const logHeartbeat = logger('routes:mountRoute:heartbeat');
 
 window.socketConnected = new Promise((resolve, reject) => {
-  const WS_URL = location.origin.replace(/^https?/, 'ws');
+  const WS_URL = location.origin.replace(/^http(s)?/, 'ws$1');
   const socket = new WebSocket(WS_URL);
 
   window.clientSocket = {
