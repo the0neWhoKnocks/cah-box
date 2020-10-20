@@ -888,9 +888,13 @@
             <div class="czar-pending-msg">
               <p>
                 {#if localUser.admin}
-                  You need to pick the Card Czar.
-                  <br>
-                  To do so, just click on a User in the side menu.
+                  {#if users.length === 1}
+                    Waiting for more users to join.
+                  {:else}
+                    You need to pick the Card Czar.
+                    <br>
+                    To do so, just click on a User in the side menu.
+                  {/if}
                 {:else}
                   Waiting for <mark>{gameMC}</mark> to pick the Card Czar.
                 {/if}

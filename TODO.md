@@ -72,7 +72,7 @@
       - https://devcenter.heroku.com/articles/config-vars#using-the-heroku-dashboard
 - [x] Add Room code at top in monospace font so it's easy to read
 - [x] After User has submitted an answer, the `Swap Card` button should go away
-- [ ] The "You need to pick the Card Czar." message should read "Waiting for
+- [x] The "You need to pick the Card Czar." message should read "Waiting for
   more players to join", when there's no one else in the room.
 
 ## Bugs
