@@ -46,6 +46,11 @@ all that Heroku needs.
            Deploys** button.
       - **Manual Deploy**:
          - Make sure the proper branch is selected, click the **Deploy Branch** button.
+   - To make it easier to determine when your App is running in Heroku, you'll
+     need to add an env var. Go to the
+     [Settings](https://dashboard.heroku.com/apps/cahbox/settings) section.
+      - Scroll down to `Config Vars`
+      - Add a key value pair of `HEROKU` and `true`.
 
 ### Debugging App Issues in Heroku
 
