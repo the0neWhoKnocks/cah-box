@@ -88,6 +88,8 @@ module.exports = {
       cleanOnceBeforeBuildPatterns: [
         '**/*',
         '!manifest.json', // the watcher won't pick up on changes if this is deleted
+        '!audio',
+        '!audio/**/*',
         '!imgs',
         '!imgs/**/*',
         '!vendor',
