@@ -74,6 +74,7 @@
 - [x] After User has submitted an answer, the `Swap Card` button should go away
 - [x] The "You need to pick the Card Czar." message should read "Waiting for
   more players to join", when there's no one else in the room.
+- [x] Play a sound on the User's screen who got the point.
 
 ## Bugs
 

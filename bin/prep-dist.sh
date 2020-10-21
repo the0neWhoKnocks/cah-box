@@ -13,5 +13,6 @@ rsync -avh \
 
 # Sync Static files
 rsync -avh \
+  ./src/static/audio \
   ./src/static/imgs \
   ./dist/public --delete
