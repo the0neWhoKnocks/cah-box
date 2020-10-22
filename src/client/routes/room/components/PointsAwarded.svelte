@@ -2,6 +2,13 @@
   :global(body .modal.points-awarded .modal__mask) {
     background: rgba(199, 199, 199, 0.85);
   }
+  :global(body .modal.points-awarded .confetti) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
   :global(body .modal.points-awarded .modal__body) {
     font-size: 1em;
     text-align: center;
@@ -52,9 +59,12 @@
   import Modal from '../../../components/Modal.svelte';
   import Audio from './Audio.svelte';
   import Card from './Card.svelte';
-
+  import Celebrate from './Celebrate';
+  
   const sources = ['/audio/celebrate.mp3'];
   let _name = '';
+  let canvasRef;
+  let celebrate;
   let play = false;
   let pointWord = '';
 
@@ -70,6 +80,15 @@
   $: _name = (localUsername === name) ? 'You' : name;
   $: pointWord = (points > 1) ? 'points' : 'point';
   $: play = open && localUsername === name;
+
+  $: if (open && canvasRef && play) {
+    celebrate = new Celebrate({ canvas: canvasRef });
+    celebrate.init();
+    celebrate.render();
+  }
+  else if (celebrate) {
+    celebrate.stop();
+  }
 </script>
 
 <Audio
@@ -78,6 +97,7 @@
   {sources}
 />
 <Modal class="points-awarded" {onClose} {open}>
+  <canvas slot="supplemental" class="confetti" bind:this={canvasRef}></canvas>
   <div class="points-awarded__msg">
     <mark class="username">{_name}</mark>
     <p>
