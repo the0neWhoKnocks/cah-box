@@ -138,6 +138,7 @@
     bind:this={modalRef}
   >
     <div class="modal__mask" on:click={onMaskClick}></div>
+    <slot name="supplemental"></slot>
     <div class="modal__body">
       <slot></slot>
     </div>
