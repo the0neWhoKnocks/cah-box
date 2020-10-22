@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import logger from '../../utils/logger';
 
   const log = logger('Modal');
@@ -16,21 +16,24 @@
   let mounted = false;
 
   export let focusRef = undefined;
-  export let force = false;
   export let open = false;
   export let onClose = undefined;
   export let onMaskClick = undefined;
   export { className as class };
 
   function renderModal() {
-    if (force && window.currentModal) window.currentModal.forceClose();
-
-    if (
-      !window.pendingModalCloses
-      || !window.pendingModalCloses.length
-    ) window.pendingModalCloses = [Promise.resolve()];
-    
+    if (!window.pendingModalCloses) window.pendingModalCloses = [];
     if (!window.modalResolvers) window.modalResolvers = [];
+
+    if (!window.pendingModalCloses.length) {
+      window.pendingModalCloses.push(Promise.resolve());
+      window.modalResolvers.push(() => {});
+    }
+    else {
+      window.pendingModalCloses.push(
+        new Promise((resolve) => { window.modalResolvers.push(resolve); })
+      );
+    }
 
     if (window.modalCount) window.modalCount++;
     else window.modalCount = 1;
@@ -44,25 +47,28 @@
 
       window.currentModal = {
         forceClose() {
-          if (portal.contains(this.modalRef)) portal.removeChild(this.modalRef);
-          if (window.modalResolvers.length) window.modalResolvers.splice(0, 1)[0]();
+          if (portal.contains(this.modalRef)) {
+            portal.removeChild(this.modalRef);
+            if (this.focusTimeout) cleatTimeout(this.focusTimeout);
 
-          document.body.classList.remove(MODIFIER__OPEN);
-          window.modalCount--;
+            delete window.currentModal;
+            
+            document.body.classList.remove(MODIFIER__OPEN);
+            document.body.classList.remove(MODIFIER__CLOSING);
+            window.modalCount--;
+            
+            if (window.modalResolvers.length) window.modalResolvers.splice(0, 1)[0]();
+          }
         },
         modalRef,
       };
   
       if (focusRef) {
-        setTimeout(() => {
+        window.currentModal.focusTimeout = setTimeout(() => {
           focusRef.focus();
           log(`renderModal [${className}] > focused el`);
         }, cssVars.animationDuration);
       }
-      
-      window.pendingModalCloses.push(
-        new Promise((resolve) => { window.modalResolvers.push(resolve); })
-      );
       
       log(`renderModal [${className}] > moved Modal to Portal \n  classList: "${document.body.classList}"`);
     });
@@ -89,6 +95,7 @@
       }
       log(`closing [${className}] > \n  modalCount: ${window.modalCount} \n  classList: "${document.body.classList}"`);
       
+      delete window.currentModal;
       window.modalResolvers.splice(0, 1)[0]();
       
       setTimeout(() => {
@@ -116,6 +123,10 @@
     // Uncomment if you need to test Modals more quickly
     // window.closeModal = () => { open = false; }
     // window.openModal = () => { open = true; }
+  });
+
+  onDestroy(() => {
+    if (open && window.currentModal) window.currentModal.forceClose();
   });
 </script>
 

@@ -116,6 +116,11 @@
   some of the cards are grayed out, and I can't select a new card.
 - [x] Notification permissions aren't requested on Mobile
    - https://stackoverflow.com/a/62450722/5156659
+- [ ] `[Violation] Only request notification permission in response to a user gesture.`
+- [x] On close of points awarded modal, sometimes the BG is still blurred
+  - `modalCount` is negative?
+  - `currentModal` not being deleted
+  - `pendingModalCloses` has one in it
 
 ## Flow
 

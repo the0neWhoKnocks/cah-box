@@ -10,12 +10,15 @@ export default function addSocketListeners(listeners) {
   });
 
   onDestroy(() => {
+    const removed = [];
+
     Object.keys(listeners).forEach((msgType) => {
       const handler = listeners[msgType];
       window.clientSocket.off(msgType, handler);
+      removed.push(`"${msgType}"`);
     });
 
-    log('Removed listeners', window.clientSocket.listeners);
+    log(`Removed listeners: \n  - ${removed.join('\n  - ')}`, window.clientSocket.listeners);
   });
 }
 

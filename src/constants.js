@@ -9,6 +9,7 @@ module.exports = {
   WS__CLOSE_CODE__USER_REMOVED: 4000,
   WS__MSG_TYPE__ANSWER_REVIEW_STATE_UPDATED: 'answer review state updated',
   WS__MSG_TYPE__CARD_SELECTION_TOGGLED: 'card selection toggled',
+  WS__MSG_TYPE__CARD_SWAPPED: 'card swapped',
   WS__MSG_TYPE__CARDS_DEALT: 'cards dealt',
   WS__MSG_TYPE__CARDS_SUBMITTED: 'cards submitted',
   WS__MSG_TYPE__CHECK_USERNAME: 'check username',
