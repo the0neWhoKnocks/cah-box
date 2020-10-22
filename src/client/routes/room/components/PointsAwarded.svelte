@@ -57,7 +57,6 @@
   let _name = '';
   let play = false;
   let pointWord = '';
-  let soundRef;
 
   export let answer = undefined;
   export let blackCard = '';
@@ -70,13 +69,7 @@
 
   $: _name = (localUsername === name) ? 'You' : name;
   $: pointWord = (points > 1) ? 'points' : 'point';
-  
-  $: if (open && localUsername === name) {
-    play = true;
-  }
-  else {
-    play = false;
-  }
+  $: play = open && localUsername === name;
 </script>
 
 <Audio
