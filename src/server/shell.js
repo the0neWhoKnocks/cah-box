@@ -21,14 +21,16 @@ const shell = ({ page, params } = {}) => {
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1.0">
       
-      <link rel="apple-touch-icon" sizes="180x180" href="/imgs/icons/apple-touch-icon.png">
-      <link rel="icon" type="image/png" sizes="32x32" href="/imgs/icons/favicon-32x32.png">
-      <link rel="icon" type="image/png" sizes="16x16" href="/imgs/icons/favicon-16x16.png">
-      <link rel="manifest" href="/imgs/icons/site.webmanifest">
-      <link rel="mask-icon" href="/imgs/icons/safari-pinned-tab.svg" color="#000000">
-      <link rel="shortcut icon" href="/imgs/icons/favicon.ico">
+      <link rel="apple-touch-icon" sizes="180x180" href="/imgs/icons/apple-touch-icon.png?v=m2ng5gjoNl">
+      <link rel="icon" type="image/png" sizes="32x32" href="/imgs/icons/favicon-32x32.png?v=m2ng5gjoNl">
+      <link rel="icon" type="image/png" sizes="16x16" href="/imgs/icons/favicon-16x16.png?v=m2ng5gjoNl">
+      <link rel="manifest" href="/imgs/icons/site.webmanifest?v=m2ng5gjoNl">
+      <link rel="mask-icon" href="/imgs/icons/safari-pinned-tab.svg?v=m2ng5gjoNl" color="#333333">
+      <link rel="shortcut icon" href="/imgs/icons/favicon.ico?v=m2ng5gjoNl">
+      <meta name="apple-mobile-web-app-title" content="CAH-Box">
+      <meta name="application-name" content="CAH-Box">
       <meta name="msapplication-TileColor" content="#da532c">
-      <meta name="msapplication-config" content="/imgs/icons/browserconfig.xml">
+      <meta name="msapplication-config" content="/imgs/icons/browserconfig.xml?v=m2ng5gjoNl">
       <meta name="theme-color" content="#000000">
 
       <link rel="stylesheet" href="${manifest['global.css']}">
