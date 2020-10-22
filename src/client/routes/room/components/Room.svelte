@@ -867,6 +867,7 @@
       <Modal
         class="admin-instructions"
         focusRef={closeAdminInstructionsBtnRef}
+        force
         open={showAdminInstructions}
       >
         <p>

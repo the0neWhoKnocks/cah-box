@@ -16,12 +16,15 @@
   let mounted = false;
 
   export let focusRef = undefined;
+  export let force = false;
   export let open = false;
   export let onClose = undefined;
   export let onMaskClick = undefined;
   export { className as class };
 
   function renderModal() {
+    if (force && window.currentModal) window.currentModal.forceClose();
+
     if (!window.pendingModalCloses) window.pendingModalCloses = [];
     if (!window.modalResolvers) window.modalResolvers = [];
 
