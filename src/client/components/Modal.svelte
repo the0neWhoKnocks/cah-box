@@ -1,5 +1,5 @@
 <script>
-  import { onDestroy, onMount } from 'svelte';
+  import { onDestroy, onMount, tick } from 'svelte';
   import logger from '../../utils/logger';
 
   const log = logger('Modal');
@@ -46,10 +46,12 @@
       document.body.classList.add(MODIFIER__OPEN);
 
       window.currentModal = {
-        forceClose() {
-          if (portal.contains(this.modalRef)) {
-            portal.removeChild(this.modalRef);
-            if (this.focusTimeout) cleatTimeout(this.focusTimeout);
+        async forceClose() {
+          await tick();
+
+          if (this.portal.contains(this.modalRef)) {
+            this.portal.removeChild(this.modalRef);
+            if (this.focusTimeout) clearTimeout(this.focusTimeout);
 
             delete window.currentModal;
             
@@ -61,6 +63,7 @@
           }
         },
         modalRef,
+        portal,
       };
   
       if (focusRef) {
