@@ -1,9 +1,3 @@
-<style>
-  .disconnect-indicator {
-    line-height: 0;
-  }
-</style>
-
 <script>
   import { onDestroy, onMount } from 'svelte';
   import { DISCONNECT_TIMEOUT } from '../../../../constants';
@@ -25,7 +19,7 @@
     btmMaskRef.style.transform = 'scaleY(0)';
 
     int = setInterval(() => {
-      if(elapsedTime >= DISCONNECT_TIMEOUT) stopAnimation();
+      if (elapsedTime >= DISCONNECT_TIMEOUT) stopAnimation();
       else {
         const perc = elapsedTime/DISCONNECT_TIMEOUT;
         topMaskRef.style.transform = `scaleY(${1 - perc})`
@@ -62,3 +56,9 @@
     />
   </svg>
 </div>
+
+<style>
+  .disconnect-indicator {
+    line-height: 0;
+  }
+</style>

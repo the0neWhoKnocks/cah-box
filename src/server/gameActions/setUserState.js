@@ -1,14 +1,14 @@
-module.exports = (serverSocket) => function setUserState({ roomID, username }, prop) {
-  const { WS__MSG_TYPE__USER_UPDATE } = require('../../constants');
-  const room = serverSocket.getRoom(roomID);
+module.exports = (roll) => function setUserState(wss, { roomID, username }) {
+  const { WS__MSG__USER_UPDATE } = require('../../constants');
+  const room = wss.getRoom(roomID);
 
   for (let i = 0; i < room.data.public.users.length; i++) {
     const user = room.data.public.users[i];
 
-    user[prop] = user.name === username;
+    user[roll] = user.name === username;
   }
   
-  serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__USER_UPDATE, {
+  wss.dispatchToAllInRoom(roomID, WS__MSG__USER_UPDATE, {
     room: room.data.public,
   });
 }

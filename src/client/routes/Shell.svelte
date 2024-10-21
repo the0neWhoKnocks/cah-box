@@ -1,11 +1,11 @@
 <script>
   import { onMount } from 'svelte';
   import {
-    WS__MSG_TYPE__PING,
-    WS__MSG_TYPE__PONG,
+    WS__MSG__PING,
+    WS__MSG__PONG,
   } from '../../constants';
   import logger from '../../utils/logger';
-  import Modal from '../components/Modal.svelte';
+  import Dialog from '../components/Dialog.svelte';
 
   const log = logger('Shell');
   const logHeartbeat = logger('Shell:heartbeat');
@@ -41,7 +41,7 @@
 
     heartbeat = setInterval(() => {
       connectionVerified = false;
-      window.clientSocket.emit(WS__MSG_TYPE__PING);
+      window.clientSocket.emit(WS__MSG__PING);
 
       heartbeatTimeout = setTimeout(() => {
         if (!connectionVerified) {
@@ -56,7 +56,7 @@
 
     window.socketConnected
       .then(() => {
-        window.clientSocket.on(WS__MSG_TYPE__PONG, () => {
+        window.clientSocket.on(WS__MSG__PONG, () => {
           logHeartbeat('socket connected');
           setConnectedState();
         });
@@ -85,7 +85,9 @@
 {#if mounted && socketConnected}
   <svelte:component this={Route} {...routeProps} />
 {/if}
- 
-<Modal open={socketError}>
-  <div>{socketError}</div>
-</Modal>
+
+{#if socketError}
+  <Dialog modal>
+    <svelte:fragment slot="dialogBody">{socketError}</svelte:fragment>
+  </Dialog>
+{/if}

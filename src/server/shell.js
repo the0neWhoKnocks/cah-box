@@ -3,13 +3,12 @@ const {
   DOM__SVELTE_MOUNT_POINT,
 } = require('../constants');
 
-const shell = ({ page, params } = {}) => {
+const shell = ({ props, view } = {}) => {
   const MANIFEST_PATH = '../public/manifest.json';
   if (process.env.NODE_ENV !== 'production') delete require.cache[require.resolve(MANIFEST_PATH)];
   const manifest = require(MANIFEST_PATH);
-  const buildNumber = process.env.SOURCE_VERSION; // exposed by Heroku during build
-  const pageCSS = (manifest[`${page}.css`])
-    ? `<link rel="stylesheet" href="${manifest[`${page}.css`]}">`
+  const viewCSS = (manifest[`${view}.css`])
+    ? `<link rel="stylesheet" href="${manifest[`${view}.css`]}">`
     : '';
 
   return `
@@ -32,18 +31,202 @@ const shell = ({ page, params } = {}) => {
       <meta name="msapplication-TileColor" content="#da532c">
       <meta name="msapplication-config" content="/imgs/icons/browserconfig.xml?v=m2ng5gjoNl">
       <meta name="theme-color" content="#000000">
+      
+      <style>
+        *, *::after, *::before {
+          box-sizing: border-box;
+        }
 
-      <link rel="stylesheet" href="${manifest['global.css']}">
-      ${pageCSS}
+        html, body {
+          width: 100%;
+          height: 100%;
+          padding: 0;
+          margin: 0;
+        }
+
+        body {
+          color: #333;
+          font-family: Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+          font-size: 16px;
+          line-height: 1.5;
+          margin: 0;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+          margin: 0 0 0.5em 0;
+          font-weight: 400;
+          line-height: 1.2;
+        }
+
+        h1 {
+          font-size: 2em;
+        }
+
+        a {
+          color: inherit;
+        }
+
+        code {
+          font-family: menlo, inconsolata, monospace;
+          font-size: calc(1em - 2px);
+          color: #555;
+          background-color: #f0f0f0;
+          padding: 0.2em 0.4em;
+          border-radius: 2px;
+        }
+        
+        button, input[type="text"] {
+          border: solid 1px;
+          border-radius: 0.25em;
+        }
+        
+        button {
+          width: 100%;
+          font-size: 1em;
+          padding: 0.5em;
+          display: block;
+        }
+        button:not(:disabled) {
+          cursor: pointer;
+        }
+        button[popovertarget] {
+          anchor-name: --tooltip;
+          width: auto;
+          color: #1e88e5; /* need to update fill color in background-image SVG as well. */
+          text-decoration-style: dotted;
+          text-decoration-line: underline;
+          text-underline-offset: 2px;
+          overflow: visible;
+          padding: 0 1.1rem 0 0; /* space for icon */
+          border: none;
+          border-radius: unset;
+          display: inline-block;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='100' title='question-circle'%3E%3Cpath fill='%231e88e5' d='M504 256c0 136.997-111.043 248-248 248S8 392.997 8 256C8 119.083 119.043 8 256 8s248 111.083 248 248zM262.655 90c-54.497 0-89.255 22.957-116.549 63.758-3.536 5.286-2.353 12.415 2.715 16.258l34.699 26.31c5.205 3.947 12.621 3.008 16.665-2.122 17.864-22.658 30.113-35.797 57.303-35.797 20.429 0 45.698 13.148 45.698 32.958 0 14.976-12.363 22.667-32.534 33.976C247.128 238.528 216 254.941 216 296v4c0 6.627 5.373 12 12 12h56c6.627 0 12-5.373 12-12v-1.333c0-28.462 83.186-29.647 83.186-106.667 0-58.002-60.165-102-116.531-102zM256 338c-25.365 0-46 20.635-46 46 0 25.364 20.635 46 46 46s46-20.636 46-46c0-25.365-20.635-46-46-46z' /%3E%3C/svg%3E");
+          background-size: 0.8em;
+          background-repeat: no-repeat;
+          background-position: center right 1px;
+        }
+        button[popovertarget]:focus,
+        button[popovertarget]:focus-visible,
+        button[popovertarget]:hover {
+          text-decoration-style: double;
+          border: none;
+        }
+          
+        [role="tooltip"][popover] {
+          color: #154a5b;
+          padding: 0.5em 0.75em;
+          border-radius: 0.5em;
+          margin: 0;
+          background: #d9faff;
+          position: absolute;
+          position-anchor: --tooltip;
+          top: anchor(top);
+          left: anchor(center);
+          translate: -50% -100%;
+        }
+
+        input {
+          font-size: 1em;
+        }
+        input[type="text"] {
+          padding: 0.25em;
+        }
+
+        p {
+          margin: 0;
+        }
+        p:not(:last-child) {
+          margin-bottom: 1em;
+        }
+
+        q {
+          color: #501600;
+          font-style: italic;
+          font-family: serif;
+          font-weight: bold;
+          padding: 0 0.5em;
+          border-radius: 0.25em;
+          background: #ffeb00;
+          display: inline-block;
+        }
+
+        @keyframes showMsg {
+          0% {
+            opacity: 0;
+          }
+          100% {
+            opacity: 1;
+          }
+        }
+
+        .icon {
+          width: 1em;
+          height: 1em;
+          fill: currentColor;
+        }
+
+        .loading-msg {
+          width: 100%;
+          height: 100%;
+          padding: 2em;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          animation-name: showMsg;
+          animation-duration: 300ms;
+          animation-delay: 300ms;
+          animation-fill-mode: both;
+        }
+        body.no-js .loading-msg .msg,
+        body.route-loaded .loading-msg,
+        body:not(.route-loaded) #route {
+          display: none;
+        }
+
+        .root,
+        #overlays,
+        #view {
+          width: 100%;
+          height: 100%;
+        }
+        
+        #overlays {
+          position: absolute;
+          top: 0;
+          left: 0;
+          pointer-events: none;
+        }
+          
+        .dialog__body {
+          padding: 1em;
+        }
+
+        @media (min-width: 400px) {
+          body {
+            font-size: 16px;
+          }
+        }
+
+        @media (max-width: 500px) {
+          .root .modal .modal__body {
+            /*
+            Svelte sometimes appends the same class countless times, so no matter how
+            specific I get, it always takes precedence.
+            https://github.com/sveltejs/svelte/issues/4374
+            */
+            font-size: 1em !important; 
+          }
+        }
+      </style>
+      ${viewCSS}
 
       <script>
         window.app = {
-          buildNumber: ${buildNumber},
-          params: ${JSON.stringify(params || {})},
+          props: ${JSON.stringify(props || {})},
         };
 
-        // The request won't be made on all Browsers unless it's made before
-        // \`DOMContentLoaded\` is fired.
+        // The request won't be made on all Browsers unless it's made before \`DOMContentLoaded\` is fired.
         window.Notification.requestPermission();
       </script>
     </head>
@@ -90,47 +273,62 @@ const shell = ({ page, params } = {}) => {
         <symbol id="ui-icon__clipboard" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512.001 512.001">
           <path
             d="M112 64.001h288c17.672 0 32 14.328 32 32v384c0 17.672-14.328 32-32 32H112c-17.672 0-32-14.328-32-32v-384c0-17.672 14.328-32 32-32z"
-            fill="#bd6428" />
-          <path d="M120 480.001c-4.416 0-8-3.584-8-8v-368c0-4.416 3.584-8 8-8h272c4.416 0 8 3.584 8 8v288l-88 88H120z"
-            fill="#f5f6f6" />
+            fill="#bd6428"
+          />
+          <path
+            d="M120 480.001c-4.416 0-8-3.584-8-8v-368c0-4.416 3.584-8 8-8h272c4.416 0 8 3.584 8 8v288l-88 88H120z"
+            fill="#f5f6f6"
+          />
           <path d="M176 96.001h-16v-16c0-8.84 7.16-16 16-16v32z" fill="#a35623" />
           <path d="M400 392.001h-80c-4.416 0-8 3.584-8 8v80l88-88z" fill="#cecece" />
-          <path d="M88 88.001c4.416 0 8 3.584 8 8v264c0 4.416-3.584 8-8 8s-8-3.584-8-8v-264c0-4.416 3.584-8 8-8z"
-            fill="#d17f4d" />
+          <path
+            d="M88 88.001c4.416 0 8 3.584 8 8v264c0 4.416-3.584 8-8 8s-8-3.584-8-8v-264c0-4.416 3.584-8 8-8z"
+            fill="#d17f4d"
+          />
           <g fill="#e9e9e9">
             <path
-              d="M304 408.001v16c0 4.416-3.584 8-8 8s-8 3.584-8 8-3.584 8-8 8h-8c-4.416 0-8 3.584-8 8s-3.584 8-8 8H112v8c0 4.416 3.584 8 8 8h192v-80c-4.416 0-8 3.584-8 8zM392 96.001H160c.128 2.4.128 4.8 0 7.2-.44 8.824 6.352 16.336 15.176 16.776.28.016.552.024.824.024h192c8.84 0 16 7.16 16 16v24c0 8.84 7.16 16 16 16v-72c0-4.416-3.584-8-8-8z" />
+              d="M304 408.001v16c0 4.416-3.584 8-8 8s-8 3.584-8 8-3.584 8-8 8h-8c-4.416 0-8 3.584-8 8s-3.584 8-8 8H112v8c0 4.416 3.584 8 8 8h192v-80c-4.416 0-8 3.584-8 8zM392 96.001H160c.128 2.4.128 4.8 0 7.2-.44 8.824 6.352 16.336 15.176 16.776.28.016.552.024.824.024h192c8.84 0 16 7.16 16 16v24c0 8.84 7.16 16 16 16v-72c0-4.416-3.584-8-8-8z"
+            />
           </g>
           <path
             d="M308.72 45.121a24.714 24.714 0 01-14.32-16c-6.184-21.208-28.392-33.384-49.6-27.2a39.983 39.983 0 00-27.2 27.2 24.714 24.714 0 01-14.32 16l-17.2 6.88a15.998 15.998 0 00-10.08 14.8v29.2c0 8.84 7.16 16 16 16h128c8.84 0 16-7.16 16-16v-29.2a15.998 15.998 0 00-10.08-14.8l-17.2-6.88zM256 56.001c-8.84 0-16-7.16-16-16s7.16-16 16-16 16 7.16 16 16-7.16 16-16 16z"
-            fill="#9ba7af" />
+            fill="#9ba7af"
+          />
           <path
             d="M312 64.001c-4.416 0-8 3.584-8 8s-3.584 8-8 8h-16c-4.416 0-8 3.584-8 8s-3.584 8-8 8h-88c0 8.84 7.16 16 16 16h128c8.84 0 16-7.16 16-16v-32h-24z"
-            fill="#72818b" />
+            fill="#72818b"
+          />
           <path
             d="M225.04 40.001c-4.416.144-8.112-3.328-8.248-7.744a8.24 8.24 0 01.248-2.256c4.584-17.744 20.632-30.104 38.96-30 4.416 0 8 3.584 8 8s-3.584 8-8 8c-10.96-.016-20.544 7.392-23.28 18a7.996 7.996 0 01-7.68 6z"
-            fill="#afbabf" />
+            fill="#afbabf"
+          />
           <path
             d="M400 80.001h-32c-8.84 0-16-7.16-16-16h-16v32h56c4.416 0 8 3.584 8 8v288l-88 88H120c0 8.84 7.16 16 16 16h194.72a31.998 31.998 0 0022.64-9.36l53.28-53.28a31.998 31.998 0 009.36-22.64V96.001c0-8.832-7.16-16-16-16z"
-            fill="#a35623" />
+            fill="#a35623"
+          />
           <circle cx="256" cy="264.001" r="104" fill="#3cb54a" />
           <path
             d="M296 248.001h-24v-24c0-8.84-7.16-16-16-16s-16 7.16-16 16v24h-24c-8.84 0-16 7.16-16 16s7.16 16 16 16h24v24c0 8.84 7.16 16 16 16s16-7.16 16-16v-24h24c8.84 0 16-7.16 16-16 0-8.832-7.16-16-16-16z"
-            fill="#fff" />
+            fill="#fff"
+          />
           <g fill="#0e9347">
             <path
-              d="M240 280.001h-24a16.017 16.017 0 01-6.56-1.44 15.998 15.998 0 0014.56 9.44h16v-8zM272 224.001v24h8v-16a15.998 15.998 0 00-9.44-14.56 16.017 16.017 0 011.44 6.56zM312 264.001c0 8.84-7.16 16-16 16h-24v24c-.016 8.84-7.2 15.984-16.032 15.968a16.125 16.125 0 01-6.528-1.408c3.664 8.04 13.152 11.592 21.192 7.928A16.018 16.018 0 00280 312.001v-24h24c8.84-.04 15.968-7.24 15.928-16.072a16.018 16.018 0 00-9.368-14.488 16.017 16.017 0 011.44 6.56z" />
+              d="M240 280.001h-24a16.017 16.017 0 01-6.56-1.44 15.998 15.998 0 0014.56 9.44h16v-8zM272 224.001v24h8v-16a15.998 15.998 0 00-9.44-14.56 16.017 16.017 0 011.44 6.56zM312 264.001c0 8.84-7.16 16-16 16h-24v24c-.016 8.84-7.2 15.984-16.032 15.968a16.125 16.125 0 01-6.528-1.408c3.664 8.04 13.152 11.592 21.192 7.928A16.018 16.018 0 00280 312.001v-24h24c8.84-.04 15.968-7.24 15.928-16.072a16.018 16.018 0 00-9.368-14.488 16.017 16.017 0 011.44 6.56z"
+            />
           </g>
           <g fill="#dddfe1">
             <path
-              d="M240 280.001c0-4.416-3.584-8-8-8h-24a16.017 16.017 0 01-6.56-1.44 15.998 15.998 0 0014.56 9.44h24zM272 248.001c-4.416 0-8-3.584-8-8v-24a16.017 16.017 0 00-1.44-6.56 15.998 15.998 0 019.44 14.56v24zM302.56 249.441a15.96 15.96 0 011.44 9.52 16.878 16.878 0 01-17.12 13.04H272c-4.416 0-8 3.584-8 8v14.88a16.878 16.878 0 01-13.04 17.12 16.011 16.011 0 01-9.52-1.12 16.006 16.006 0 0017.92 9.12 16.486 16.486 0 0012.64-16v-24h23.28a16.486 16.486 0 0016-12.64 16 16 0 00-8.72-17.92z" />
+              d="M240 280.001c0-4.416-3.584-8-8-8h-24a16.017 16.017 0 01-6.56-1.44 15.998 15.998 0 0014.56 9.44h24zM272 248.001c-4.416 0-8-3.584-8-8v-24a16.017 16.017 0 00-1.44-6.56 15.998 15.998 0 019.44 14.56v24zM302.56 249.441a15.96 15.96 0 011.44 9.52 16.878 16.878 0 01-17.12 13.04H272c-4.416 0-8 3.584-8 8v14.88a16.878 16.878 0 01-13.04 17.12 16.011 16.011 0 01-9.52-1.12 16.006 16.006 0 0017.92 9.12 16.486 16.486 0 0012.64-16v-24h23.28a16.486 16.486 0 0016-12.64 16 16 0 00-8.72-17.92z"
+            />
           </g>
           <path
             d="M344 248.001c-8.84 0-16 7.16-16 16 0 39.768-32.232 72-72 72-8.84 0-16 7.16-16 16s7.16 16 16 16c57.44 0 104-46.56 104-104 0-8.832-7.16-16-16-16z"
-            fill="#0e9347" />
+            fill="#0e9347"
+          />
           <path
             d="M168 280.001c8.84 0 16-7.16 16-16 0-39.768 32.232-72 72-72 8.84 0 16-7.16 16-16s-7.16-16-16-16c-57.44 0-104 46.56-104 104 0 8.84 7.16 16 16 16z"
-            fill="#89c763" />
+            fill="#89c763"
+          />
         </symbol>
       </svg>
       
@@ -142,11 +340,11 @@ const shell = ({ page, params } = {}) => {
           </noscript>
         </div>
         <div id="${DOM__SVELTE_MOUNT_POINT}"></div>
-        <div id="portal"></div>
+        <div id="overlays"></div>
       </div>
       
       <script src="${manifest['vendor.js']}"></script>
-      <script src="${manifest[`${page}.js`]}"></script>
+      <script src="${manifest[`${view}.js`]}"></script>
     </body>
     </html>
   `;

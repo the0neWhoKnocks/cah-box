@@ -1,3 +1,29 @@
+- `.app_data` may not be needed
+- `handleRoomDestruction` missing in `EnterUsername.svelte`
+- Some modals are using a `force` prop. Not sure why it's needed, and Dialog doesn't implement it. See if I can kill it. Delete `Modal.svelte` once figured out.
+- Bring in updated `socket.js`
+- Dialog, is `supplemental` slot needed? Only used in one component, may be a better way.
+- e2e, switch to Playwright. Can test websockets and multiple pages/tabs: https://playwright.dev/docs/pages#multiple-pages, https://playwright.dev/docs/docker, https://mcr.microsoft.com/en-us/product/playwright/tags
+- in test-runner add logic to poll health of app. if it dies, print out logs for app.
+  - to repro issue, don't `COPY` the `data.json` over to container, and try to create a room.
+- at the beginning of test run, delete screenshots. can't do it in fixture since fixture runs every time a fixture is referenced in a test.
+
+https://playwright.dev/docs/test-ui-mode#introduction
+https://github.com/microsoft/playwright/blob/699f51b227d98d6d6e912f9490828337d1011340/utils/docker/Dockerfile.noble
+global modules: `npm list -g` = `/usr/lib/node_modules/`
+https://stackoverflow.com/a/69009661/5156659
+https://stackoverflow.com/a/79024328/5156659
+https://github.com/microsoft/playwright/issues/28621 (need to create my own image for some reason... only thing missing is the actual test runner?)
+https://www.npmjs.com/package/@playwright/test
+
+actions: https://playwright.dev/docs/input
+assertions: https://playwright.dev/docs/test-assertions | https://playwright.dev/docs/api/class-genericassertions
+fixtures: https://playwright.dev/docs/test-fixtures
+pages/tabs: https://playwright.dev/docs/pages#multiple-pages
+screenshots: https://playwright.dev/docs/screenshots
+selectors: https://playwright.dev/docs/api/class-locator
+
+
 ## Features/Changes
 
 - [x] Make the chosen card more obvious

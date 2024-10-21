@@ -1,9 +1,9 @@
-module.exports = (serverSocket) => function submitCards({
+module.exports = function submitCards(wss, {
   roomID,
   username,
 }) {
-  const { WS__MSG_TYPE__CARDS_SUBMITTED } = require('../../constants');
-  const room = serverSocket.getRoom(roomID);
+  const { WS__MSG__CARDS_SUBMITTED } = require('../../constants');
+  const room = wss.getRoom(roomID);
   const shuffleArray = require('../utils/shuffleArray');
   const {
     private: { cards: { dead } },
@@ -33,7 +33,7 @@ module.exports = (serverSocket) => function submitCards({
     room.data.public.submittedCards = shuffleArray(submittedCards);
   }
   
-  serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__CARDS_SUBMITTED, {
+  wss.dispatchToAllInRoom(roomID, WS__MSG__CARDS_SUBMITTED, {
     room: room.data.public,
   });
 }

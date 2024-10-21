@@ -1,12 +1,12 @@
 import {
   DOM__SVELTE_MOUNT_POINT,
-  WS__MSG_TYPE__PONG,
+  WS__MSG__PONG,
 } from '../../constants';
 import logger from '../../utils/logger';
-import Shell from './Shell';
+import Shell from './Shell.svelte';
 
 const log = logger('routes:mountRoute');
-const logHeartbeat = logger('routes:mountRoute:heartbeat');
+// const logHeartbeat = logger('routes:mountRoute:heartbeat');
 
 window.socketConnected = new Promise((resolve, reject) => {
   const WS_URL = location.origin.replace(/^http(s)?/, 'ws$1');
@@ -18,6 +18,7 @@ window.socketConnected = new Promise((resolve, reject) => {
       socket.close();
     },
     emit(type, data = {}) {
+      // TODO: error occurs here when reloading Dev files (already in Closed or Closing state)
       socket.send(JSON.stringify({ data, type }));
     },
     listeners: {},
@@ -38,9 +39,11 @@ window.socketConnected = new Promise((resolve, reject) => {
   socket.onopen = function onWSOpen() {
     socket.onmessage = function onWSMsg({ data: msgData }) {
       const { data, type } = JSON.parse(msgData);
-      const _log = (type === WS__MSG_TYPE__PONG) ? logHeartbeat : log;
-
-      _log(`Message from Server: "${type}"`, data);
+      const baseMsg = `[WS] type: "${type}" | `;
+      
+      (type === WS__MSG__PONG)
+        ? log.debug(baseMsg, data)
+        : log.info(baseMsg, data);
       
       if (window.clientSocket.listeners[type]) {
         window.clientSocket.listeners[type].forEach(cb => { cb(data); });
@@ -65,6 +68,7 @@ window.socketConnected = new Promise((resolve, reject) => {
   }
 });
 
+// TODO: running 5 now, so update this.
 // NOTE - Webpack@4 doesn't have `iife` support yet, so this boilerplate is required.
 const mountRoute = (Route, props = {}) => {
   new Shell({

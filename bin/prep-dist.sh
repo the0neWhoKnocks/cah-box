@@ -1,14 +1,14 @@
-#!/bin/bash
+#!/bin/sh
 
 # Create required directories
 mkdir -p ./dist/server ./dist/public
 
-# Sync Server files
+# Sync Server files, delete anything that doesn't exist anymore
 rsync -avh \
-  ./src/constants.js \
-  ./src/data.json \
   ./src/server \
   ./src/utils \
+  ./src/constants.js \
+  ./src/data.json \
   ./dist --delete
 
 # Sync Static files

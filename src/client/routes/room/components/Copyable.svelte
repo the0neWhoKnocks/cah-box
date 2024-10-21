@@ -7,6 +7,7 @@
 
   export let onCopy = undefined;
   export let text = '';
+  export let title = 'Click to copy';
   export { className as class };
 
   function addValueToClipboard() {
@@ -34,7 +35,7 @@
   class={`copyable-item ${className}`}
   class:copied
   style="--copiedMsgDuration: {cssVars.copiedMsgDuration}ms;"
-  title="Click to copy game URL"
+  {title}
   on:click={addValueToClipboard}
 >
   <div class="copyable-item__text">{text}</div>
@@ -87,7 +88,6 @@
     animation-fill-mode: forwards;
   }
   .copyable-item > * {
-    margin: 0 0.5em;
     user-select: none;
     pointer-events: none;
   }
@@ -99,14 +99,16 @@
     text-overflow: ellipsis;
     overflow: hidden;
     border-top: dashed 1px #eee;
+    margin: 0 2.25em 0 0.5em;
   }
   .copyable-item__clipboard-icon {
-    margin: 0;
-    margin-left: 0.25em;
     display: flex;
     align-items: center;
-    position: relative;
+    position: absolute;
     z-index: 1;
+    top: 50%;
+    right: 0px;
+    transform: translateY(-50%) rotate(-10deg) scale(1.2);
   }
   .copyable-item__clipboard-icon .icon {
     width: 2.25em;

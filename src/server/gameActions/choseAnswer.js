@@ -1,8 +1,8 @@
-module.exports = (serverSocket) => function choseAnswer({ roomID }) {
-  const { WS__MSG_TYPE__POINTS_AWARDED } = require('../../constants');
+module.exports = function choseAnswer(wss, { roomID }) {
+  const { WS__MSG__POINTS_AWARDED } = require('../../constants');
   const assignNextCzar = require('../utils/assignNextCzar');
   const dealCards = require('./dealCards');
-  const room = serverSocket.getRoom(roomID);
+  const room = wss.getRoom(roomID);
   const {
     private: {
       cards: { dead },
@@ -42,7 +42,7 @@ module.exports = (serverSocket) => function choseAnswer({ roomID }) {
 
   assignNextCzar(room);
   
-  dealCards(serverSocket)({ newRound: true, roomID });
+  dealCards(wss, { newRound: true, roomID });
 
-  serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__POINTS_AWARDED, { ...winner });
+  wss.dispatchToAllInRoom(roomID, WS__MSG__POINTS_AWARDED, { ...winner });
 }

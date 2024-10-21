@@ -1,91 +1,71 @@
 # CAH-Box
 
-Cards Against Humanity mixed with the play-on-any-device strategy of JackBox
-games. Yuh know, cuz of COVID, and I wanted to play around with Svelte.
+Cards Against Humanity mixed with the play-on-any-device strategy of JackBox games. Yuh know, cuz of COVID, and I wanted to play around with Svelte.
 
-https://cahbox.herokuapp.com/
+- [Development](#development)
+- [Docker](#docker)
+- [E2E Testing](#e2e-testing)
+- [Local HTTPS](#local-https)
+- [Logging](#logging)
 
 ---
 
 ## Development
 
-1. Install `npm i`
-1. Run `npm run dev`
+**NOTE** - Aliases to speed up workflow:
+| Alias | Command          |
+| ----- | ---------------- |
+| `d`   | `docker`         |
+| `dc`  | `docker compose` |
+| `nr`  | `npm run`        |
 
-### Logging
+**NOTE** - To ensure local development reflects what will end up in production, local files are exposed to a development Docker container. You can add `source <REPO_PATH>/bin/repo-funcs.sh` to your shell's rc file to use easier to remember commands.
+To automate that process I `source` [this script](https://github.com/the0neWhoKnocks/shell-scripts/blob/master/override-cd.sh) instead, so anytime I `cd` in or out of a repo, the functions are added or removed when not at the root of the repo.
 
-The App utilizes [debug](https://www.npmjs.com/package/debug) and Server logs
-are always enabled, but Client logs are only enabled in Development and if
-`verbose` logs are enabled (the latter is a quirk of `debug` not my choosing).
-When on the Client I tend to just filter by `cahbox` since the `verbose` logs
-can be noisy.
+| Alias | Command |
+| ----- | ------- |
+| `startcont` |	Starts and enters the Container in development mode. |
+| `entercont` | Enter the running development Container to debug or what ever. |
 
----
+Install dependencies
+```sh
+# This should be run from within the Docker container to ensure Dev dependencies are installed.
+npm i
+```
 
-## Deploy to Heroku
+Run the App
+```sh
+# Prod mode
+nr start
 
-In more complicated use cases, you may need to create a `Procfile`. For this
-App, there's already a `build` and `start` script in `package.json` and that's
-all that Heroku needs.
-
-1. [Create an account on Heroku](https://signup.heroku.com/) if you don't
-   already have one.
-1. Once logged in, [go to your Apps Dashboard](https://dashboard.heroku.com/apps).
-   - Click on the **Create new app** button
-   - Give it a name, and click **Create**
-   - After creating, you should be in the App / Deploy section.
-      - **Deployment Method**:
-         - Click on **Connect to GitHub**
-         - Allow Heroku to connect
-         - Search for your repo, click **Connect**
-      - **Automatic Deploys**:
-         - Choose what branch you want deployed
-         - If you have CI enabled on your branch, check **Wait for CI to pass
-           before deploy**.
-         - Once your code is in a reliable state, click the **Enable Automatic
-           Deploys** button.
-      - **Manual Deploy**:
-         - Make sure the proper branch is selected, click the **Deploy Branch** button.
-   - To make it easier to determine when your App is running in Heroku, you'll
-     need to add an env var. Go to the
-     [Settings](https://dashboard.heroku.com/apps/cahbox/settings) section.
-      - Scroll down to `Config Vars`
-      - Add a key value pair of `HEROKU` and `true`.
-
-### Debugging App Issues in Heroku
-
-While in the dashboard for your specific App, there'll be a `Open App` button
-and a `More` button.
-- `Open App` does what it says.
-- `More` gives you access to `View Logs` and `Run console`.
-   - `View Logs` isn't that helpful. It seems to just give you the last X number
-     of logs. So unless the important part of a stacktrace are in the last few
-     lines, you may be SOL.
-   - `Run console` allows you to connect to the current instance and run
-     commands like you would in any SSH session.
+# Dev mode
+nr start:dev
+```
 
 ---
 
-## Testing
+## Docker
 
-In order to ensure Cypress runs consistently on all OS's for CI and the GUI mode
-I've opted for the Docker image. One downside to this is the size (over 2gb,
-yeesh). I tried the non-Docker route, and the setup would be different for all
-OS's and there was no guarantee it'd even work.
+```sh
+# Compile Production code (required since the assets are copied over)
+nr build
+# Build and start the container
+dc up --build cahbox
 
-If you don't care about the GUI mode, just run `npm run test`.
+# Or just start the container if you have 'dist' mapped or you just want to use the old build
+dc up cahbox
+```
+
+---
+
+## E2E Testing
+
+In order to ensure Cypress runs consistently on all OS's for CI and the GUI mode I've opted for the Docker image. One downside to this is the size (over 2gb, yeesh). I tried the non-Docker route, and the setup would be different for all OS's and there was no guarantee it'd even work.
 
 To get the GUI to work, follow the instructions for your OS.
 
 **Windows/WSL**
 - Install `choco install vcxsrv`
-- ~~Start a Server with these settings:~~
-   ~~- **Display Settings**: `Multiple Windows`~~
-   ~~- **Start Clients**: `Start no Clients`~~
-   ~~- **Extra Settings**: Check `Disable Access Control`~~
-- ~~Once the XServer is started, if you mouse over the icon, the hover tooltip will~~
-  ~~tell you where the Server is listening for connections. Most likely something~~
-  ~~like `<computer_nam>:0.0`.~~
 
 **OSX**
 - Install `brew install xquartz`
@@ -93,6 +73,39 @@ To get the GUI to work, follow the instructions for your OS.
    - Go to Preferences > Security.
       - Make sure `Allow connections from network clients` is checked
 - Once the settings have been updated you can close XQuartz
+- If you run `echo $DISPLAY` and it's blank, restart your system. The variable should equal something like `/private/tmp/com.apple.launchd.7X4k55BnyT/org.xquartz:0`.
 
-**Once an XServer is set up on your OS**, run `npm run test:watch`
-   
+Once things are wired up you can run any of the below.
+
+```sh
+nr test
+nr test:watch
+
+# skips building the App and Container
+nr test -- --skip-build
+nr test:watch -- --skip-build
+```
+
+---
+
+## Local HTTPS
+
+Follow instructions from https://github.com/the0neWhoKnocks/generate-certs
+
+---
+
+## Logging
+
+This App utilizes [ulog](https://www.npmjs.com/package/ulog).
+
+On the Server you can enable logging via:
+```sh
+# setting an env var of `log` with a log level value
+log=debug nr start:dev
+log=error nr start:dev
+log=info nr start:dev
+```
+
+On the Client you can enable logging via:
+- A query param: `?log=debug` (for temporary logging)
+- Local Storage: `localStorage.setItem('log', 'debug');` (to enable permanently).

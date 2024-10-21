@@ -1,3 +1,61 @@
+<script>
+  import getGaps from '../../../../utils/getGaps';
+  import randomNumber from '../../../utils/randomNumber';
+
+  export let answer = undefined;
+  export let onClick = undefined;
+  export let onSwapClick = undefined;
+  export let rotate = false;
+  export let selected = false;
+  export let swappable = false;
+  export let text = '';
+  export let type = 'white';
+
+  function handleClick() {
+    if (swappable && onSwapClick) {
+      onSwapClick($$props.ndx);
+    }
+    else if (onClick) {
+      selected = !selected;
+      onClick($$props.ndx);
+    }
+  }
+
+  const transformAnswer = (t, a) => {
+    let ret = t;
+
+    if (Array.isArray(a) && a.length) {
+      const gaps = getGaps(t);
+
+      if (!gaps.length) {
+        ret = `${t}<span class="answer">${a[0].trim()}</span>`;
+      }
+      else {
+        ret = gaps.reduce((_t, gap, ndx) => {
+          return _t.replace(gap, `<span class="answer gap">${a[ndx].trim().replace(/\.$/, '')}</span>`);
+        }, t);
+      }
+    }
+    
+    return ret;
+  }
+</script>
+
+<!-- TODO changed from div to button. verify styling -->
+<button
+  class="card"
+  class:is--white={type === 'white'}
+  class:is--black={type === 'black'}
+  class:is--selected={selected}
+  class:is--selectedable={!!onClick}
+  class:is--swappable={swappable}
+  style={rotate ? `transform: rotate(${randomNumber(-2, 2)}deg);` : undefined}
+  on:click={handleClick}
+>
+  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+  <div class="card__text">{@html transformAnswer(text, answer)}</div>
+</button>
+
 <style>
   .card {
     font-size: 1.25em;
@@ -54,59 +112,3 @@
     }
   }
 </style>
-
-<script>
-  import getGaps from '../../../../utils/getGaps';
-  import randomNumber from '../../../utils/randomNumber';
-
-  export let answer = undefined;
-  export let onClick = undefined;
-  export let onSwapClick = undefined;
-  export let rotate = false;
-  export let selected = false;
-  export let swappable = false;
-  export let text = '';
-  export let type = 'white';
-
-  function handleClick() {
-    if (swappable && onSwapClick) {
-      onSwapClick($$props.ndx);
-    }
-    else if (onClick) {
-      selected = !selected;
-      onClick($$props.ndx);
-    }
-  }
-
-  const transformAnswer = (t, a) => {
-    let ret = t;
-
-    if (Array.isArray(a) && a.length) {
-      const gaps = getGaps(t);
-
-      if (!gaps.length) {
-        ret = `${t}<span class="answer">${a[0].trim()}</span>`;
-      }
-      else {
-        ret = gaps.reduce((_t, gap, ndx) => {
-          return _t.replace(gap, `<span class="answer gap">${a[ndx].trim().replace(/\.$/, '')}</span>`);
-        }, t);
-      }
-    }
-    
-    return ret;
-  }
-</script>
-
-<div
-  class="card"
-  class:is--white={type === 'white'}
-  class:is--black={type === 'black'}
-  class:is--selected={selected}
-  class:is--selectedable={!!onClick}
-  class:is--swappable={swappable}
-  style={rotate ? `transform: rotate(${randomNumber(-2, 2)}deg);` : undefined}
-  on:click={handleClick}
->
-  <div class="card__text">{@html transformAnswer(text, answer)}</div>
-</div>

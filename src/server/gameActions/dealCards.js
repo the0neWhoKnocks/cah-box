@@ -5,10 +5,10 @@ const getRequiredCount = (blackCard) => {
   return (numOfGaps > 1) ? numOfGaps : 1;
 };
 
-module.exports = (serverSocket) => function dealCards({ newRound, roomID }) {
-  const { WS__MSG_TYPE__CARDS_DEALT } = require('../../constants');
+module.exports = function dealCards(wss, { newRound, roomID }) {
+  const { WS__MSG__CARDS_DEALT } = require('../../constants');
   const resetGameRound = require('../utils/resetGameRound');
-  const room = serverSocket.getRoom(roomID);
+  const room = wss.getRoom(roomID);
   const {
     private: { cards },
     public: { users },
@@ -50,7 +50,7 @@ module.exports = (serverSocket) => function dealCards({ newRound, roomID }) {
     }
   }
 
-  serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__CARDS_DEALT, {
+  wss.dispatchToAllInRoom(roomID, WS__MSG__CARDS_DEALT, {
     room: room.data.public,
   });
 }

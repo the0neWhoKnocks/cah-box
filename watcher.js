@@ -1,18 +1,16 @@
 #!/usr/bin/env node
-
 const { create } = require('browser-sync');
 const nodemon = require('nodemon');
 const chokidar = require('chokidar');
+const logger = require('./src/utils/logger')('watcher');
 const { SERVER__PORT } = require('./src/constants');
-
-const browserSync = create();
-const LOG_PREFIX = '[WATCHER]';
 let httpModule;
 let protocol = 'http';
+const browserSync = create();
 let bSyncHTTPS;
 
 if (process.env.NODE_EXTRA_CA_CERTS) {
-  httpModule = require('https');
+  httpModule = require('node:https');
   protocol = 'https';
   bSyncHTTPS = {
     cert: process.env.NODE_EXTRA_CA_CERTS,
@@ -20,9 +18,8 @@ if (process.env.NODE_EXTRA_CA_CERTS) {
   }
 }
 else {
-  httpModule = require('http');
+  httpModule = require('node:http');
 }
-
 const checkServer = () => new Promise((rootResolve, rootReject) => {
   let count = 0;
   const check = () => new Promise((resolve, reject) => {
@@ -37,8 +34,7 @@ const checkServer = () => new Promise((rootResolve, rootReject) => {
         // this will get around that issue (which is fine in development, not Prod).
         opts.rejectUnauthorized = false;
       }
-
-      console.log(`${LOG_PREFIX} Pinging ${serverAddress}`);
+      logger.info(`Pinging ${serverAddress}`);
       httpModule
         .get(serverAddress, opts, (res) => resolve(res))
         .on('error', (err) => reject(err));
@@ -50,7 +46,7 @@ const checkServer = () => new Promise((rootResolve, rootReject) => {
       count++;
     }
     else {
-      console.log(err)
+      logger.error(err);
       rootReject();
     }
   };
@@ -64,29 +60,28 @@ const checkServer = () => new Promise((rootResolve, rootReject) => {
   ping();
 });
 
-const fileCheck = (file, timeout = 5) => new Promise((resolveCheck, rejectCheck) => {
-  const { existsSync } = require('fs');
-  const { resolve } = require('path');
+const fileCheck = (file, timeout = 30) => new Promise((resolveCheck, rejectCheck) => {
+  const { existsSync } = require('node:fs');
+  const { resolve } = require('node:path');
   const filePath = resolve(__dirname, file);
   const exists = () => existsSync(filePath);
   let elapsedTime = 0;
 
   if (exists()) resolveCheck();
   else {
-    console.log(`${LOG_PREFIX} Waiting for "${filePath}"\n to exist before starting the Server.\n`);
+    logger.info(`Waiting for "${filePath}"\n to exist before starting.\n`);
     const int = setInterval(() => {
       elapsedTime++;
-
-      console.log(`${LOG_PREFIX}  - Looking for file`);
+      logger.info('Looking for file');
       
       if (exists()) {
-        console.log(`\n${LOG_PREFIX} File found, starting Server\n`);
+        logger.info('File found, starting...\n');
         clearInterval(int);
         resolveCheck();
       }
       else if (elapsedTime === timeout) {
         clearInterval(int);
-        rejectCheck(`\n${LOG_PREFIX} Waited for ${timeout} seconds for "${filePath}"\n to exist, but it was not found.\n`);
+        rejectCheck(`\nWaited for ${timeout} seconds for "${filePath}"\n to exist, but it was not found.\n`);
       }
     }, 1000);
   }
@@ -98,68 +93,60 @@ const waitForFileBeforeStart = args[1];
 const fileGate = (waitForFileBeforeStart)
   ? fileCheck(waitForFileBeforeStart)
   : Promise.resolve();
+const watchedServerFiles = [
+  './src/server/**/*.js',
+  './src/utils/**/*.js',
+  './src/constants.js',
+  './src/data.json',
+];
+
+const chokidarOpts = { ignoreInitial: true };
 
 fileGate
   .then(() => {
-    const serverFilesWatcher = chokidar.watch([
-      './src/server/**/*',
-      './src/static/imgs/**/*',
-      './src/utils/**/*',
-      './src/constants.js',
-      './src/data.json',
-    ], {
-      ignoreInitial: true,
-    });
+    const serverFilesWatcher = chokidar.watch(watchedServerFiles, chokidarOpts);
     serverFilesWatcher
       .on('ready', () => {
-        console.log(`${LOG_PREFIX} Watching for Server changes`);
+        logger.info('Watching for Server changes');
       })
       .on('all', (ev, p) => { // events are: add addDir change unlink unlinkDir
         if (!serverFilesWatcher.events) serverFilesWatcher.events = [];
         serverFilesWatcher.events.push([ev, p]);
 
-        // if (serverFilesWatcher.debounce) clearTimeout(serverFilesWatcher.debounce);
         if (!serverFilesWatcher.debounce) {
           serverFilesWatcher.debounce = setTimeout(() => {
-            console.log(`${LOG_PREFIX} Server updates:\n  - ${serverFilesWatcher.events.map(([_ev, _p]) => `${_ev}: ${_p}`).join('\n  - ')}`);
+            logger.info(`Server updates:\n  - ${serverFilesWatcher.events.map(([_ev, _p]) => `${_ev}: ${_p}`).join('\n  - ')}`);
             delete serverFilesWatcher.debounce;
             delete serverFilesWatcher.events;
             
             if (serverSyncCmd) {
-              const { execSync } = require('child_process');
+              const { execSync } = require('node:child_process');
               execSync(serverSyncCmd);
             }
           }, 300);
         }
       });
 
-
     nodemon({
       delay: 500,
-      exec: 'node --inspect',
+      exec: 'node --inspect=0.0.0.0',
       ext: 'js json',
       script: './dist/server',
       // verbose: true,
-      watch: [
-        './dist/server/**/*.js',
-        './dist/utils/**/*.js',
-        './dist/constants.js',
-        './dist/data.json',
-      ],
+      watch: watchedServerFiles,
     })
       .on('restart', () => {
-        console.log(`${LOG_PREFIX} Server restarting because file(s) changed`);
+        logger.info('Server restarting because file(s) changed');
     
         checkServer()
           .then(() => {
-            console.log(`${LOG_PREFIX} Server has fully started`);
+            logger.info('Server has fully started');
             browserSync.reload();
           })
           .catch(() => {
-            console.log(`${LOG_PREFIX} Couldn't detect the Server, a manual reload may be required`);
+            logger.info("Couldn't detect the Server, a manual reload may be required");
           });
       });
-    
     // https://www.browsersync.io/docs/options
     browserSync.init({
       files: [
@@ -175,22 +162,29 @@ fileGate
         target: `${protocol}://localhost:${SERVER__PORT}`,
         ws: true,
       },
-      reloadDebounce: 300, // Wait for a specified window of event-silence before sending any reload events.
+      reloadDebounce: 1000, // Wait for a specified window of event-silence before sending any reload events.
+      serveStatic: ['dist/public'], // now required when using `proxy` otherwise automatic-reloads don't work.
       snippetOptions: {
+        async: true,
         rule: {
           match: /<\/body>/i,
           fn: (snippet) => snippet,
         },
       },
+      socket: {
+        domain: `localhost:${SERVER__PORT + 3}`,
+        port: SERVER__PORT + 3,
+      },
       ui: {
         port: SERVER__PORT + 2,
       },
+      watchOptions: chokidarOpts,
     });
     
     function killWatcher(evType) {
-      console.log(`${LOG_PREFIX} Killing watcher (${evType})`);
-      serverFilesWatcher.close();
+      logger.info(`Killing watcher (${evType})`);
       browserSync.exit();
+      serverFilesWatcher.close();
       nodemon.emit('quit');
       process.exit(0);
     }
@@ -200,6 +194,6 @@ fileGate
     process.on('SIGUSR2', killWatcher.bind(null, 'SIGUSR2'));
   })
   .catch(err => {
-    console.error(err);
+    logger.error(err);
     process.exit(1);
   });
