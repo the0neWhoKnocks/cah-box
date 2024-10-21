@@ -1,13 +1,13 @@
 const log = require('../../utils/logger')('gameActions:swapCard');
 
-module.exports = (serverSocket) => function swapCard({
+module.exports = function swapCard(wss, {
   cardNdx,
   roomID,
   username,
 }) {
-  const { WS__MSG_TYPE__CARD_SWAPPED } = require('../../constants');
+  const { WS__MSG__CARD_SWAPPED } = require('../../constants');
   const getUser = require('../utils/getUser');
-  const room = serverSocket.getRoom(roomID);
+  const room = wss.getRoom(roomID);
   const user = getUser(room, username);
   const {
     private: { cards: { dead, live } },
@@ -21,7 +21,7 @@ module.exports = (serverSocket) => function swapCard({
   user.cards[cardNdx] = newCard;
   user.points -= 1;
 
-  serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__CARD_SWAPPED, {
+  wss.dispatchToAllInRoom(roomID, WS__MSG__CARD_SWAPPED, {
     room: room.data.public,
   });
 }

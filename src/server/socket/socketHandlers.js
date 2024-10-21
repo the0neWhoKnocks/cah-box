@@ -3,21 +3,21 @@ const logHeartbeat = require('../../utils/logger')('socket:socketHandlers:heartb
 
 module.exports = function connection(socket, serverSocket) {
   const {
-    WS__MSG_TYPE__CHECK_USERNAME,
-    WS__MSG_TYPE__CHOSE_ANSWER,
-    WS__MSG_TYPE__CREATE_GAME,
-    WS__MSG_TYPE__DEAL_CARDS,
-    WS__MSG_TYPE__USER_ENTERED_ROOM,
-    WS__MSG_TYPE__JOIN_GAME,
-    WS__MSG_TYPE__PING,
-    WS__MSG_TYPE__PONG,
-    WS__MSG_TYPE__REMOVE_USER_FROM_ROOM,
-    WS__MSG_TYPE__SET_ADMIN,
-    WS__MSG_TYPE__SET_ANSWER_REVIEW_STATE,
-    WS__MSG_TYPE__SET_CZAR,
-    WS__MSG_TYPE__SUBMIT_CARDS,
-    WS__MSG_TYPE__SWAP_CARD,
-    WS__MSG_TYPE__TOGGLE_CARD_SELECTION,
+    WS__MSG__CHECK_USERNAME,
+    WS__MSG__CHOSE_ANSWER,
+    WS__MSG__CREATE_GAME,
+    WS__MSG__DEAL_CARDS,
+    WS__MSG__USER_ENTERED_ROOM,
+    WS__MSG__JOIN_GAME,
+    WS__MSG__PING,
+    WS__MSG__PONG,
+    WS__MSG__REMOVE_USER_FROM_ROOM,
+    WS__MSG__SET_ADMIN,
+    WS__MSG__SET_ANSWER_REVIEW_STATE,
+    WS__MSG__SET_CZAR,
+    WS__MSG__SUBMIT_CARDS,
+    WS__MSG__SWAP_CARD,
+    WS__MSG__TOGGLE_CARD_SELECTION,
   } = require('../../constants');
   const checkUsername = require('../gameActions/checkUsername')(serverSocket);
   const choseAnswer = require('../gameActions/choseAnswer')(serverSocket);
@@ -34,28 +34,32 @@ module.exports = function connection(socket, serverSocket) {
 
   socket.on('message', (payload) => {
     const { data, type } = JSON.parse(payload);
-    const _log = (type === WS__MSG_TYPE__PING) ? logHeartbeat : log;
+    const baseMsg = ``;
+    
+    (type === WS__MSG__PING)
+      ? log.debug(baseMsg, data)
+      : log.info(baseMsg, data);
     
     _log(`[HANDLE] "${type}"`);
 
     switch (type) {
-      case WS__MSG_TYPE__CHECK_USERNAME: checkUsername(data); break;
-      case WS__MSG_TYPE__CHOSE_ANSWER: choseAnswer(data); break;
-      case WS__MSG_TYPE__CREATE_GAME: createGame(data); break;
-      case WS__MSG_TYPE__DEAL_CARDS: dealCards(data); break;
-      case WS__MSG_TYPE__JOIN_GAME: joinGame(data); break;
-      case WS__MSG_TYPE__PING: {
-        serverSocket.emitToSelf(WS__MSG_TYPE__PONG);
+      case WS__MSG__CHECK_USERNAME: checkUsername(data); break;
+      case WS__MSG__CHOSE_ANSWER: choseAnswer(data); break;
+      case WS__MSG__CREATE_GAME: createGame(data); break;
+      case WS__MSG__DEAL_CARDS: dealCards(data); break;
+      case WS__MSG__JOIN_GAME: joinGame(data); break;
+      case WS__MSG__PING: {
+        serverSocket.emitToSelf(WS__MSG__PONG);
         break;
       }
-      case WS__MSG_TYPE__REMOVE_USER_FROM_ROOM: removeUserFromRoom(data); break;
-      case WS__MSG_TYPE__SET_ADMIN: setUserState(data, 'admin'); break;
-      case WS__MSG_TYPE__SET_ANSWER_REVIEW_STATE: setAnswerReviewState(data); break;
-      case WS__MSG_TYPE__SET_CZAR: setUserState(data, 'czar'); break;
-      case WS__MSG_TYPE__SUBMIT_CARDS: submitCards(data); break;
-      case WS__MSG_TYPE__SWAP_CARD: swapCard(data); break;
-      case WS__MSG_TYPE__TOGGLE_CARD_SELECTION: toggleCardSelection(data); break;
-      case WS__MSG_TYPE__USER_ENTERED_ROOM: enterRoom(data); break;
+      case WS__MSG__REMOVE_USER_FROM_ROOM: removeUserFromRoom(data); break;
+      case WS__MSG__SET_ADMIN: setUserState(data, 'admin'); break;
+      case WS__MSG__SET_ANSWER_REVIEW_STATE: setAnswerReviewState(data); break;
+      case WS__MSG__SET_CZAR: setUserState(data, 'czar'); break;
+      case WS__MSG__SUBMIT_CARDS: submitCards(data); break;
+      case WS__MSG__SWAP_CARD: swapCard(data); break;
+      case WS__MSG__TOGGLE_CARD_SELECTION: toggleCardSelection(data); break;
+      case WS__MSG__USER_ENTERED_ROOM: enterRoom(data); break;
       default: {
         log(`[WARN] Message type "${type}" is not valid, no action taken data:`, data);
       }
@@ -66,9 +70,9 @@ module.exports = function connection(socket, serverSocket) {
     const {
       DISCONNECT_TIMEOUT,
       WS__CLOSE_CODE__USER_REMOVED,
-      WS__MSG_TYPE__ROOM_DESTROYED,
-      WS__MSG_TYPE__USER_DISCONNECTED,
-      WS__MSG_TYPE__USER_LEFT_ROOM,
+      WS__MSG__ROOM_DESTROYED,
+      WS__MSG__USER_DISCONNECTED,
+      WS__MSG__USER_LEFT_ROOM,
     } = require('../../constants');
     const assignNextAdmin = require('../utils/assignNextAdmin');
     const assignNextCzar = require('../utils/assignNextCzar');
@@ -82,7 +86,7 @@ module.exports = function connection(socket, serverSocket) {
       if (user) {
         user.connected = false;
   
-        serverSocket.emitToOthersInRoom(roomID, WS__MSG_TYPE__USER_DISCONNECTED, {
+        serverSocket.emitToOthersInRoom(roomID, WS__MSG__USER_DISCONNECTED, {
           room: room.data.public,
         });
 
@@ -117,7 +121,7 @@ module.exports = function connection(socket, serverSocket) {
               // it's possible that a User is in the process of joining when
               // the Admin left the room, so lets tell them that the room no
               // longer exists.
-              serverSocket.emitToSelf(WS__MSG_TYPE__ROOM_DESTROYED);
+              serverSocket.emitToSelf(WS__MSG__ROOM_DESTROYED);
   
               serverSocket.deleteRoom(roomID);
             }
@@ -141,7 +145,7 @@ module.exports = function connection(socket, serverSocket) {
               const socketNdx = room.sockets.indexOf(serverSocket.socket);
               if (socketNdx > -1) room.sockets.splice(socketNdx, 1);
   
-              serverSocket.emitToOthersInRoom(roomID, WS__MSG_TYPE__USER_LEFT_ROOM, {
+              serverSocket.emitToOthersInRoom(roomID, WS__MSG__USER_LEFT_ROOM, {
                 room: room.data.public,
               });
             }

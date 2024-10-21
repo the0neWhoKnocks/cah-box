@@ -1,3 +1,41 @@
+<script>
+  import DisconnectIndicator from './DisconnectIndicator.svelte';
+
+  let className = '';
+  
+  export let admin = false;
+  export let cardsSubmitted = false;
+  export let connected = false;
+  export let czar = false;
+  export let name = '';
+  export let points = 0;
+  export { className as class };
+</script>
+
+<div
+  class={`user ${className}`}
+  class:is--admin={admin}
+  class:is--connected={connected}
+  class:is--czar={czar}
+  class:cards-submitted={cardsSubmitted}
+  data-name={name}
+>
+  <span class="user__icon">
+    <svg class="icon">
+      <use
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        xlink:href={`#ui-icon__${czar ? 'crown' : 'star'}`}
+      ></use>
+    </svg>
+  </span>
+  {#if !connected}
+    <DisconnectIndicator />
+  {/if}
+  <span class="user__name">{name}</span>
+  <span class="user__points">{points}</span>
+  <span class="user__status-indicator"></span>
+</div>
+
 <style>
   .user {
     font-size: 1.25em;
@@ -90,41 +128,3 @@
     animation-duration: 300ms;
   }
 </style>
-
-<script>
-  import DisconnectIndicator from './DisconnectIndicator.svelte';
-
-  let className = '';
-  
-  export let admin = false;
-  export let cardsSubmitted = false;
-  export let connected = false;
-  export let czar = false;
-  export let name = '';
-  export let points = 0;
-  export { className as class };
-</script>
-
-<div
-  class={`user ${className}`}
-  class:is--admin={admin}
-  class:is--connected={connected}
-  class:is--czar={czar}
-  class:cards-submitted={cardsSubmitted}
-  data-name={name}
->
-  <span class="user__icon">
-    <svg class="icon">
-      <use
-        xmlns:xlink="http://www.w3.org/1999/xlink"
-        xlink:href={`#ui-icon__${czar ? 'crown' : 'star'}`}
-      ></use>
-    </svg>
-  </span>
-  {#if !connected}
-    <DisconnectIndicator />
-  {/if}
-  <span class="user__name">{name}</span>
-  <span class="user__points">{points}</span>
-  <span class="user__status-indicator"></span>
-</div>

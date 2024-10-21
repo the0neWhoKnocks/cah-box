@@ -1,7 +1,7 @@
 const log = require('../../utils/logger')('gameActions:createGame');
 
-module.exports = (serverSocket) => function createGame() {
-  const { WS__MSG_TYPE__CREATE_GAME } = require('../../constants');
+module.exports = function createGame(wss) {
+  const { WS__MSG__CREATE_GAME } = require('../../constants');
   const {
     black: blackCards,
     white: whiteCards,
@@ -14,10 +14,10 @@ module.exports = (serverSocket) => function createGame() {
   // generating one until a unique one is found.
   while (!roomID) {
     const id = generateRoomID();
-    if (!serverSocket.getRoom(id)) roomID = id;
+    if (!wss.getRoom(id)) roomID = id;
   }
 
-  serverSocket.createRoom(roomID, {
+  wss.createRoom(roomID, {
     private: {
       cards: {
         dead: { black: [], white: [] },
@@ -34,7 +34,8 @@ module.exports = (serverSocket) => function createGame() {
     },
   });
 
-  log(`Created new room "${roomID}"`);
+  log.info(`Created new room "${roomID}"`);
 
-  serverSocket.emitToSelf(WS__MSG_TYPE__CREATE_GAME, { roomID });
+  // wss.emitToSelf(WS__MSG__CREATE_GAME, { roomID });
+  wss.dispatchToClient(WS__MSG__CREATE_GAME, { roomID });
 }

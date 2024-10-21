@@ -1,14 +1,14 @@
+# Folders
+.app_data
+.git
+.ignore
+certs*
+e2e/artifacts
+e2e/reports
+dist
+node_modules
+
 # Files
 *.log
 *.patch
-*.zip
-
-# Folders
-.git
-.ignore
-.vscode
-dist
-node_modules
-tests/cypress/fixtures
-tests/cypress/integration/examples
-tests/cypress/screenshots
+.DS_STORE

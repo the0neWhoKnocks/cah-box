@@ -1,4 +1,5 @@
 <script>
+  // TODO delete file
   import { onDestroy, onMount, tick } from 'svelte';
   import logger from '../../utils/logger';
 

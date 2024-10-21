@@ -11,7 +11,7 @@ const confetti = [];
 const log = logger('Celebrate');
 
 export default class Celebrate {
-  static randomRange(min, max){ return Math.random() * (max - min) + min; }
+  static randomRange(min, max) { return Math.random() * (max - min) + min; }
 
   constructor({ canvas }) {
     this.canvas = canvas;
@@ -99,6 +99,6 @@ export default class Celebrate {
   stop() {
     this.allowRender = false;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    log('stop');
+    log.info('stop');
   }
 }

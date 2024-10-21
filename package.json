@@ -1,45 +1,41 @@
 {
-  "name": "cah-box",
-  "description": "Cards Against Humanity mixed with the play-on-any-device strategy of JackBox",
   "version": "0.0.2",
-  "engines": {
-    "node": "10.22.x"
-  },
   "scripts": {
     "build": "./bin/prep-dist.sh && NODE_ENV=production webpack",
+    "lint": "eslint ./*.js \"{bin,e2e,src}/**/*.{js,svelte}\"",
+    "preinstall": "if [ -z \"$IN_CONTAINER\" ] || ! $IN_CONTAINER; then echo \" [ERROR] Not in Docker\\n\"; rm -rf node_modules; exit 1; fi",
     "start": "node ./dist/server",
     "start:dev": "./bin/prep-dist.sh && webpack & ./watcher.js \"./bin/prep-dist.sh\" \"./dist/public/manifest.json\"",
-    "test": "./bin/test-runner.sh",
-    "test:watch": "./bin/test-runner.sh watch"
+    "test": "./e2e/bin/test-runner.sh",
+    "test:watch": "npm run test -- --watch"
   },
   "dependencies": {
-    "bufferutil": "^4.0.1",
-    "compression": "^1.7.1",
-    "debug": "^4.2.0",
-    "polka": "^1.0.0-next.11",
-    "sirv": "^0.4.0",
-    "supports-color": "^7.2.0",
-    "utf-8-validate": "^5.0.2",
-    "ws": "^7.3.1"
+    "anylogger": "1.0.11",
+    "compression": "1.7.4",
+    "polka": "1.0.0-next.23",
+    "sirv": "2.0.4",
+    "ulog": "2.0.0-beta.19",
+    "ws": "8.18.0"
   },
   "devDependencies": {
-    "browser-sync": "^2.26.12",
-    "clean-webpack-plugin": "^3.0.0",
-    "concurrently": "^5.3.0",
-    "css-loader": "^4.3.0",
-    "eslint": "^7.5.0",
-    "eslint-plugin-cypress": "^2.11.1",
-    "ignore-emit-webpack-plugin": "^2.0.3",
-    "mini-css-extract-plugin": "^0.12.0",
-    "nodemon": "^2.0.4",
-    "optimize-css-assets-webpack-plugin": "^5.0.4",
-    "stylus": "^0.54.8",
-    "stylus-loader": "^4.1.0",
-    "svelte": "^3.29.0",
-    "svelte-loader": "^2.13.6",
-    "terser-webpack-plugin": "^4.2.3",
-    "webpack": "^4.44.2",
-    "webpack-cli": "^3.3.12",
-    "webpack-manifest-plugin": "^2.2.0"
+    "browser-sync": "3.0.3",
+    "chokidar": "3.5.2",
+    "clean-webpack-plugin": "4.0.0",
+    "css-loader": "6.5.1",
+    "css-minimizer-webpack-plugin": "3.1.3",
+    "eslint": "8.57.1",
+    "eslint-plugin-node": "11.1.0",
+    "eslint-plugin-playwright": "1.7.0",
+    "eslint-plugin-svelte": "2.44.1",
+    "ignore-emit-webpack-plugin": "2.0.6",
+    "mini-css-extract-plugin": "2.4.4",
+    "nodemon": "3.0.1",
+    "svelte": "4.2.19",
+    "svelte-loader": "3.1.9",
+    "svelte-portal": "2.2.0",
+    "terser-webpack-plugin": "5.2.5",
+    "webpack": "5.95.0",
+    "webpack-cli": "4.9.1",
+    "webpack-manifest-plugin": "4.0.2"
   }
 }

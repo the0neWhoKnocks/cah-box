@@ -1,7 +1,7 @@
-module.exports = (serverSocket) => function joinGame({ roomID, username }) {
-  const { WS__MSG_TYPE__USER_JOINED } = require('../../constants');
+module.exports = function joinGame(wss, { roomID, username }) {
+  const { WS__MSG__USER_JOINED } = require('../../constants');
   const getUser = require('../utils/getUser');
-  const room = serverSocket.getRoom(roomID);
+  const room = wss.getRoom(roomID);
   const { public: { users } } = room.data;
   let user = getUser(room, username);
 
@@ -23,11 +23,11 @@ module.exports = (serverSocket) => function joinGame({ roomID, username }) {
 
     users.push(user);
 
-    serverSocket.data.user = user;
-    serverSocket.socket._username = username;
+    wss.data.user = user;
+    wss.socket._username = username;
   }
 
-  serverSocket.emitToAllInRoom(roomID, WS__MSG_TYPE__USER_JOINED, {
+  wss.dispatchToAllInRoom(roomID, WS__MSG__USER_JOINED, {
     room: room.data.public,
     username,
   });

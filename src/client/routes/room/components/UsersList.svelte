@@ -1,28 +1,3 @@
-<style>
-  .users-list {
-    background: #fff;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 1;
-  }
-  .users-list :global(.user) {
-    margin: 0.25em 0;
-  }
-  .users-list :global(.user.is--local) {
-    color: #fff1be;
-    font-weight: bold;
-    margin-top: 0;
-    background: #000;
-  }
-  .users-list.is--admin :global(.user:hover) {
-    cursor: pointer;
-    background: rgba(255, 255, 0, 0.5);
-  }
-  .users-list.is--admin :global(.user.is--local:hover) {
-    color: #000;
-  }
-</style>
-
 <script>
   import User from './User.svelte';
 
@@ -50,6 +25,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   class="users-list"
   class:is--admin={isAdmin}
@@ -79,3 +56,28 @@
     {/each}
   {/if}
 </div>
+
+<style>
+  .users-list {
+    background: #fff;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .users-list :global(.user) {
+    margin: 0.25em 0;
+  }
+  .users-list :global(.user.is--local) {
+    color: #fff1be;
+    font-weight: bold;
+    margin-top: 0;
+    background: #000;
+  }
+  .users-list.is--admin :global(.user:hover) {
+    cursor: pointer;
+    background: rgba(255, 255, 0, 0.5);
+  }
+  .users-list.is--admin :global(.user.is--local:hover) {
+    color: #000;
+  }
+</style>

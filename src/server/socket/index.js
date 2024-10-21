@@ -7,6 +7,8 @@ const disconnectChecksForRoom = new Map();
 
 const disconnectKey = (roomID, username) => `${roomID}__${username}`;
 
+// TODO: extend socket.wss with serverSocket functions 
+
 // NOTE - wrapping API in case I need to refactor again in the future
 class ServerSocket {
   constructor(currentUserSocket, wsServerInst) {
