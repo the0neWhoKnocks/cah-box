@@ -172,7 +172,6 @@ fileGate
         },
       },
       socket: {
-        domain: `localhost:${SERVER__PORT + 3}`,
         port: SERVER__PORT + 3,
       },
       ui: {
