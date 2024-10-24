@@ -28,7 +28,8 @@ module.exports = function submitCards(wss, {
     }
   }
   
-  // shuffle answers once all Users have submitted
+  // Shuffle answers once all Users have submitted so the Czar can't pick based
+  // on the order the Users submitted answers.
   if (submittedCards.length === (users.length - 1)) {
     room.data.public.submittedCards = shuffleArray(submittedCards);
   }
