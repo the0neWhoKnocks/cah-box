@@ -33,13 +33,11 @@ else
   isOSX=$(uname | grep -qi "darwin" &> /dev/null)
 fi
 
-APP_SERVICE="cahbox"
+APP_SERVICE="cahbox-test"
 E2E_CONTAINER_NAME="cahbox-e2e"
 E2E_SERVICE="cahbox-e2e"
 runnerCmd=""
 xlaunchPath="${SCRIPT_DIR}/XServer.xlaunch"
-# TODO needed?
-# extraArgs="-e CYPRESS_baseUrl=https://${DOCKER_HOST}:3000"
 extraArgs=""
 
 # When watching for test changes, `open` (instead of `run`) runner so that the
@@ -67,18 +65,15 @@ if $WATCH_MODE; then
     IP=$(ip addr show | grep docker | grep -Eo 'inet ([^/]+)' | sed 's|inet ||')
     DBUS_PATH=$(echo "${DBUS_SESSION_BUS_ADDRESS}" | sed 's|unix:path=||')
     display="${DISPLAY}"
-    # TODO removed user stuff
-    # extraArgs="${extraArgs} --user $(id -u):$(id -g) -e DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS}" -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v /run/dbus/system_bus_socket:/run/dbus/system_bus_socket -v ${DBUS_PATH}:${DBUS_PATH}"
-    extraArgs="${extraArgs} -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v /run/dbus/system_bus_socket:/run/dbus/system_bus_socket"
+    
+    export VOL_X11='/tmp/.X11-unix:/tmp/.X11-unix:rw'
+    export VOL_DBUS='/run/dbus/system_bus_socket:/run/dbus/system_bus_socket'
+    
     # ensure folder is accessible by container mount (otherwise report creation will fail)
     chmod 777 e2e
   fi
 
   if [[ "$display" != "" ]]; then
-    # TODO remove old commented stuff
-    # runnerCmd="docker compose run --name=${E2E_CONTAINER_NAME} -e DISPLAY=$display ${extraArgs} --rm --entrypoint cypress ${E2E_SERVICE} open --e2e --browser electron --project ."
-    runnerCmd="docker compose run --name=${E2E_CONTAINER_NAME} -e DISPLAY=$display ${extraArgs} --rm ${E2E_SERVICE} npx playwright test --ui"
-    
     if [[ "$xlaunchBinary" != "" ]] && [ -f "$xlaunchBinary" ]; then
       echo;
       echo "[START] XServer"
@@ -118,12 +113,13 @@ fi
 echo;
 echo "[START] Tests"
 echo;
-if [[ "$runnerCmd" != "" ]]; then
-  echo "[RUN] ${runnerCmd}"
-  ${runnerCmd}
+if $WATCH_MODE; then
+  export CMD="npx playwright test --ui"
+  export TEST_DISPLAY="$display"
 else
-  docker compose up "${extraArgs}" --abort-on-container-exit --remove-orphans "${E2E_SERVICE}"
+  export CMD="npx playwright test"
 fi
+docker compose up --abort-on-container-exit --remove-orphans $APP_SERVICE $E2E_SERVICE
 exitCode=$(echo $?)
 
 docker compose down

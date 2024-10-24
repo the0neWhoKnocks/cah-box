@@ -2,6 +2,7 @@ import { WS__MSG__CARDS_DEALT } from '@src/constants';
 import {
   STATUS__ACTIVE,
   STATUS__DEFAULT,
+  STATUS__DISCONNECTED,
   test,
   expect,
 } from './fixtures/GameFixture';
@@ -13,10 +14,10 @@ test.describe('Game', () => {
       await game.loadRoom();
       await game.createGame();
       await game.joinGame({
+        isFirst: true,
         name: 'User_1',
         screenshot: 'Adding first User',
       });
-      await game.validateAdminInstructions({ screenshot: 'Admin instructions' });
       await game.valitateUser({
         admin: true,
         name: 'User1',
@@ -185,13 +186,79 @@ test.describe('Game', () => {
     });
     
     
+    await test.step('Local user should be at the top of the users list', async () => {
+      await game.switchToPage(1);
+      await game.validateUserOrder({
+        screenshot: "User1 should be at top",
+        userNames: ['User1', 'User2', 'User3'],
+      });
+      
+      await game.switchToPage(2);
+      await game.validateUserOrder({
+        screenshot: "User2 should be at top",
+        userNames: ['User2', 'User1', 'User3'],
+      });
+      
+      await game.switchToPage(3);
+      await game.validateUserOrder({
+        screenshot: "User3 should be at top",
+        userNames: ['User3', 'User1', 'User2'],
+      });
+    });
     
     // TODO:
-    // - admin menu (click on .user):
-    //   - assign admin
+    // - play through a couple rounds (since there's only 2 cards)
+    //   - users pick required cards
+    //   - MC sees ready state for all users
+    //   - pick a winner
+    //   - verify dialog that displays winner and points
+    //   - winner dialog should have confetti and sound 
+    // - admin menu:
     //   - remove player
-    // - validate .user order for each Tab (data-name attribute). current Tab user should always be at top.
     // - have a player leave: https://playwright.dev/docs/api/class-page#page-close
+    // - create a 2nd game with the same user names as 1st, verify there's no conflicts in gameplay.
+    // - if admin leaves, another user gets assigned role automatically
+    // - if czar leaves, another user gets assigned role automatically
+  });
+  
+  test('Handle connection issues', async ({ game }) => {
+    const DISCONNECTION_MSG = "You've lost connection to the Server";
+    const users = ['User1', 'User2'];
+    
+    await game.startWithUsers(users);
+    
+    await game.goOffline();
+    let dialog = await game.waitForDialog();
+    await expect(dialog).toHaveText(DISCONNECTION_MSG);
+    await game.screenshot(`${users[1]} informed they've lost connection`);
+    
+    await game.switchToPage(1);
+    await game.screenshot(`${users[0]} sees ${users[1]} as connected`, '.users-list');
+    await game.valitateUser({ disconnected: true, name: users[1], status: STATUS__DISCONNECTED });
+    await game.screenshot(`${users[0]} sees ${users[1]} as disconnected`, '.users-list');
+    
+    await game.switchToPage(2);
+    await game.goOnline();
+    await game.valitateUser({ name: users[1], status: STATUS__DEFAULT });
+    await game.screenshot(`${users[1]} re-connected`, '.users-list');
+    
+    await game.goOffline();
+    dialog = await game.waitForDialog();
+    await expect(dialog).toHaveText(DISCONNECTION_MSG);
+    await game.screenshot(`${users[1]} lost connection again`);
+    
+    await game.switchToPage(1);
+    await game.valitateUser({ disconnected: true, name: users[1], status: STATUS__DISCONNECTED });
+    await game.screenshot(`${users[0]} sees ${users[1]} disconnected again`, '.users-list');
+    await game.valitateUserRemoved({ name: users[1], screenshot: `${users[1]} removed from game due to disconnection` });
+    
+    await game.switchToPage(2);
+    await game.goOnline();
+    await game.joinGame({ name: users[1], screenshot: `${users[1]} rejoined game` });
+    
+    await game.switchToPage(1);
+    await game.valitateUser({ name: users[1], status: STATUS__DEFAULT });
+    await game.screenshot(`${users[0]} sees ${users[1]} re-joined game`, '.users-list');
   });
   
   test('Non-existent room', async ({ game }) => {

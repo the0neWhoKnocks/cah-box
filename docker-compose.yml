@@ -5,14 +5,12 @@ services:
       dockerfile: .docker/Dockerfile
     container_name: cahbox
     environment:
-      # DATA_PATH: /app_data
       NODE_EXTRA_CA_CERTS: /app_certs/localhost.crt
       TZ: America/Los_Angeles
     healthcheck:
       interval: "3s"
       retries: 3
       start_interval: "2s"
-      # start_period: "5s"
       test: wget --no-verbose --tries=1 --spider --no-check-certificate https://localhost:3000 || exit 1
       timeout: "2s"
     image: theonewhoknocks/cahbox
@@ -24,7 +22,6 @@ services:
       - type: bind
         source: "${PWD}/certs"
         target: "/app_certs"
-      # - "${PWD}/.app_data:/app_data"
   
   cahbox-dev:
     extends: cahbox # allows for just changing key pieces of data for development
@@ -47,30 +44,35 @@ services:
       # Map the current directory over for development
       - "${PWD}:/home/node/app"
   
+  cahbox-test:
+    extends: cahbox
+    container_name: cahbox-test
+    environment:
+      DATA_PATH: /test/data.json
+    hostname: cahbox # domain name (usually assigned via container name)
+    volumes:
+      - "${PWD}/e2e/tests/fixtures/data.json:/test/data.json:r"
+  
   cahbox-e2e:
     build:
       context: ./e2e/
       dockerfile: Dockerfile
+    command: $CMD
     container_name: cahbox-e2e
     depends_on:
-      - cahbox
+      cahbox-test:
+        condition: service_healthy
     environment:
       BASE_URL: "https://cahbox:3000" # <PROTOCOL>://<CONTAINER_NAME>:<CONTAINER_PORT>
+      DISPLAY: $TEST_DISPLAY
     hostname: e2etests
     ipc: host # Using `--ipc=host` is recommended when using Chrome (Docker docs). Chrome can run out of memory without this flag.
     ports:
       - "3001:3000"
     security_opt:
       - "seccomp:${PWD}/e2e/seccomp_profile.json"
-    # working_dir: /e2e
     volumes:
-      # - type: bind
-      #   source: "/tmp/.X11-unix"
-      #   target: "/tmp/.X11-unix"
-      # - type: bind
-      #   source: "${PWD}/e2e/results"
-      #   target: "/e2e/results"
       - "${PWD}/e2e:/e2e"
-      # - "${PWD}/e2e/tests:/e2e/tests"
-      # - "${PWD}/e2e/playwright.config.js:/e2e/playwright.config.js"
-      - "${PWD}/src/constants.js:/node_modules/@src/constants.js:r"
+      - "${PWD}/src/constants.js:/node_modules/@src/constants.js:r" # map local modules to the fake `@src` parent
+      - $VOL_DBUS
+      - $VOL_X11

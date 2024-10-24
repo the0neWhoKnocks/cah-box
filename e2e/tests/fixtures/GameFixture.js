@@ -1,16 +1,21 @@
 import { exec as _exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { test as base, expect } from '@playwright/test';
-import { WS__MSG__CARDS_DEALT } from '@src/constants';
+import {
+  DISCONNECT_TIMEOUT,
+  WS__MSG__CARDS_DEALT,
+} from '@src/constants';
 
 const PATH__REL_SCREENSHOTS = 'artifacts/screenshots';
 const PATH__ABS_SCREENSHOTS = `/e2e/${PATH__REL_SCREENSHOTS}`;
 export const STATUS__ACTIVE = '#27cfb6';
 export const STATUS__DEFAULT = '#393939';
-const exec = promisify(_exec);
-const pad = (num) => `${num}`.padStart(2, '0');
+export const STATUS__DISCONNECTED = '#ffff00';
+const fixtures = [];
 const screenshotNdxs = {};
+let currFixture;
 
+const exec = promisify(_exec);
 const genShotKeys = (testInfo) => {
   const testFileKey = testInfo.titlePath[0].replace(/\.test\.js$/, '');
   const testNameKey = `[${testInfo.titlePath[1]}][${testInfo.titlePath[2]}]`;
@@ -20,12 +25,17 @@ const genShotKeys = (testInfo) => {
 const genShotPrefix = ({ testFileKey, testNameKey }) => {
   return `${testFileKey}/${testNameKey}`.toLowerCase().replace(/\s/g, '-');
 };
+const pad = (num) => `${num}`.padStart(2, '0');
 
 class GameFixture {
-  constructor({ context, page, testInfo }) {
+  constructor({ browser, context, page, testInfo }) {
+    if (!currFixture) currFixture = this;
+    fixtures.push(this);
+    
+    this.browser = browser;
     this.ctx = context;
-    this.currPage = page;
-    this.pages = [page];
+    this.page = page;
+    this.testInfo = testInfo;
     
     const { testFileKey, testNameKey } = genShotKeys(testInfo);
     this.testFileKey = testFileKey;
@@ -33,12 +43,6 @@ class GameFixture {
     this.ndxKey = `${this.testFileKey}_${this.testNameKey}`;
     this.shotNamePrefix = genShotPrefix({ testFileKey, testNameKey });
     
-    delete screenshotNdxs[this.ndxKey];
-    
-    this.addSocketListener(page);
-  }
-  
-  async addSocketListener(page) {
     page.wsMsgs = {};
     page.on('websocket', (ws) => {
       ws.on('framereceived', ({ payload }) => {
@@ -49,69 +53,93 @@ class GameFixture {
   }
   
   async assignCzar({ from: userAName, to: userBName }) {
-    await this.valitateUser({ czar: false, name: userBName, status: STATUS__DEFAULT });
+    await currFixture.valitateUser({ czar: false, name: userBName, status: STATUS__DEFAULT });
     
-    const menu = await this.openAdminMenu(userBName);
-    const btn = this.getAssignCzarBtn(menu, userBName);
+    const menu = await currFixture.openAdminMenu(userBName);
+    const btn = currFixture.getAssignCzarBtn(menu, userBName);
     
     await btn.click();
     await expect(menu).not.toBeAttached();
-    await this.valitateUser({ czar: true, name: userBName, status: STATUS__ACTIVE });
+    await currFixture.valitateUser({ czar: true, name: userBName, status: STATUS__ACTIVE });
     
     // TODO check `from`, then click, verify from not assigned
   }
   
   async assignMC({ from: userAName, to: userBName }) {
-    await this.valitateUser({ admin: true, name: userAName });
-    await this.valitateUser({ admin: false, name: userBName });
+    await currFixture.valitateUser({ admin: true, name: userAName });
+    await currFixture.valitateUser({ admin: false, name: userBName });
     
-    const menu = await this.openAdminMenu(userBName);
-    const btn = this.getAssignMCBtn(menu, userBName);
+    const menu = await currFixture.openAdminMenu(userBName);
+    const btn = currFixture.getAssignMCBtn(menu, userBName);
     
     await btn.click();
     await expect(menu).not.toBeAttached();
-    await this.valitateUser({ admin: false, name: userAName });
-    await this.valitateUser({ admin: true, name: userBName });
+    await currFixture.valitateUser({ admin: false, name: userAName });
+    await currFixture.valitateUser({ admin: true, name: userBName });
+  }
+  
+  async closePage() {
+    // TODO
+    // // Gracefully close up everything
+    // await context.close();
+    // await browser.close();
   }
   
   async copyGameCode(el) {
     await el.locator('.copyable-item.for--code').click();
-    const gameCode = await this.readClipboard();
+    const gameCode = await currFixture.readClipboard();
     await expect(
       gameCode,
       "should copy the room code to the clipboard"
-    ).toEqual(this.getRoomCode());
+    ).toEqual(currFixture.getRoomCode());
     return gameCode;
   }
   
   async copyGameURL(el) {
     await el.locator('.copyable-item.for--url').click();
-    const gameURL = await this.readClipboard();
+    const gameURL = await currFixture.readClipboard();
     await expect(
       gameURL,
       "should copy the room's URL to the clipboard"
-    ).toEqual(`https://cahbox:3000/${this.getRoomCode()}`);
+    ).toEqual(`https://cahbox:3000/${currFixture.getRoomCode()}`);
     return gameURL;
   }
   
   async createGame() {
-    await this.waitForDialog();
-    const { createBtn } = await this.validateGameEntry();
-    await this.screenshot('game entry');
+    await currFixture.waitForDialog();
+    const { createBtn } = await currFixture.validateGameEntry();
+    await currFixture.screenshot('game entry');
     
-    const { pathname: oldPath } = this.getURLParts();
-    const navPromise = this.currPage.waitForNavigation();
+    const { pathname: oldPath } = currFixture.getURLParts();
+    const navPromise = currFixture.page.waitForNavigation();
     await createBtn.click();
     await navPromise;
-    const { pathname: newPath } = this.getURLParts();
+    const { pathname: newPath } = currFixture.getURLParts();
     expect(oldPath).not.toEqual(newPath);
-    await this.screenshot('new room created');
+    await currFixture.screenshot('new room created');
   }
   
   async createPage() {
-    const newPage = await this.ctx.newPage();
-    this.pages.push(newPage);
-    this.addSocketListener(newPage);
+    const ctx = await currFixture.browser.newContext();
+    const page = await ctx.newPage();
+    
+    new GameFixture({
+      browser: currFixture.browser,
+      context: ctx,
+      page,
+      testInfo: currFixture.testInfo,
+    });
+  }
+  
+  async decodeHTML(rawTxt) {
+    // NOTE: There are cards with HTML entities (`A gerbil named &quot;Gerbil&quot;.`),
+    // so when comparing the raw WS data against what's in the DOM, errors will
+    // occur unless decoded.
+    return await currFixture.page.evaluate((str) => {
+      const el = document.createElement('div');
+      el.innerHTML = str;
+      return el.textContent;
+    }, rawTxt);
   }
   
   async getBGColor(loc) {
@@ -134,11 +162,11 @@ class GameFixture {
   }
   
   getRoomCode() {
-    return this.getURLParts().pathname.replace(/^\//, '');
+    return currFixture.getURLParts().pathname.replace(/^\//, '');
   }
   
   getSocketMsg(type) {
-    let payload = this.currPage.wsMsgs[type];
+    let payload = currFixture.page.wsMsgs[type];
     
     switch (type) {
       case WS__MSG__CARDS_DEALT: {
@@ -165,18 +193,26 @@ class GameFixture {
   }
   
   getURLParts() {
-    return new URL(this.currPage.url());
+    return new URL(currFixture.page.url());
   }
   
   getUser(name) {
-    return this.currPage.locator(`.users-list .user[data-name="${name}"]`);
+    return currFixture.page.locator(`.users-list .user[data-name="${name}"]`);
   }
   
-  async joinGame({ name, screenshot }) {
-    const dialog = await this.waitForDialog('.join-form');
+  async goOffline() {
+    await currFixture.ctx.setOffline(true);
+  }
+  
+  async goOnline() {
+    await currFixture.ctx.setOffline(false);
+  }
+  
+  async joinGame({ isFirst, name, screenshot }) {
+    const dialog = await currFixture.waitForDialog('.join-form');
     await dialog.getByLabel('Enter Username').fill(name);
     
-    if (screenshot) await this.screenshot(`${screenshot} 01`);
+    if (screenshot) await currFixture.screenshot(`${screenshot} (name entered)`);
     
     await dialog.getByRole('button', { name: 'Join Game' }).click();
     await expect(
@@ -184,76 +220,95 @@ class GameFixture {
       "should've closed Join Game dialog"
     ).not.toBeAttached();
     
-    if (screenshot) await this.screenshot(`${screenshot} 02`);
+    if (isFirst) {
+      const opts = {};
+      if (screenshot) opts.screenshot = `${screenshot} (admin instructions)`;
+      await currFixture.validateAdminInstructions(opts);
+    }
+    
+    if (screenshot) await currFixture.screenshot(`${screenshot} (added to list)`);
   }
   
   async loadRoom(str) {
     const route = (str)
       ? (str.startsWith('http')) ? str : `/${str}`
       : '';
-    await this.currPage.goto(route);
+    await currFixture.page.goto(route);
   }
   
   async openAdminMenu(name) {
-    await this.getUser(name).click();
-    return await this.waitForDialog('.user-data-menu');
+    await currFixture.getUser(name).click();
+    return await currFixture.waitForDialog('.user-data-menu');
   }
   
   async openGameMenu() {
-    await this.currPage
+    await currFixture.page
       .locator('.top-nav')
       .getByRole('button', { name: 'Menu' })
       .click();
-    return await this.waitForDialog('.game-menu');
+    return await currFixture.waitForDialog('.game-menu');
   }
   
   async readClipboard() {
-    await this.ctx.grantPermissions(['clipboard-read']);
-    const handle = await this.currPage.evaluateHandle(() => navigator.clipboard.readText());
+    await currFixture.ctx.grantPermissions(['clipboard-read']);
+    const handle = await currFixture.page.evaluateHandle(() => navigator.clipboard.readText());
     const txt = await handle.jsonValue();
     await handle.dispose();
     return txt;
   }
   
-  async screenshot(name) {
-    // delete old screenshots for current test file
-    if (!screenshotNdxs[this.ndxKey]) {
-      // await test.step(`Remove old screenshots for "${namePrefix}"`, async () => {
-      //   await exec(`rm -rf ${PATH__ABS_SCREENSHOTS}/${namePrefix}*`);
-      // });
-      
-      screenshotNdxs[this.ndxKey] = 1;
-    }
+  async screenshot(name, loc) {
+    const _loc = (typeof loc === 'string') ? currFixture.page.locator(loc) : loc; 
+    if (!screenshotNdxs[currFixture.ndxKey]) screenshotNdxs[currFixture.ndxKey] = 1;
     
-    const screenshotNdx = screenshotNdxs[this.ndxKey];
-    const filename = `${PATH__REL_SCREENSHOTS}/${`${this.shotNamePrefix}_${pad(screenshotNdx)}__${name}`.toLowerCase().replace(/\s/g, '-')}.jpg`;
+    const screenshotNdx = screenshotNdxs[currFixture.ndxKey];
+    const filename = `${PATH__REL_SCREENSHOTS}/${`${currFixture.shotNamePrefix}_${pad(screenshotNdx)}__${name}`.toLowerCase().replace(/\s/g, '-')}.jpg`;
     
-    screenshotNdxs[this.ndxKey] += 1;
+    screenshotNdxs[currFixture.ndxKey] += 1;
     
-    await this.currPage.screenshot({
+    const el = (_loc) ? _loc : currFixture.page;
+    await el.screenshot({
       animations: 'disabled', // stops CSS animations, CSS transitions and Web Animations.
-      fullPage: true,
+      fullPage: !_loc,
       path: filename,
       quality: 90,
       type: 'jpeg',
     });
   }
   
+  async startWithUsers(users) {
+    const _users = [...users];
+    
+    await currFixture.loadRoom();
+    await currFixture.createGame();
+    await currFixture.joinGame({ isFirst: true, name: _users.shift() });
+    const menuDialog = await currFixture.openGameMenu();
+    const gameURL = await currFixture.copyGameURL(menuDialog);
+    
+    for (let i=0; i<_users.length; i++) {
+      const name = _users[i];
+      await currFixture.createPage();
+      await currFixture.switchToPage(2);
+      await currFixture.loadRoom(gameURL);
+      await currFixture.joinGame({ name });
+    }
+  }
+  
   async switchToPage(pageNum) {
-    this.currPage = this.pages[pageNum - 1];
-    await this.currPage.bringToFront();
-    await expect(this.currPage.locator('body')).toBeAttached();
+    currFixture = fixtures[pageNum - 1];
+    await currFixture.page.bringToFront();
+    await expect(currFixture.page.locator('body')).toBeAttached();
   }
   
   async validateAdminInstructions({ screenshot }) {
-    const dialog = await this.waitForDialog('.admin-instructions');
+    const dialog = await currFixture.waitForDialog('.admin-instructions');
     const instructions = dialog.locator('p');
     await expect(instructions.nth(0)).toHaveText("Congrats! You're the MC, so you're running the game. In order for others to join, just send them");
     await expect(instructions.nth(1)).toHaveText("When starting a new CAH game it's up to the group to choose the Card Czar. Y'all can do that via the typical Who was the last to poop? question, or by what ever means you choose.");
     await expect(instructions.nth(2)).toHaveText("Once the group's chosen the Czar, you just have to click on that User and choose Make <User> the Czar. Once you do so, the game will start.");
-    await this.copyGameURL(dialog);
-    await this.copyGameCode(dialog);
-    if (screenshot) await this.screenshot(screenshot);
+    await currFixture.copyGameURL(dialog);
+    await currFixture.copyGameCode(dialog);
+    if (screenshot) await currFixture.screenshot(screenshot);
     await dialog.getByRole('button', { name: 'Close' }).click();
     await expect(
       dialog,
@@ -262,14 +317,14 @@ class GameFixture {
   }
   
   async validateCards({ blackCard, whiteCards }) {
-    const answers = this.currPage.locator('.cards .answers');
-    const userCards = this.currPage.locator('.cards .user-cards');
+    const answers = currFixture.page.locator('.cards .answers');
+    const userCards = currFixture.page.locator('.cards .user-cards');
     
     let cards = answers.locator('.card');
     await expect(cards).toHaveCount(1);
     let card = cards.nth(0);
     await expect(card).toHaveClass(/is--black/);
-    await expect(card).toHaveText(blackCard);
+    await expect(card).toHaveText( await currFixture.decodeHTML(blackCard) );
     
     if (whiteCards) {
       cards = userCards.locator('.card');
@@ -278,12 +333,12 @@ class GameFixture {
       for (let i=0; i<cardsCount; i++) {
         card = cards.nth(i);
         await expect(card).toHaveClass(/is--white/);
-        await expect(card).toHaveText(whiteCards[i]);
+        await expect(card).toHaveText( await currFixture.decodeHTML(whiteCards[i]) );
       }
     }
     else {
-      const waitingMsg = this.currPage.locator('.czar-waiting-msg');
-      const [ userA, userB ] = await this.currPage
+      const waitingMsg = currFixture.page.locator('.czar-waiting-msg');
+      const [ userA, userB ] = await currFixture.page
         .locator('.users-list .user:not(.is--czar)')
         .evaluateAll(els => els.map((el) => el.dataset.name));
       await expect(waitingMsg).toHaveText(`Waiting for ${userA}, and ${userB} to submit their answers.`);
@@ -292,7 +347,7 @@ class GameFixture {
   }
   
   async validateGameEntry() {
-    const dialog = await this.waitForDialog();
+    const dialog = await currFixture.waitForDialog();
     const rows = dialog.locator('.row');
     const codeRow = rows.nth(0);
     const codeLabel = codeRow.locator('label');
@@ -318,19 +373,19 @@ class GameFixture {
   }
   
   async valitatePendingMsg({ loc, msg, note }) {
-    await expect(this.currPage.locator(loc), note).toHaveText(msg);
+    await expect(currFixture.page.locator(loc), note).toHaveText(msg);
   }
   
   async validateTooltip({ id, msg, note }) {
-    await this.currPage.locator(`button[popovertarget="${id}"]`).click();
+    await currFixture.page.locator(`button[popovertarget="${id}"]`).click();
     await expect(
-      this.currPage.locator(`[popover][role="tooltip"][id="${id}"]`),
+      currFixture.page.locator(`[popover][role="tooltip"][id="${id}"]`),
       note
     ).toHaveText(msg);
   }
   
-  async valitateUser({ admin, czar, name, points, status }) {
-    const userEl = this.getUser(name);
+  async valitateUser({ admin, czar, disconnected, name, points, status }) {
+    const userEl = currFixture.getUser(name);
     let userIcon;
     
     if (admin) {
@@ -340,6 +395,14 @@ class GameFixture {
     else if (czar) {
       await expect(userEl).toHaveClass(/is--czar/);
       userIcon = 'ui-icon__crown';
+    }
+    
+    if (disconnected) {
+      await expect(userEl).not.toHaveClass(/is--connected/, { timeout: 5000 });
+      await expect(
+        userEl.locator('.disconnect-indicator'),
+        "should display animated icon that informs users when disconnected user will be removed"
+      ).toBeAttached();
     }
     
     if (userIcon) {
@@ -365,17 +428,23 @@ class GameFixture {
     }
     
     if (status) {
-      const statusEl = userEl.locator('.user__status-indicator');
-      await this.waitForAnimations(statusEl);
+      const statusEl = (disconnected) ? userEl : userEl.locator('.user__status-indicator');
+      await currFixture.waitForAnimations(statusEl);
       await expect(
-        await this.getBGColor(statusEl),
+        await currFixture.getBGColor(statusEl),
         "should display User status color"
       ).toEqual(status);
     }
   }
   
+  async valitateUserRemoved({ name, screenshot }) {
+    const user = currFixture.getUser(name);
+    await expect(user).not.toBeAttached({ timeout: DISCONNECT_TIMEOUT });
+    if (screenshot) currFixture.screenshot(screenshot, currFixture.page.locator('.users-list'));
+  }
+  
   async validateUserMenu({ btns, screenshot, user }) {
-    const menu = await this.openAdminMenu(user);
+    const menu = await currFixture.openAdminMenu(user);
     const cancelBtn = menu.getByRole('button', { name: 'Cancel' });
     
     for (const [ key, { caption, enabled } ] of Object.entries(btns)) {
@@ -383,15 +452,15 @@ class GameFixture {
       
       switch (key) {
         case 'czar': {
-          btnEl = this.getAssignCzarBtn(menu, user);
+          btnEl = currFixture.getAssignCzarBtn(menu, user);
           break;
         }
         case 'mc': {
-          btnEl = this.getAssignMCBtn(menu, user);
+          btnEl = currFixture.getAssignMCBtn(menu, user);
           break;
         }
         case 'remove': {
-          btnEl = this.getRemoveUserBtn(menu, user);
+          btnEl = currFixture.getRemoveUserBtn(menu, user);
           break;
         }
       }
@@ -402,14 +471,27 @@ class GameFixture {
       if (caption) await expect(btnEl.locator(' + .help')).toHaveText(caption);
     }
     
-    if (screenshot) await this.screenshot(screenshot);
+    if (screenshot) await currFixture.screenshot(screenshot);
     
     await cancelBtn.click();
     await expect(menu).not.toBeAttached();
   }
   
+  async validateUserOrder({ screenshot, userNames }) {
+    const users = currFixture.page.locator('.users-list .user');
+    const usersCount = await users.count();
+    
+    await expect(usersCount).toEqual(userNames.length);
+    
+    for (let i=0; i<usersCount; i++) {
+      await expect(users.nth(i)).toHaveAttribute('data-name', userNames[i]);
+    }
+    
+    if (screenshot) await currFixture.screenshot(screenshot, currFixture.page.locator('.users-list'));
+  }
+  
   async waitForDialog(selector) {
-    const dialog = this.currPage.locator('.dialog');
+    const dialog = currFixture.page.locator('.dialog');
     await dialog.waitFor({ state: 'visible' });
     
     if (selector) {
@@ -425,28 +507,12 @@ class GameFixture {
   }
   
   async writeClipboard() {
-    await this.ctx.grantPermissions(['clipboard-write']);
+    await currFixture.ctx.grantPermissions(['clipboard-write']);
   }
 }
 
 export const test = base.extend({
-  // forEachTest: [async ({}, use, testInfo) => {
-  //   // [ beforeEach test ] =====================================================
-  //   console.log('[PW][auto] beforeEach');
-    
-  //   // delete old screenshots for current test file
-  //   const rmPath = `${PATH__ABS_SCREENSHOTS}/${genShotPrefix(genShotKeys(testInfo))}`;
-  //   await test.step(`Remove old screenshots for "${rmPath}"`, async () => {
-  //     await exec(`rm -rf "${rmPath}"*`); // without quotes, the brackets get misinterpreted
-  //   });
-    
-  //   // [ test ] ================================================================
-  //   await use();
-    
-  //   // [ afterEach test ] ======================================================
-  // }, { auto: true }],  // automatically starts for every test.
-  
-  game: async ({ context, page }, use, testInfo) => {
+  game: async ({ browser, context, page }, use, testInfo) => {
     // [ before test ] =========================================================
     const rmPath = `${PATH__ABS_SCREENSHOTS}/${genShotPrefix(genShotKeys(testInfo))}`;
     await test.step(`Remove old screenshots for "${rmPath}"`, async () => {
@@ -454,15 +520,11 @@ export const test = base.extend({
     });
     
     // [ test ] ================================================================
-    const game = new GameFixture({ context, page, testInfo });
+    const game = new GameFixture({ browser, context, page, testInfo });
     await use(game);
     
     // [ after test ] ==========================================================
   },
 });
-
-// test.beforeEach(() => {
-//   console.log('[auto] beforeEach');
-// });
 
 export { expect };
