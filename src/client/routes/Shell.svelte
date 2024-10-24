@@ -56,6 +56,12 @@
 
     window.socketConnected
       .then(() => {
+        // Server checking if User connected
+        window.clientSocket.on(WS__MSG__PING, () => {
+          window.clientSocket.emit(WS__MSG__PONG);
+        });
+        
+        // User checking if it has connection to Server
         window.clientSocket.on(WS__MSG__PONG, () => {
           logHeartbeat('socket connected');
           setConnectedState();

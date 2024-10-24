@@ -22,7 +22,7 @@
       if (elapsedTime >= DISCONNECT_TIMEOUT) stopAnimation();
       else {
         const perc = elapsedTime/DISCONNECT_TIMEOUT;
-        topMaskRef.style.transform = `scaleY(${1 - perc})`
+        topMaskRef.style.transform = `scaleY(${1 - perc})`;
         btmMaskRef.style.transform = `scaleY(${perc})`;
         elapsedTime += interval;
       }

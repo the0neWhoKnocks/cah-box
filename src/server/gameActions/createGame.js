@@ -1,11 +1,14 @@
 const log = require('../../utils/logger')('gameActions:createGame');
 
 module.exports = function createGame(wss) {
-  const { WS__MSG__CREATE_GAME } = require('../../constants');
+  const { 
+    PATH__DATA,
+    WS__MSG__CREATE_GAME,
+  } = require('../../constants');
   const {
     black: blackCards,
     white: whiteCards,
-  } = require('../../data.json');
+  } = require(PATH__DATA);
   const generateRoomID = require('../utils/generateRoomID');
   const shuffleArray = require('../utils/shuffleArray');
   let roomID;

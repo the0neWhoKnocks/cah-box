@@ -108,19 +108,18 @@ const wss = socket(server, {
   handleClientDisconnect: require('./socket/handleClientDisconnect'),
   msgHandlers: {
     client: {
-      // [WS__MSG__EXAMPLE]: function handleExample(wss, data) {
-      //   wss.dispatchToClient(WS__MSG__EXAMPLE, {
-      //     msg: `Client: ${data.d} | Server: ${Date.now()}`,
-      //   });
-      // },
       [WS__MSG__CHECK_USERNAME]: require('./gameActions/checkUsername'),
       [WS__MSG__CHOSE_ANSWER]: require('./gameActions/choseAnswer'),
       [WS__MSG__CREATE_GAME]: require('./gameActions/createGame'),
       [WS__MSG__DEAL_CARDS]: require('./gameActions/dealCards'),
       [WS__MSG__JOIN_GAME]: require('./gameActions/joinGame'),
+      // User is verifying that Server is active.
       [WS__MSG__PING]: function handlePing(wss) {
         wss.dispatchToClient(WS__MSG__PONG);
-        // serverSocket.emitToSelf(WS__MSG__PONG);
+      },
+      // Server is verifying that User is active.
+      [WS__MSG__PONG]: function handlePong(wss) {
+        wss.connectionCheckPending = false;
       },
       [WS__MSG__REMOVE_USER_FROM_ROOM]: require('./gameActions/removeUserFromRoom'),
       [WS__MSG__SET_ADMIN]: require('./gameActions/setUserState')('admin'),

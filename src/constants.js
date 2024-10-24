@@ -6,7 +6,8 @@ const constants = {
   ERROR_CODE__NAME_TAKEN: 101,
   ERROR_CODE__ROOM_DOES_NOT_EXIST: 100,
   NAMESPACE__LOGGER: 'cahbox',
-  WS__CLOSE_CODE__USER_REMOVED: 4000, // Close event numbers https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent
+  WS__CLOSE_CODE__DISCONNECTED: 4000,
+  WS__CLOSE_CODE__USER_REMOVED: 4001, // Close event numbers https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code
   WS__MSG__ANSWER_REVIEW_STATE_UPDATED: 'answer review state updated',
   WS__MSG__CARD_SELECTION_TOGGLED: 'card selection toggled',
   WS__MSG__CARD_SWAPPED: 'card swapped',
@@ -46,6 +47,7 @@ if (!process.env.FOR_CLIENT_BUNDLE) {
   const ROOT_PATH = resolve(__dirname, './');
   
   Object.assign(constants, {
+    PATH__DATA: process.env.DATA_PATH || `${ROOT_PATH}/data.json`,
     PATH__PUBLIC: `${ROOT_PATH}/public`,
     SERVER__PORT: +process.env.SERVER_PORT || 3000,
   });

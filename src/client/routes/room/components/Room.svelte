@@ -543,11 +543,7 @@
       />
       
       {#if showAdminInstructions}
-        <Dialog
-          force
-          modal
-          onOpenEnd={handleFocusAdmin}
-        >
+        <Dialog modal onOpenEnd={handleFocusAdmin}>
           <div class="admin-instructions" slot="dialogBody">
             <p>
               Congrats! You're the MC, so you're running the game. In order for

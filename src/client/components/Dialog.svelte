@@ -130,8 +130,6 @@
   </Portal>
 {/if}
 
-
-
 <style>
   .dialog-wrapper {
     pointer-events: all;

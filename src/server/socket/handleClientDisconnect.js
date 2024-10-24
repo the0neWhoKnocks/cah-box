@@ -3,6 +3,7 @@ const log = require('../../utils/logger')('socket.handleClientDisconnect');
 module.exports = function handleClientDisconnect(wss, code, reason) {
   const {
     DISCONNECT_TIMEOUT,
+    WS__CLOSE_CODE__DISCONNECTED,
     WS__CLOSE_CODE__USER_REMOVED,
     WS__MSG__ROOM_DESTROYED,
     WS__MSG__USER_DISCONNECTED,
@@ -71,7 +72,10 @@ module.exports = function handleClientDisconnect(wss, code, reason) {
             }
 
             log.info(
-              code === WS__CLOSE_CODE__USER_REMOVED
+              [
+                WS__CLOSE_CODE__DISCONNECTED,
+                WS__CLOSE_CODE__USER_REMOVED,
+              ].includes(code)
                 ? reason
                 : `User "${user.name}" left room "${roomID}" due to disconnection`
             );
