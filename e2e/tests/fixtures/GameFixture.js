@@ -18,7 +18,7 @@ let currFixture;
 const exec = promisify(_exec);
 const genShotKeys = (testInfo) => {
   const testFileKey = testInfo.titlePath[0].replace(/\.test\.js$/, '');
-  const testNameKey = `[${testInfo.titlePath[1]}][${testInfo.titlePath[2]}]`;
+  const testNameKey = `[${testInfo.titlePath[1]}]`;
   
   return { testFileKey, testNameKey }; 
 };
