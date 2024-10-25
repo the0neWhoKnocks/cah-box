@@ -119,6 +119,10 @@ if $WATCH_MODE; then
 else
   export CMD="npx playwright test"
 fi
+# - Even though the App is started via E2E (depends_on), if it's not included here,
+# the test container won't abort if the App container dies.
+# - Using `compose up` instead of `compose run` because `abort-on-container-exit`
+# doesn't work with `run`.
 docker compose up --abort-on-container-exit --remove-orphans $APP_SERVICE $E2E_SERVICE
 exitCode=$(echo $?)
 

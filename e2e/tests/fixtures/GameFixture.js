@@ -26,6 +26,7 @@ const genShotPrefix = ({ testFileKey, testNameKey }) => {
   return `${testFileKey}/${testNameKey}`.toLowerCase().replace(/\s/g, '-');
 };
 const pad = (num) => `${num}`.padStart(2, '0');
+const transformAnswerText = (txt) => txt.trim().replace(/\.$/, '');
 
 class GameFixture {
   constructor({ browser, context, page, testInfo }) {
@@ -53,6 +54,7 @@ class GameFixture {
   }
   
   async assignCzar({ from: userAName, to: userBName }) {
+    if (userAName) await currFixture.valitateUser({ czar: true, name: userAName, status: STATUS__ACTIVE });
     await currFixture.valitateUser({ czar: false, name: userBName, status: STATUS__DEFAULT });
     
     const menu = await currFixture.openAdminMenu(userBName);
@@ -60,9 +62,8 @@ class GameFixture {
     
     await btn.click();
     await expect(menu).not.toBeAttached();
+    if (userAName) await currFixture.valitateUser({ czar: false, name: userAName, status: STATUS__DEFAULT });
     await currFixture.valitateUser({ czar: true, name: userBName, status: STATUS__ACTIVE });
-    
-    // TODO check `from`, then click, verify from not assigned
   }
   
   async assignMC({ from: userAName, to: userBName }) {
@@ -142,11 +143,14 @@ class GameFixture {
     }, rawTxt);
   }
   
-  async getBGColor(loc) {
-    return await loc.evaluate((el) => {
-      const rgb = window.getComputedStyle(el).getPropertyValue('background-color');
-      return `#${rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/).slice(1).map(n => parseInt(n, 10).toString(16).padStart(2, '0')).join('')}`;
-    });
+  async findCzar() {
+    return await currFixture.page
+      .locator('.users-list .user.is--czar .user__name')
+      .evaluate((el) => el.textContent);
+  }
+  
+  getAnswerNav() {
+    return currFixture.page.locator('.black-card-wrapper .card.is--black + nav');
   }
   
   getAssignCzarBtn(menu, user) {
@@ -155,6 +159,88 @@ class GameFixture {
   
   getAssignMCBtn(menu, user) {
     return menu.getByRole('button', { name: `Make ${user} the MC` });
+  }
+  
+  async getBGColor(loc) {
+    return await loc.evaluate((el) => {
+      const rgb = window.getComputedStyle(el).getPropertyValue('background-color');
+      return `#${rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/).slice(1).map(n => parseInt(n, 10).toString(16).padStart(2, '0')).join('')}`;
+    });
+  }
+  
+  getBlackCard(inDialog = false) {
+    const par = (inDialog) ? '.dialog' : '.cards .answers';
+    return currFixture.page.locator(`${par} .card.is--black .card__text`);
+  }
+  
+  async getBlackCardAnswers() {
+    return await currFixture.getBlackCard()
+      .locator('.answer')
+      .evaluateAll((els) => els.map(el => el.textContent));
+  }
+  
+  // getFixturePage(fNum) {
+  //   return fixtures[fNum].page;
+  // }
+  
+  getNextAnswerBtn() {
+    return currFixture.getAnswerNav().locator('.next-btn');
+  }
+  
+  async getOrderedUsers(otherUsers, users) {
+    await expect(
+      currFixture.getPrevAnswerBtn(),
+      "View previous answer button should be disabled at start"
+    ).toBeDisabled();
+    await expect(
+      currFixture.getNextAnswerBtn(),
+      "View next answer button should be enabled at start"
+    ).toBeEnabled();
+    
+    const orderedUsers = [];
+    // NOTE: order of user's answers is shuffled, so find the order so assertions can continue.
+    for (let a=0; a<otherUsers.length; a++) {
+      const answers = await currFixture.getBlackCardAnswers();
+      
+      for (let u=0; u<otherUsers.length; u++) {
+        const uName = otherUsers[u];
+        const { chosenCards } = users[uName];
+        
+        if (transformAnswerText(chosenCards[0]) === answers[0]) orderedUsers.push(uName);
+      }
+      
+      if (a < otherUsers.length - 1) await currFixture.viewNextAnswer();
+    }
+    await expect(
+      currFixture.getPrevAnswerBtn(),
+      "View previous answer button should be enabled at end"
+    ).toBeEnabled();
+    await expect(
+      currFixture.getNextAnswerBtn(),
+      "View next answer button should be disabled at end"
+    ).toBeDisabled();
+    
+    for (let u=0; u<otherUsers.length; u++) {
+      if (u < otherUsers.length - 1) await currFixture.viewPrevAnswer();
+    }
+    await expect(
+      currFixture.getPrevAnswerBtn(),
+      "View previous answer button should be disabled at start"
+    ).toBeDisabled();
+    await expect(
+      currFixture.getNextAnswerBtn(),
+      "View next answer button should be enabled at start"
+    ).toBeEnabled();
+    
+    return orderedUsers;
+  }
+  
+  getPickAnswerBtn() {
+    return currFixture.getAnswerNav().locator('.pick-answer-btn');
+  }
+  
+  getPrevAnswerBtn() {
+    return currFixture.getAnswerNav().locator('.prev-btn');
   }
   
   getRemoveUserBtn(menu, user) {
@@ -276,6 +362,28 @@ class GameFixture {
     });
   }
   
+  async showAnswers() {
+    const nav = currFixture.getAnswerNav();
+    
+    await expect(
+      currFixture.getPrevAnswerBtn(),
+      "Previous answer button should not be visible"
+    ).toHaveClass(/\bhidden\b/);
+    await expect(
+      currFixture.getNextAnswerBtn(),
+      "Next answer button should not be visible"
+    ).toHaveClass(/\bhidden\b/);
+    await expect(
+      currFixture.getPickAnswerBtn(),
+      "Pick answer button should be disabled"
+    ).toBeDisabled();
+    await nav.locator('.show-answer-btn').click();
+    await expect(
+      currFixture.getPickAnswerBtn(),
+      "Pick answer button should be enabled when reviewing answers"
+    ).toBeEnabled();
+  }
+  
   async startWithUsers(users) {
     const _users = [...users];
     
@@ -292,6 +400,60 @@ class GameFixture {
       await currFixture.loadRoom(gameURL);
       await currFixture.joinGame({ name });
     }
+  }
+  
+  async submitWhiteCards({ chosenCards, screenshot }) {
+    const userCards = currFixture.page.locator('.user-cards');
+    const selectMultiple = chosenCards.length > 1;
+    
+    for (let i=0; i<chosenCards.length; i++) {
+      const cardText = (await currFixture.decodeHTML(chosenCards[i]));
+      const card = userCards.locator(`.card:has-text("${cardText.replace(/"/g, "\\\"")}")`);
+      
+      await expect(card, "card should be enabled before selection").toBeEnabled();
+      await expect(card).toHaveClass(/\bis--selectable\b/);
+      await expect(card).not.toHaveClass(/\bis--selected\b/);
+      await card.click();
+      await expect(card, "card should be disabled after selection").toBeDisabled();
+      await expect(card).not.toHaveClass(/\bis--selectable\b/);
+      await expect(card).toHaveClass(/\bis--selected\b/);
+      
+      const answerCard = currFixture.page
+        .locator('.answers-wrapper.displaying-users-cards .card.is--white.is--selectable')
+        .nth(i);
+      await expect(answerCard).toHaveText(cardText);
+      
+      if (selectMultiple) {
+        if (i < chosenCards.length - 1) {
+          await expect(
+            userCards,
+            "cards should still be selectable when all required cards have not been selected"
+          ).not.toHaveClass(/\bdisabled\b/);
+        }
+        else {
+          await expect(
+            userCards,
+            "no cards should be selectable after required cards selected"
+          ).toHaveClass(/\bdisabled\b/);
+        }
+      }
+      else {
+        await expect(
+          userCards, 
+          "no cards should be selectable after required cards selected"
+        ).toHaveClass(/\bdisabled\b/);
+      }
+    }
+    
+    await currFixture.page.locator('.submit-cards-btn').click();
+    await expect(userCards, "User's cards should not be visible after they've submitted answers").not.toBeAttached();
+    const localUser = currFixture.page.locator('.user.is--local.cards-submitted');
+    const animName = await localUser.evaluate((el) => {
+      return window.getComputedStyle(el, '::after').getPropertyValue('animation-name');
+    });
+    await expect(animName).toMatch(/.*showCard$/);
+    
+    if (screenshot) await currFixture.screenshot(screenshot, '.game-ui');
   }
   
   async switchToPage(pageNum) {
@@ -316,6 +478,20 @@ class GameFixture {
     ).not.toBeAttached();
   }
   
+  async validateAnswerFormatting(blackCard, answers, inDialog = false) {
+    let ndx = 0;
+    const expected = blackCard.replaceAll('__________', () => {
+      const a = transformAnswerText(answers[ndx]);
+      ndx += 1;
+      return a;
+    });
+    
+    await expect(
+      currFixture.getBlackCard(inDialog),
+      "black card should have gaps replaced with answer text"
+    ).toHaveText(await currFixture.decodeHTML(expected));
+  }
+  
   async validateCards({ blackCard, whiteCards }) {
     const answers = currFixture.page.locator('.cards .answers');
     const userCards = currFixture.page.locator('.cards .user-cards');
@@ -323,7 +499,7 @@ class GameFixture {
     let cards = answers.locator('.card');
     await expect(cards).toHaveCount(1);
     let card = cards.nth(0);
-    await expect(card).toHaveClass(/is--black/);
+    await expect(card).toHaveClass(/\bis--black\b/);
     await expect(card).toHaveText( await currFixture.decodeHTML(blackCard) );
     
     if (whiteCards) {
@@ -332,16 +508,28 @@ class GameFixture {
       const cardsCount = await cards.count();
       for (let i=0; i<cardsCount; i++) {
         card = cards.nth(i);
-        await expect(card).toHaveClass(/is--white/);
+        await expect(card).toHaveClass(/\bis--white\b/);
         await expect(card).toHaveText( await currFixture.decodeHTML(whiteCards[i]) );
       }
     }
     else {
       const waitingMsg = currFixture.page.locator('.czar-waiting-msg');
-      const [ userA, userB ] = await currFixture.page
-        .locator('.users-list .user:not(.is--czar)')
+      const userNames = await currFixture.page
+        .locator('.users-list .user:not(.is--czar):not(.cards-submitted)')
         .evaluateAll(els => els.map((el) => el.dataset.name));
-      await expect(waitingMsg).toHaveText(`Waiting for ${userA}, and ${userB} to submit their answers.`);
+      const formattedTxt = (userNames.length > 1)
+        ? userNames.reduce((str, uName, ndx) => {
+          if (ndx === 0) str += uName;
+          else if (ndx === userNames.length - 1) str += `, and ${uName}`;
+          else str += `, ${uName}`;
+          return str;
+        }, '')
+        : userNames[0];
+      
+      await expect(
+        waitingMsg,
+        "should be formatted based on how many users that haven't submitted cards"
+      ).toHaveText(`Waiting for ${formattedTxt} to submit their answer${userNames.length > 1 ? 's' : ''}.`);
       await expect(userCards).not.toBeAttached();
     }
   }
@@ -376,6 +564,21 @@ class GameFixture {
     await expect(currFixture.page.locator(loc), note).toHaveText(msg);
   }
   
+  async validatePointsMsg({ answers, blackCard, points, screenshot, user, winner }) {
+    const dialog = await currFixture.waitForDialog('.points-awarded');
+    
+    if (winner) {
+      await expect(currFixture.page.locator('.dialog-wrapper .confetti')).toBeAttached();
+      // TODO: check if audio play(ing/ed). Haven't found anything that allows for this check
+    }
+    
+    await expect(dialog.locator('.points-awarded__msg')).toHaveText(`${winner ? 'You' : user} got ${points} point${(points > 1 ? 's' : '')} for`);
+    await currFixture.validateAnswerFormatting(blackCard, answers, true);
+    if (screenshot) await currFixture.screenshot(screenshot);
+    await dialog.getByRole('button', { name: 'Close' }).click();
+    await expect(dialog).not.toBeAttached();
+  }
+  
   async validateTooltip({ id, msg, note }) {
     await currFixture.page.locator(`button[popovertarget="${id}"]`).click();
     await expect(
@@ -389,16 +592,16 @@ class GameFixture {
     let userIcon;
     
     if (admin) {
-      await expect(userEl).toHaveClass(/is--admin/);
+      await expect(userEl).toHaveClass(/\bis--admin\b/);
       userIcon = 'ui-icon__star';
     }
     else if (czar) {
-      await expect(userEl).toHaveClass(/is--czar/);
+      await expect(userEl).toHaveClass(/\bis--czar\b/);
       userIcon = 'ui-icon__crown';
     }
     
     if (disconnected) {
-      await expect(userEl).not.toHaveClass(/is--connected/, { timeout: 5000 });
+      await expect(userEl).not.toHaveClass(/\bis--connected\b/, { timeout: 5000 });
       await expect(
         userEl.locator('.disconnect-indicator'),
         "should display animated icon that informs users when disconnected user will be removed"
@@ -440,7 +643,7 @@ class GameFixture {
   async valitateUserRemoved({ name, screenshot }) {
     const user = currFixture.getUser(name);
     await expect(user).not.toBeAttached({ timeout: DISCONNECT_TIMEOUT });
-    if (screenshot) currFixture.screenshot(screenshot, currFixture.page.locator('.users-list'));
+    if (screenshot) await currFixture.screenshot(screenshot, currFixture.page.locator('.users-list'));
   }
   
   async validateUserMenu({ btns, screenshot, user }) {
@@ -488,6 +691,30 @@ class GameFixture {
     }
     
     if (screenshot) await currFixture.screenshot(screenshot, currFixture.page.locator('.users-list'));
+  }
+  
+  async validateUserPoints({ screenshot, users }) {
+    const usersLoc = currFixture.page.locator('.users-list .user');
+    const usersCount = await usersLoc.count();
+    
+    for (let i=0; i<usersCount; i++) {
+      const user = usersLoc.nth(i);
+      const uName = await user.locator('.user__name').evaluate((el) => el.textContent);
+      await expect(
+        user.locator('.user__points'),
+        "should display the User's current points"
+      ).toHaveText(`${users[uName].points}`);
+    }
+    
+    if (screenshot) await currFixture.screenshot(screenshot, currFixture.page.locator('.users-list'));
+  }
+  
+  async viewNextAnswer() {
+    await currFixture.getNextAnswerBtn().click();
+  }
+  
+  async viewPrevAnswer() {
+    await currFixture.getPrevAnswerBtn().click();
   }
   
   async waitForDialog(selector) {

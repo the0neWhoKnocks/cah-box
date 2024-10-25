@@ -42,15 +42,17 @@
 </script>
 
 <!-- TODO changed from div to button. verify styling -->
+<!-- TODO should be a dynamic element, if white = button, else div -->
 <button
   class="card"
   class:is--white={type === 'white'}
   class:is--black={type === 'black'}
   class:is--selected={selected}
-  class:is--selectedable={!!onClick}
+  class:is--selectable={!!onClick && !selected}
   class:is--swappable={swappable}
   style={rotate ? `transform: rotate(${randomNumber(-2, 2)}deg);` : undefined}
-  on:click={handleClick}
+  disabled={selected}
+  on:click={!!onClick && handleClick}
 >
   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
   <div class="card__text">{@html transformAnswer(text, answer)}</div>
@@ -76,7 +78,7 @@
     color: #fff;
     background: #000;
   }
-  .card.is--selectedable {
+  .card.is--selectable {
     cursor: pointer;
   }
   .card.is--selected {

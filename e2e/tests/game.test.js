@@ -1,4 +1,7 @@
-import { WS__MSG__CARDS_DEALT } from '@src/constants';
+import {
+  /* APP__TITLE, */
+  WS__MSG__CARDS_DEALT,
+} from '@src/constants';
 import {
   STATUS__ACTIVE,
   STATUS__DEFAULT,
@@ -9,7 +12,7 @@ import {
 
 test.describe('Game', () => {
   
-  test('Create room', async ({ game }) => {
+  test('Create and play', async ({ game }) => {
     await test.step('First User creates game', async () => {
       await game.loadRoom();
       await game.createGame();
@@ -206,13 +209,92 @@ test.describe('Game', () => {
       });
     });
     
+    
+    await test.step('Play a couple rounds', async () => {
+      const chooseCards = (cards, name, required) => cards[name].filter((card, ndx) => (ndx + 1) <= required);
+      const users = {
+        'User1': { pageNum: 1, points: 0 },
+        'User2': { pageNum: 2, points: 0 },
+        'User3': { pageNum: 3, points: 0 },
+      };
+      
+      for (let rNum=1; rNum<=2; rNum++) {
+        const czar = await game.findCzar();
+        const czarPageNum = users[czar].pageNum;
+        const otherUsers = Object.keys(users).filter((user) => user !== czar);
+        const { blackCard, required, whiteCards } = game.getSocketMsg(WS__MSG__CARDS_DEALT);
+        
+        await game.switchToPage(czarPageNum);
+        await game.validateCards({ blackCard });
+        await game.screenshot("Czar is waiting for 2 users' answers");
+        
+        for (let u=0; u<otherUsers.length; u++) {
+          const uName = otherUsers[u];
+          const uData = users[uName];
+          
+          await game.switchToPage(uData.pageNum);
+          
+          uData.chosenCards = chooseCards(whiteCards, uName, required);
+          await game.submitWhiteCards({
+            chosenCards: uData.chosenCards,
+            screenshot: `round${rNum} - ${uName} submitted card${(required > 1) ? 's' : ''}`,
+          });
+        }
+        
+        // TODO: Check that notification fired for Czar. Currently not possible https://github.com/microsoft/playwright/issues/23954
+        // TODO: Check Czar's title. Tried but the below check for `Come Back` never worked.
+        // const czarFNum = czarPageNum - 1;
+        // const roomCode = game.getRoomCode();
+        // await expect(game.getFixturePage(czarFNum)).toHaveTitle(`${APP__TITLE} | Game ${roomCode}`);
+        // await game.getFixturePage(czarFNum).waitForFunction(() => document.title === 'Come Back!');
+        
+        await game.switchToPage(czarPageNum);
+        // await expect(game.getFixturePage(czarFNum)).toHaveTitle(`${APP__TITLE} | Game ${roomCode}`);
+        await game.showAnswers();
+        const [ firstUser, ...remainingUsers ] = await game.getOrderedUsers(otherUsers, users);
+        await game.validateAnswerFormatting(blackCard, users[firstUser].chosenCards);
+        await game.getPickAnswerBtn().click();
+        
+        await game.validatePointsMsg({
+          answers: users[firstUser].chosenCards,
+          blackCard,
+          points: required,
+          screenshot: `Czar sees ${required} point(s) awarded to ${firstUser}`,
+          user: firstUser,
+        });
+        await game.valitateUser({ czar: false, name: czar });
+        
+        users[firstUser].points += required;
+        await game.switchToPage(users[firstUser].pageNum);
+        await game.validatePointsMsg({
+          answers: users[firstUser].chosenCards,
+          blackCard,
+          points: required,
+          screenshot: `${firstUser} sees ${required} point(s) awarded`,
+          winner: true,
+        });
+        
+        for (let i=0; i<remainingUsers.length; i++) {
+          const uName = remainingUsers[i];
+          await game.switchToPage(users[uName].pageNum);
+          await game.validatePointsMsg({
+            answers: users[firstUser].chosenCards,
+            blackCard,
+            points: required,
+            screenshot: `${uName} sees ${required} point(s) awarded to ${firstUser}`,
+            user: firstUser,
+          });
+        }
+        
+        await game.validateUserPoints({
+          screenshot: `${firstUser} should have more points`,
+          users,
+        });
+      }
+    });
+    
     // TODO:
-    // - play through a couple rounds (since there's only 2 cards)
-    //   - users pick required cards
-    //   - MC sees ready state for all users
-    //   - pick a winner
-    //   - verify dialog that displays winner and points
-    //   - winner dialog should have confetti and sound 
+    // - can swap out card(s)
     // - admin menu:
     //   - remove player
     // - have a player leave: https://playwright.dev/docs/api/class-page#page-close
