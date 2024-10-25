@@ -16,7 +16,7 @@ const chooseCards = (cards, name, required) => cards[name].filter((card, ndx) =>
 test('Create and play', async ({ game }) => {
   await test.step('First User creates game', async () => {
     await game.loadRoom();
-    await game.createGame();
+    await game.createGame({ screenshots: true });
     await game.joinGame({
       isFirst: true,
       name: 'User_1',

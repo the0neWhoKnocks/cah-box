@@ -120,10 +120,10 @@ class GameFixture {
     return gameURL;
   }
   
-  async createGame() {
+  async createGame({ screenshots } = {}) {
     await currFixture.waitForDialog();
     const { createBtn } = await currFixture.validateGameEntry();
-    await currFixture.screenshot('game entry');
+    if (screenshots) await currFixture.screenshot('game entry');
     
     const { pathname: oldPath } = currFixture.getURLParts();
     const navPromise = currFixture.page.waitForNavigation();
@@ -131,7 +131,7 @@ class GameFixture {
     await navPromise;
     const { pathname: newPath } = currFixture.getURLParts();
     expect(oldPath).not.toEqual(newPath);
-    await currFixture.screenshot('new room created');
+    if (screenshots) await currFixture.screenshot('new room created');
   }
   
   async createPage() {
