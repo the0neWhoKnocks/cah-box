@@ -10,6 +10,8 @@ import {
   expect,
 } from './fixtures/GameFixture';
 
+const chooseCards = (cards, name, required) => cards[name].filter((card, ndx) => (ndx + 1) <= required);
+
 test.describe('Game', () => {
   
   test('Create and play', async ({ game }) => {
@@ -211,7 +213,6 @@ test.describe('Game', () => {
     
     
     await test.step('Play a couple rounds', async () => {
-      const chooseCards = (cards, name, required) => cards[name].filter((card, ndx) => (ndx + 1) <= required);
       const users = {
         'User1': { pageNum: 1, points: 0 },
         'User2': { pageNum: 2, points: 0 },
@@ -292,15 +293,46 @@ test.describe('Game', () => {
         });
       }
     });
+  });
+  
+  test('Ability to swap cards', async ({ game }) => {
+    const users = ['User1', 'User2'];
     
-    // TODO:
-    // - can swap out card(s)
-    // - admin menu:
-    //   - remove player
-    // - have a player leave: https://playwright.dev/docs/api/class-page#page-close
-    // - create a 2nd game with the same user names as 1st, verify there's no conflicts in gameplay.
-    // - if admin leaves, another user gets assigned role automatically
-    // - if czar leaves, another user gets assigned role automatically
+    await test.step('setup', async () => {
+      await game.startWithUsers(users);
+      await game.switchToPage(1);
+      await game.assignCzar({ to: users[1] });
+    });
+    
+    await test.step('first user submitted answer', async () => {
+      const data = game.getSocketMsg(WS__MSG__CARDS_DEALT);
+      await game.submitWhiteCards({ chosenCards: chooseCards(data.whiteCards, users[0], data.required) });
+    });
+    
+    await test.step('second user awards points', async () => {
+      await game.switchToPage(2);
+      await game.showAnswers();
+      await game.getPickAnswerBtn().click();
+      await game.closePointsAwarded();
+    });
+    
+    await test.step('second user submitted answer', async () => {
+      const data = game.getSocketMsg(WS__MSG__CARDS_DEALT);
+      await game.submitWhiteCards({ chosenCards: chooseCards(data.whiteCards, users[1], data.required) });
+    });
+    
+    await test.step('first user awards points', async () => {
+      await game.switchToPage(1);
+      await game.closePointsAwarded();
+      await game.showAnswers();
+      await game.getPickAnswerBtn().click();
+      await game.closePointsAwarded();
+    });
+    
+    await test.step('first user swapped cards', async () => {
+      await game.validateSwappable();
+      await game.swapMaxCards();
+    });
   });
   
   test('Handle connection issues', async ({ game }) => {
@@ -355,5 +387,82 @@ test.describe('Game', () => {
     await game.validateGameEntry();
     
     await game.screenshot('Missing Room dialog');
+  });
+  
+  test('Auto-Reassign roles', async ({ game }) => {
+    const users = ['User1', 'User2', 'User3', 'User4'];
+    
+    await test.step('setup', async () => {
+      await game.startWithUsers(users);
+      await game.switchToPage(1);
+    });
+    
+    await test.step('MC removes last user and first user becomes Czar', async () => {
+      await game.assignCzar({ to: users[3] });
+      await game.removeUser({
+        screenshot: `${users[3]} removed `,
+        user: users[3],
+      });
+      await game.closePage(4);
+      await game.valitateUser({
+        czar: true,
+        name: users[0],
+        screenshot: `the next user - ${users[0]} - should be auto-assigned the Czar role`,
+        status: STATUS__ACTIVE,
+      });
+    });
+    
+    await test.step('second user leaves game and third user becomes Czar', async () => {
+      await game.assignCzar({ to: users[1] });
+      await game.closePage(2, { waitForUserRemoval: users[1] });
+      await game.valitateUser({
+        czar: true,
+        name: users[2],
+        screenshot: `the next user - ${users[2]} - should be auto-assigned the Czar role`,
+        status: STATUS__ACTIVE,
+      });
+    });
+    
+    await test.step('MC leaves game and third user becomes MC', async () => {
+      await game.switchToPage(2);
+      await game.valitateUser({
+        admin: false,
+        name: users[2],
+        screenshot: `${users[2]} is not the Admin`,
+      });
+      await game.closePage(1, { waitForUserRemoval: users[0] });
+      await game.validateAdminInstructions({ screenshot: 'Auto-assigned MC is presented with instructions' });
+      await game.valitateUser({
+        admin: true,
+        name: users[2],
+        screenshot: `${users[2]} should be auto-assigned the MC role`,
+      });
+    });
+  });
+  
+  test('No conflicts with multiple games', async ({ game }) => {
+    const users = ['User1', 'User2'];
+    
+    await test.step('setup', async () => {
+      await game.startWithUsers(users);
+      await game.startWithUsers(users, true);
+    });
+    
+    await test.step('same names different rooms', async () => {
+      await game.switchToPage(1);
+      const roomCode1 = await game.getRoomCode();
+      await game.validateUserOrder({
+        screenshot: `Room ${roomCode1} has the same users`,
+        userNames: users,
+      });
+      
+      await game.switchToPage(3);
+      const roomCode2 = await game.getRoomCode();
+      await expect(roomCode2).not.toBe(roomCode1);
+      await game.validateUserOrder({
+        screenshot: `Room ${roomCode2} has the same users`,
+        userNames: users,
+      });
+    });
   });
 });

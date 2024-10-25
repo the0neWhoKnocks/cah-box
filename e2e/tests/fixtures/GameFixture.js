@@ -79,11 +79,25 @@ class GameFixture {
     await currFixture.valitateUser({ admin: true, name: userBName });
   }
   
-  async closePage() {
-    // TODO
-    // // Gracefully close up everything
-    // await context.close();
-    // await browser.close();
+  async closePage(pageNum, { waitForUserRemoval } = {}) {
+    const fNdx = pageNum - 1;
+    const fx = fixtures[fNdx];
+    
+    await fx.page.close();
+    await fx.ctx.close();
+    
+    if (waitForUserRemoval) {
+      const user = currFixture.getUser(waitForUserRemoval);
+      await expect(user).not.toBeAttached({ timeout: DISCONNECT_TIMEOUT + 1000 });
+    }
+    
+    fixtures.splice(fNdx, 1);
+  }
+  
+  async closePointsAwarded() {
+    const dialog = await currFixture.waitForDialog('.points-awarded');
+    await dialog.getByRole('button', { name: 'Close' }).click();
+    await expect(dialog).not.toBeAttached();
   }
   
   async copyGameCode(el) {
@@ -179,9 +193,26 @@ class GameFixture {
       .evaluateAll((els) => els.map(el => el.textContent));
   }
   
+  getCardsNav() {
+    return currFixture.page.locator('.cards-nav');
+  }
+  
+  getCancelCardSwapBtn() {
+    return currFixture.getCardsNav().getByRole('button', { name: 'Cancel Card Swap' });
+  }
+  
   // getFixturePage(fNum) {
   //   return fixtures[fNum].page;
   // }
+  
+  getLocalUser(extraSelector = '') {
+    return currFixture.page.locator(`.user.is--local${extraSelector}`);
+  }
+  
+  async getLocalUserPoints() {
+    const localUser = currFixture.getLocalUser();
+    return +(await localUser.locator('.user__points').evaluate(el => el.textContent));
+  }
   
   getNextAnswerBtn() {
     return currFixture.getAnswerNav().locator('.next-btn');
@@ -278,6 +309,10 @@ class GameFixture {
     return payload;
   }
   
+  getSwapCardBtn() {
+    return currFixture.getCardsNav().getByRole('button', { name: 'Swap Card' });
+  }
+  
   getURLParts() {
     return new URL(currFixture.page.url());
   }
@@ -343,6 +378,17 @@ class GameFixture {
     return txt;
   }
   
+  async removeUser({ screenshot, user }) {
+    const menu = await currFixture.openAdminMenu(user);
+    const btn = currFixture.getRemoveUserBtn(menu, user);
+    
+    await btn.click();
+    await expect(menu).not.toBeAttached();
+    await expect(currFixture.getUser(user)).not.toBeAttached();
+    
+    if (screenshot) await currFixture.screenshot(screenshot, '.users-list');
+  }
+  
   async screenshot(name, loc) {
     const _loc = (typeof loc === 'string') ? currFixture.page.locator(loc) : loc; 
     if (!screenshotNdxs[currFixture.ndxKey]) screenshotNdxs[currFixture.ndxKey] = 1;
@@ -384,8 +430,13 @@ class GameFixture {
     ).toBeEnabled();
   }
   
-  async startWithUsers(users) {
+  async startWithUsers(users, freshPage) {
     const _users = [...users];
+    
+    if (freshPage) {
+      await currFixture.createPage();
+      await currFixture.switchToPage(fixtures.length);
+    }
     
     await currFixture.loadRoom();
     await currFixture.createGame();
@@ -396,7 +447,7 @@ class GameFixture {
     for (let i=0; i<_users.length; i++) {
       const name = _users[i];
       await currFixture.createPage();
-      await currFixture.switchToPage(2);
+      await currFixture.switchToPage(fixtures.length);
       await currFixture.loadRoom(gameURL);
       await currFixture.joinGame({ name });
     }
@@ -447,13 +498,43 @@ class GameFixture {
     
     await currFixture.page.locator('.submit-cards-btn').click();
     await expect(userCards, "User's cards should not be visible after they've submitted answers").not.toBeAttached();
-    const localUser = currFixture.page.locator('.user.is--local.cards-submitted');
+    const localUser = currFixture.getLocalUser('.cards-submitted');
     const animName = await localUser.evaluate((el) => {
       return window.getComputedStyle(el, '::after').getPropertyValue('animation-name');
     });
     await expect(animName).toMatch(/.*showCard$/);
     
     if (screenshot) await currFixture.screenshot(screenshot, '.game-ui');
+  }
+  
+  async swapMaxCards() {
+    const SELECTOR__WHITE_CARDS = '.user-cards .card.is--white.is--selectable';
+    const SELECTOR__SWAPPABLE = '.is--swappable';
+    
+    let points = await currFixture.getLocalUserPoints();
+    
+    await currFixture.screenshot("pre-swap cards");
+    
+    for (let i=0; i<points; i++) {
+      await currFixture.getSwapCardBtn().click();
+      
+      let card = currFixture.page.locator(`${SELECTOR__WHITE_CARDS}${SELECTOR__SWAPPABLE}`).nth(0);
+      const cardText1 = await card.evaluate(el => el.textContent);
+      await card.click();
+      
+      card = currFixture.page.locator(`${SELECTOR__WHITE_CARDS}:not(${SELECTOR__SWAPPABLE})`).nth(0);
+      const cardText2 = await card.evaluate(el => el.textContent);
+      await expect(cardText2).not.toBe(cardText1);
+      
+      await currFixture.screenshot("swapped card");
+    }
+    
+    points = await currFixture.getLocalUserPoints();
+    await expect(points).toBe(0);
+    await expect(currFixture.getSwapCardBtn()).not.toBeAttached();
+    await expect(currFixture.getCancelCardSwapBtn()).not.toBeAttached();
+    
+    await currFixture.screenshot("swapped available points for cards");
   }
   
   async switchToPage(pageNum) {
@@ -579,6 +660,40 @@ class GameFixture {
     await expect(dialog).not.toBeAttached();
   }
   
+  async validateSwappable() {
+    const SELECTOR__WHITE_CARDS = '.user-cards .card.is--white.is--selectable';
+    const SELECTOR__SWAPPABLE = '.is--swappable';
+    
+    await expect(
+      await currFixture.getLocalUserPoints(),
+      "should have at least one point for swapping to be enabled"
+    ).toBeGreaterThan(0);
+    
+    const swapBtn = currFixture.getSwapCardBtn();
+    await expect(
+      swapBtn,
+      "ability to swap cards should be enabled"
+    ).toBeAttached();
+    await swapBtn.click();
+    const swappableCards = currFixture.page.locator(`${SELECTOR__WHITE_CARDS}${SELECTOR__SWAPPABLE}`);
+    await expect(
+      swappableCards,
+      "all cards should be swappable"
+    ).toHaveCount(10);
+    
+    const cancelSwapBtn = currFixture.getCancelCardSwapBtn();
+    await expect(
+      cancelSwapBtn,
+      "ability to cancel swapping cards should be enabled"
+    ).toBeAttached();
+    await cancelSwapBtn.click();
+    const unSwappableCards = currFixture.page.locator(`${SELECTOR__WHITE_CARDS}:not(${SELECTOR__SWAPPABLE})`);
+    await expect(
+      unSwappableCards,
+      "all cards should be not be swappable"
+    ).toHaveCount(10);
+  }
+  
   async validateTooltip({ id, msg, note }) {
     await currFixture.page.locator(`button[popovertarget="${id}"]`).click();
     await expect(
@@ -587,7 +702,7 @@ class GameFixture {
     ).toHaveText(msg);
   }
   
-  async valitateUser({ admin, czar, disconnected, name, points, status }) {
+  async valitateUser({ admin, czar, disconnected, name, points, screenshot, status }) {
     const userEl = currFixture.getUser(name);
     let userIcon;
     
@@ -638,6 +753,8 @@ class GameFixture {
         "should display User status color"
       ).toEqual(status);
     }
+    
+    if (screenshot) await currFixture.screenshot(screenshot, '.users-list');
   }
   
   async valitateUserRemoved({ name, screenshot }) {
@@ -681,7 +798,7 @@ class GameFixture {
   }
   
   async validateUserOrder({ screenshot, userNames }) {
-    const users = currFixture.page.locator('.users-list .user');
+    const users = currFixture.page.locator('.users-list .user.is--connected');
     const usersCount = await users.count();
     
     await expect(usersCount).toEqual(userNames.length);

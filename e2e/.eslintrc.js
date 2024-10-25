@@ -19,6 +19,7 @@ module.exports = {
         'copyGameURL',
         'createGame',
         'joinGame',
+        'startWithUsers',
         'validateAdminInstructions',
         'validateGameEntry',
         'valitatePendingMsg',

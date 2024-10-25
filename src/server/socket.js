@@ -66,7 +66,6 @@ module.exports = function socket(server, opts = {}) {
     dispatch(type, data = {}) {
       wss.emit('message', JSON.stringify({ data, type }));
     },
-    // TODO: replace `emitToAll` with `dispatchToClients`
     dispatchToClients(type, data = {}, filterFn) {
       wss.clients.forEach((socket) => {
         const filterResult = (filterFn) ? filterFn(socket) : true;
@@ -136,6 +135,7 @@ module.exports = function socket(server, opts = {}) {
     socket.on('close', (code, reason) => {
       log.info(`Client disconnected | ${code} | ${reason}`);
       
+      // TODO `reason` seems to be coming through as a Buffer
       if (opts.handleClientDisconnect) opts.handleClientDisconnect(_wss, code, reason);
     });
   });
