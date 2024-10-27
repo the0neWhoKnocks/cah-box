@@ -7,6 +7,8 @@ const IgnoreEmitPlugin = require('ignore-emit-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
+const ENTRY_PREFIX__CSS = 'css/'; // folder path to dump CSS files in after compilation
+const ENTRY_PREFIX__JS = 'js/'; // folder path to dump JS files in after compilation
 const HASH_LENGTH = 5;
 const alias = {
   svelte: resolve('node_modules', 'svelte/src/runtime'),
@@ -32,13 +34,18 @@ const mainFields = [
 const mode = process.env.NODE_ENV || 'development';
 const dev = mode === 'development';
 
-const outputFilename = ({ chunk: { name }, contentHashType }) => {
+const outputFilename = ({ chunk, contentHashType }) => {  
   let _name;
+  
+  // Account for dynamic imports that likely won't have path prefixes.
+  if (!chunk.name.includes('/')) {
+    chunk.name = `${ENTRY_PREFIX__JS}${chunk.name}`;
+  }
   
   switch (contentHashType) {
     case 'css/mini-extract': {
       // dump CSS files in a 'css' folder
-      const newName = name.replace(/^js\//, 'css/');
+      const newName = chunk.name.replace(new RegExp(`^${ENTRY_PREFIX__JS}`), ENTRY_PREFIX__CSS);
       _name = `${newName}_[chunkhash:${HASH_LENGTH}].css`;
       break;
     }
@@ -54,8 +61,7 @@ const outputFilename = ({ chunk: { name }, contentHashType }) => {
 const conf = {
   devtool: dev && 'inline-cheap-source-map',
   entry: {
-    'js/home': resolve(__dirname, './src/client/routes/home/index.js'),
-    'js/room': resolve(__dirname, './src/client/routes/room/index.js'),
+    [`${ENTRY_PREFIX__JS}app`]: resolve(__dirname, './src/client/index.js'),
   },
   mode,
   module: {

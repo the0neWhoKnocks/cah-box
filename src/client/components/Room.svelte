@@ -24,14 +24,14 @@
     WS__MSG__USER_LEFT_ROOM,
     WS__MSG__USER_REMOVED,
     WS__MSG__USER_UPDATE,
-  } from '../../../../constants';
-  import { title, titleSuffix } from '../../../store';
-  import GameEntry from '../../../components/GameEntry.svelte';
-  import Dialog from '../../../components/Dialog.svelte';
-  import addSocketListeners from '../../../utils/addSocketListeners';
+  } from '../../constants';
+  import addSocketListeners from '../utils/addSocketListeners';
+  import { title, titleSuffix } from '../store';
   import Card from './Card.svelte';
   import Copyable from './Copyable.svelte';
+  import Dialog from './Dialog.svelte';
   import EnterUsername from './EnterUsername.svelte';
+  import GameEntry from './GameEntry.svelte';
   import PointsAwarded from './PointsAwarded.svelte';
   import UsersList from './UsersList.svelte';
   

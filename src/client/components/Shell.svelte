@@ -5,22 +5,22 @@
     WS__MSG__PONG,
   } from '../../constants';
   import logger from '../../utils/logger';
-  import Dialog from '../components/Dialog.svelte';
+  import Dialog from './Dialog.svelte';
 
   const log = logger('Shell');
-  const logHeartbeat = logger('Shell:heartbeat');
 
   let connectionVerified = false;
   let mounted = false;
   let heartbeat;
   let heartbeatTimeout;
   let online = false;
+  let Route;
   let socketConnected = false;
   let socketError = '';
   let wentOffline = false;
 
-  export let Route;
   export let routeProps;
+  export let routeName;
 
   function setConnectedState() {
     connectionVerified = true;
@@ -29,7 +29,7 @@
   }
 
   function stopHeartbeat() {
-    logHeartbeat('socket disconnected');
+    log.debug('socket disconnected');
     socketConnected = false;
     socketError = "You've lost connection to the Server";
     clearInterval(heartbeat);
@@ -51,7 +51,7 @@
     }, 2000);
   }
 
-  onMount(() => {
+  onMount(async () => {
     mounted = true;
 
     window.socketConnected
@@ -63,7 +63,7 @@
         
         // User checking if it has connection to Server
         window.clientSocket.on(WS__MSG__PONG, () => {
-          logHeartbeat('socket connected');
+          log.debug('socket connected');
           setConnectedState();
         });
         
@@ -72,17 +72,33 @@
       .catch((err) => {
         socketError = err;
       });
+    
+    switch (routeName) {
+      case 'home':
+        Route = (await import(
+          /* webpackChunkName: "route_Home" */
+          './Home.svelte'
+        )).default;
+        break;
+      
+      case 'room':
+        Route = (await import(
+          /* webpackChunkName: "route_Room" */  
+          './Room.svelte'
+        )).default;
+        break;
+    }
   });
 
   $: if (mounted && !online) {
     wentOffline = true;
     stopHeartbeat();
-    log('Browser disconnected');
+    log.info('Browser disconnected');
   }
   else if (wentOffline && online) {
     wentOffline = false;
     startHeartbeat();
-    log('Browser reconnected');
+    log.info('Browser reconnected');
   }
 </script>
 

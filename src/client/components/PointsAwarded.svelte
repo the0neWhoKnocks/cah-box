@@ -1,8 +1,8 @@
 <script>
-  import Dialog from '../../../components/Dialog.svelte';
+  import Celebrate from '../utils/Celebrate';
   import Audio from './Audio.svelte';
   import Card from './Card.svelte';
-  import Celebrate from './Celebrate';
+  import Dialog from './Dialog.svelte';
   
   const sources = ['/audio/celebrate.mp3'];
   let _name = '';

@@ -1,6 +1,6 @@
 <script>
-  import Dialog from '../../components/Dialog.svelte';
-  import GameEntry from '../../components/GameEntry.svelte';
+  import Dialog from './Dialog.svelte';
+  import GameEntry from './GameEntry.svelte';
 </script>
 
 <Dialog modal>

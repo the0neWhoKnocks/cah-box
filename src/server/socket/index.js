@@ -1,127 +1,146 @@
-const { OPEN, Server } = require('ws');
-const log = require('../../utils/logger')('socket');
-const getUser = require('../utils/getUser');
+const { OPEN, WebSocketServer } = require('ws');
+const { WS__MSG__SERVER_DOWN } = require('../../constants');
+const log = require('../../utils/logger')('server:socket');
 
-const rooms = new Map();
-const disconnectChecksForRoom = new Map();
-
-const disconnectKey = (roomID, username) => `${roomID}__${username}`;
-
-// TODO: extend socket.wss with serverSocket functions 
-
-// NOTE - wrapping API in case I need to refactor again in the future
-class ServerSocket {
-  constructor(currentUserSocket, wsServerInst) {
-    this.data = {};
-    this.serverInstance = wsServerInst;
-    this.socket = currentUserSocket;
-  }
-
-  createRoom(roomID, data = {}) {
-    let room = rooms.get(roomID);
-    
-    if (!room) {
-      room = { data, sockets: [] };
-      rooms.set(roomID, room);
-    }
-
-    return room;
-  }
-
-  deleteRoom(roomID) {
-    rooms.delete(roomID);
-    log(`Room "${roomID}" deleted`);
-  }
-
-  emitToAll(type, data = {}) {
-    this.serverInstance.clients.forEach((socket) => {
-      if (socket.readyState === OPEN) {
-        socket.send(JSON.stringify({ data, type }));
-      }
+function accountForServerDeath(server) {
+  const serverConnections = new Set();
+  const deathSignals = [
+    'SIGINT', 
+    'SIGQUIT',
+    'SIGTERM', 
+  ];
+  server.on('connection', connection => {
+    serverConnections.add(connection);
+    connection.on('close', () => {
+      serverConnections.delete(connection);
     });
-  }
-
-  emitToAllInRoom(roomID, type, data = {}) {
-    this.serverInstance.clients.forEach((socket) => {
-      const room = this.getRoom(roomID);
-
-      if (
-        room
-        && room.sockets.includes(socket)
-        && socket.readyState === OPEN
-      ) {
-        socket.send(JSON.stringify({ data, type }));
-      }
-    });
-  }
-
-  emitToOthersInRoom(roomID, type, data = {}) {
-    this.serverInstance.clients.forEach((socket) => {
-      const room = this.getRoom(roomID);
-
-      if (
-        room
-        && room.sockets.includes(socket)
-        && socket !== this.socket
-        && socket.readyState === OPEN
-      ) {
-        socket.send(JSON.stringify({ data, type }));
-      }
-    });
-  }
-
-  emitToSelf(type, data = {}) {
-    if (this.socket.readyState === OPEN) {
-      this.socket.send(JSON.stringify({ data, type }));
-    }
-  }
-
-  enterRoom(roomID, username, cb) {
-    const room = rooms.get(roomID);
-
-    if (room) room.sockets.push(this.socket);
-    // User didn't create the room, they're just joining so keep a reference
-    if (!this.data.roomID) this.data.roomID = roomID;
-
-    // Rejoining a running game
-    if (room && username) {
-      const user =  getUser(room, username);
-      
-      if (user) {
-        this.data.user = user;
-        user.connected = true;
-        
-        const dKey = disconnectKey(roomID, username);
-        const disconnectCheck = disconnectChecksForRoom.get(dKey);
-        if (disconnectCheck) {
-          clearTimeout(disconnectCheck);
-          disconnectChecksForRoom.delete(dKey);
-        }
-  
-        log(`User "${user.name}" reconnected`);
-      }
-    }
-    
-    cb(room);
-  }
-
-  getRoom(roomID) {
-    return rooms.get(roomID);
-  }
-
-  leaveRoom(roomID, username, timeout) {
-    disconnectChecksForRoom.set(disconnectKey(roomID, username), timeout);
-  }
-}
-
-module.exports = function socket(server) {
-  const wss = new Server({ server });
-  const socketHandlers = require('./socketHandlers');
-
-  wss.on('connection', function connected(currentUserSocket) {
-    log('Server Socket connected to Client');
-    socketHandlers(currentUserSocket, new ServerSocket(currentUserSocket, wss));
   });
 
-  return new ServerSocket(undefined, wss);
+  function destroyConnections() {
+    for (const connection of serverConnections.values()) {
+      connection.destroy();
+    }
+  }
+
+  function handleServerDeath(signal) {
+    log.info(`[${signal}] Server closing`);
+
+    // NOTE - I've seen this NOT work if there are some zombie WS processes
+    // floating around from a previous bad run. So try killing all `node`
+    // instances and see if things work after.
+    // NOTE - This also only works when the WS isn't being proxied via BrowserSync
+    // while in development. So if you go to the non-proxied port, things will
+    // behave as expected.
+    server.wss.dispatchToClients(WS__MSG__SERVER_DOWN);
+    server.wss.closeConnections();
+
+    server.close(() => {
+      log.info(`[${signal}] Server closed`);
+      process.kill(process.pid, signal);
+    });
+    destroyConnections();
+  }
+
+  deathSignals.forEach(signal => process.once(signal, handleServerDeath));
+}
+
+function genUniqueId() {
+  const s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+  return `${s4()}${s4()}-${s4()}`;
+}
+
+module.exports = function socket(server, opts = {}) {
+  const wss = new WebSocketServer({ server });
+  
+  // NOTE: The `request` and `response` objects in a `request` handler have 
+  // `client` and `socket` props which are the same `Socket` instance but have 
+  // nothing to do with `ws`, they're exposed by Node's `http` module. Just
+  // stating for clarity since it can be confusing.
+  // The easiest way for request handlers to utilize this API is via one of the
+  // mentioned props, though I feel the `client` prop is less confusing.
+  // Example: `req.client.server.wss.<FN>`.
+  server.wss = {
+    closeConnections() {
+      wss.close();
+    },
+    dispatch(type, data = {}) {
+      wss.emit('message', JSON.stringify({ data, type }));
+    },
+    dispatchToClients(type, data = {}, filterFn) {
+      wss.clients.forEach((socket) => {
+        const filterResult = (filterFn) ? filterFn(socket) : true;
+        if (socket.readyState === OPEN && filterResult) socket.send(JSON.stringify({ data, type }));
+      });
+    },
+  };
+  
+  wss.on('message', function handleServerMessage(payload) {
+    const { data, type } = JSON.parse(payload);
+    
+    log.info(`[HANDLE] Server message: "${type}"`);
+    
+    const serverHandlers = opts?.msgHandlers?.server || {};
+    const msgKeys = Object.keys(serverHandlers);
+    let msgFound = false;
+    for (let k=0; k<msgKeys.length; k++) {
+      if (msgKeys[k] === type) {
+        const fn = serverHandlers[msgKeys[k]];
+        if (fn) {
+          fn(server.wss, data);
+          msgFound = true;
+          break;
+        }
+      }
+    }
+    
+    if (!msgFound) log.warn(`No handler for "${type}", data lost: ${JSON.stringify(data)}`);
+  });
+  
+  wss.on('connection', function handleClientConnection(socket) {
+    log.info('Client connected');
+    
+    const _wss = {
+      ...server.wss,
+      clientSocket: socket,
+      dispatchToClient(type, data = {}) {
+        if (socket.readyState === OPEN) socket.send(JSON.stringify({ data, type }));
+      },
+      id: genUniqueId(),
+    };
+    
+    if (opts.handleClientConnect) opts.handleClientConnect(_wss);
+    
+    socket.on('message', function handleClientMessage(payload) {
+      const { data, type } = JSON.parse(payload);
+    
+      // log.info(`[HANDLE] Client message: "${type}"`);
+      
+      const clientHandlers = opts?.msgHandlers?.client || {};
+      const msgKeys = Object.keys(clientHandlers);
+      let msgFound = false;
+      for (let k=0; k<msgKeys.length; k++) {
+        if (msgKeys[k] === type) {
+          const fn = clientHandlers[msgKeys[k]];
+          if (fn) {
+            fn(_wss, data);
+            msgFound = true;
+            break;
+          }
+        }
+      }
+      
+      if (!msgFound) log.warn(`No handler for "${type}", data lost: ${JSON.stringify(data)}`);
+    });
+    
+    socket.on('close', (code, reason) => {
+      log.info(`Client disconnected | ${code} | ${reason}`);
+      
+      // TODO `reason` seems to be coming through as a Buffer
+      if (opts.handleClientDisconnect) opts.handleClientDisconnect(_wss, code, reason);
+    });
+  });
+  
+  accountForServerDeath(server);
+  
+  return server.wss;
 }

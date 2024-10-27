@@ -1,6 +1,6 @@
 <script>
-  import getGaps from '../../../../utils/getGaps';
-  import randomNumber from '../../../utils/randomNumber';
+  import getGaps from '../../utils/getGaps';
+  import randomNumber from '../utils/randomNumber';
 
   export let answer = undefined;
   export let onClick = undefined;

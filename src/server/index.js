@@ -23,8 +23,7 @@ const {
   WS__MSG__TOGGLE_CARD_SELECTION,
 } = require('../constants');
 const log = require('../utils/logger')('server');
-// TODO switch to socket folder?
-const socket = require('./socket.js');
+const socket = require('./socket');
 const shell = require('./shell');
 
 const { NODE_ENV } = process.env;
@@ -81,13 +80,17 @@ app
   // `view` names are usually tied to the `entry` name in your bundler.
   .get('/:roomID', (req, res) => {
     res.end(shell({
-      props: req.params,
-      view: 'room',
+      props: {
+        ...req.params,
+        route: 'room',
+      },
+      view: 'app',
     }));
   })
   .get('/', (req, res) => {
     res.end(shell({
-      view: 'home',
+      props: { route: 'home' },
+      view: 'app',
     }));
   });
 
@@ -130,24 +133,6 @@ const wss = socket(server, {
       [WS__MSG__TOGGLE_CARD_SELECTION]: require('./gameActions/toggleCardSelection'),
       [WS__MSG__USER_ENTERED_ROOM]: require('./gameActions/enterRoom'),
     },
-    server: {
-      [WS__MSG__SERVER_UP]: function handleServerStart(/* wss */) {
-        // TODO: may not be needed
-        // log.info('Starting long running process');
-        
-        // let count = 1;
-        // const procInt = setInterval(() => {
-        //   if (count < 6) {
-        //     wss.dispatchToClients(WS__MSG__EXAMPLE, { msg: `Server process progress: ${count}` });
-        //     count += 1;
-        //   }
-        //   else {
-        //     clearInterval(procInt);
-        //     wss.dispatchToClients(WS__MSG__EXAMPLE, { msg: 'Server process complete' });
-        //   }
-        // }, 2000);
-      },
-    },
   },
 });
 
@@ -157,90 +142,3 @@ server.listen(SERVER__PORT, err => {
   
   wss.dispatch(WS__MSG__SERVER_UP);
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// const compression = require('compression');
-// const polka = require('polka');
-// const sirv = require('sirv');
-// const { SERVER__PORT } = require('../constants');
-// const log = require('../utils/logger')('server');
-// const socket = require('./socket');
-// const shell = require('./shell');
-
-// const {
-//   NODE_ENV,
-//   PORT = SERVER__PORT,
-// } = process.env;
-// const dev = NODE_ENV !== 'production';
-// const middleware = [
-//   compression({ threshold: 0 }),
-//   sirv('./dist/public', { dev, etag: true }),
-// ];
-
-// const { server } = polka()
-//   .use(...middleware)
-//   // .all('*', (req, res, next) => {
-//   //   console.log('headers', req.headers);
-//   //   if (process.env.HEROKU) {
-//   //     const forwardedProtoHeader = req.headers['x-forwarded-proto'];
-//   //     log(`X-Forwarded-Proto header: "${forwardedProtoHeader}"`);
-
-//   //     next();
-//   //   }
-//   //   else next();
-//   // })
-//   .get('/:roomID', (req, res) => {
-//     res.end(shell({ page: 'room', params: req.params }));
-//   })
-//   .get('/', (req, res) => {
-//     res.end(shell({ page: 'home' }));
-//   })
-//   .listen(PORT, err => {
-//     if (err) log('Error', err);
-//     log(`Server running at: http://localhost:${PORT}`);
-//   });
-
-// const serverSocket = socket(server);
-
-// function handleServerDeath(signal) {
-//   const { WS__MSG__SERVER_DOWN } = require('../constants');
-
-//   log(`\n[${signal}] Server closing`);
-  
-//   // NOTE - I've seen this NOT work if there are some zombie WS processes
-//   // floating around from a previous bad run. So try killing all `node`
-//   // instances and see if things work after.
-//   // NOTE - This also only works when the WS isn't being proxied via BrowserSync
-//   // while in development. So if you go to the non-proxied port, things will
-//   // behave as expected.
-//   serverSocket.emitToAll(WS__MSG__SERVER_DOWN);
-//   serverSocket.serverInstance.close();
-  
-//   server.close(() => {
-//     log(`[${signal}] Server closed`);
-//     process.exit(0);
-//   });
-// }
-
-// [
-//   'SIGINT', 
-//   'SIGQUIT',
-//   'SIGTERM', 
-// ].forEach(signal => process.on(signal, handleServerDeath));
