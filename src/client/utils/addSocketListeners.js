@@ -18,7 +18,7 @@ export default function addSocketListeners(listeners) {
       removed.push(`"${msgType}"`);
     });
 
-    log(`Removed listeners: \n  - ${removed.join('\n  - ')}`, window.clientSocket.listeners);
+    log.info(`Removed listeners: \n  - ${removed.join('\n  - ')}`, window.clientSocket.listeners);
   });
 }
 

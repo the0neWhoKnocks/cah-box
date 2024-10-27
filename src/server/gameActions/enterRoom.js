@@ -14,7 +14,7 @@ module.exports = function enterRoom(wss, { roomID, username }) {
       });
     }
     else {
-      log(`Tried to join room "${roomID}", but it doesn't exist`);
+      log.info(`Tried to join room "${roomID}", but it doesn't exist`);
       wss.dispatchToClient(WS__MSG__ROOM_DESTROYED);
     }
   });

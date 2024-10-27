@@ -7,9 +7,6 @@ if (process.env.FOR_CLIENT_BUNDLE) {
   window.localStorage.log = ulog.config.log;
   window.localStorage.log_format = ulog.config.log_format;
 }
-// else {
-//   process.env.DEBUG = `info,${NAMESPACE__LOGGER}:*,-${NAMESPACE__LOGGER}:*heartbeat*`;
-// }
 ulog.use({
   use: [ require('ulog/mods/formats') ],
   formats: {

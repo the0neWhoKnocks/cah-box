@@ -15,7 +15,7 @@ module.exports = function swapCard(wss, {
   const oldCard = user.cards[cardNdx];
   const newCard = { ndx: cardNdx, selected: false, text: live.white.shift() };
 
-  log(`User "${username}" swapped "${oldCard.text}" for "${newCard.text}"`);
+  log.info(`User "${username}" swapped "${oldCard.text}" for "${newCard.text}"`);
 
   dead.white.push(oldCard.text);
   user.cards[cardNdx] = newCard;

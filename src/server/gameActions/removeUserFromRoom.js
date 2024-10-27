@@ -10,7 +10,7 @@ module.exports = function removeUserFromRoom(wss, { admin, roomID, username }) {
   room.sockets.forEach(socket => {
     if (socket._username === username) {
       const msg = `User "${username}" was removed from room "${roomID}" by "${admin}"`;
-      log(msg);
+      log.info(msg);
       socket.close(WS__CLOSE_CODE__USER_REMOVED, msg);
     }
   });

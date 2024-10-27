@@ -1,4 +1,3 @@
-// const { OPEN } = require('ws');
 const {
   WS__MSG__CONNECTED_TO_SERVER,
   WS__MSG__PING,
@@ -15,8 +14,6 @@ const disconnectKey = (roomID, username) => `${roomID}__${username}`;
 module.exports = function handleClientConnect(wss) {
   Object.assign(wss, {
     data: {},
-    // TODO: figure out if these props are neccessary (from server/socket/index.js)
-    // serverInstance: wsServerInst,
     socket: wss.clientSocket, // TODO maybe just use `wss.id`
     
     createRoom(roomID, data = {}) {
@@ -32,7 +29,7 @@ module.exports = function handleClientConnect(wss) {
   
     deleteRoom(roomID) {
       rooms.delete(roomID);
-      log(`Room "${roomID}" deleted`);
+      log.info(`Room "${roomID}" deleted`);
     },
     
     // TODO maybe instead of checking sockets, store the unique client `id` and compare against it.
@@ -76,7 +73,7 @@ module.exports = function handleClientConnect(wss) {
             disconnectChecksForRoom.delete(dKey);
           }
     
-          log(`User "${user.name}" reconnected`);
+          log.info(`User "${user.name}" reconnected`);
         }
       }
       

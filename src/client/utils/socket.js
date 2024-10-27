@@ -52,7 +52,7 @@ export default function initSocket(opts = {}) {
         }
       };
       
-      log('Client Socket connected to Server');
+      log.info('Client Socket connected to Server');
   
       window.clientSocket.connected = true;
       resolve();
