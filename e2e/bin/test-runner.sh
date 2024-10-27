@@ -34,6 +34,7 @@ else
 fi
 
 APP_SERVICE="cahbox-test"
+E2E_COMPOSE_FILE="./e2e/docker-compose.yml"
 E2E_CONTAINER_NAME="cahbox-e2e"
 E2E_SERVICE="cahbox-e2e"
 runnerCmd=""
@@ -107,7 +108,7 @@ if $BUILD; then
   
   echo;
   echo "[BUILD] Containers"
-  docker compose build ${APP_SERVICE} ${E2E_SERVICE} 
+  docker compose -f "${E2E_COMPOSE_FILE}" build ${APP_SERVICE} ${E2E_SERVICE} 
 fi
 
 echo;
@@ -120,13 +121,13 @@ else
   export CMD="npx playwright test"
 fi
 # - Even though the App is started via E2E (depends_on), if it's not included here,
-# the test container won't abort if the App container dies.
+#   the test container won't abort if the App container dies.
 # - Using `compose up` instead of `compose run` because `abort-on-container-exit`
-# doesn't work with `run`.
-docker compose up --abort-on-container-exit --remove-orphans $APP_SERVICE $E2E_SERVICE
+#   doesn't work with `run`.
+docker compose -f "${E2E_COMPOSE_FILE}" up --abort-on-container-exit --remove-orphans $APP_SERVICE $E2E_SERVICE
 exitCode=$(echo $?)
 
-docker compose down
+docker compose -f "${E2E_COMPOSE_FILE}" down
 
 if [[ "$xlaunchKillCmd" != "" ]]; then
   echo;
