@@ -56,7 +56,7 @@ module.exports = function handleClientDisconnect(wss, code, reason) {
             // it's possible that a User is in the process of joining when
             // the Admin left the room, so lets tell them that the room no
             // longer exists.
-            wss.dispatchToClient(WS__MSG__ROOM_DESTROYED);
+            wss.dispatchToOthersInRoom(roomID, WS__MSG__ROOM_DESTROYED);
 
             wss.deleteRoom(roomID);
           }

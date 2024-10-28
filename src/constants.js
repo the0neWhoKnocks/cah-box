@@ -3,8 +3,7 @@ const constants = {
   APP__TITLE: 'CAH-Box',
   DISCONNECT_TIMEOUT: 5000,
   DOM__SVELTE_MOUNT_POINT: 'view',
-  ERROR_CODE__NAME_TAKEN: 101,
-  ERROR_CODE__ROOM_DOES_NOT_EXIST: 100,
+  ERROR_CODE__NAME_TAKEN: 100,
   NAMESPACE__LOGGER: 'cahbox',
   WS__CLOSE_CODE__DISCONNECTED: 4000,
   WS__CLOSE_CODE__USER_REMOVED: 4001, // Close event numbers https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code

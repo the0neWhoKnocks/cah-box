@@ -464,3 +464,24 @@ test('No conflicts with multiple games', async ({ game }) => {
     });
   });
 });
+
+test('User informed that room destroyed before joining', async ({ game }) => {
+  let joinForm;
+  
+  await test.step('setup', async () => {
+    await game.startWithUsers(['User1']);
+    const gameURL = await game.copyGameURL( await game.openGameMenu() );
+    
+    await game.createPage();
+    await game.switchToPage(2);
+    await game.loadRoom(gameURL);
+    joinForm = (await game.getJoinDialog()).locator('.join-form');
+  });
+  
+  await test.step("User sees that room doesn't exist anymore", async () => {
+    await game.closePage(1, { waitForUserRemoval: 'User1' });
+    await expect(joinForm).not.toBeAttached();
+    await expect( await game.waitForDialog('.room-error-msg') ).toBeAttached();
+    await game.screenshot('User informed of dead room while joining');
+  });
+});

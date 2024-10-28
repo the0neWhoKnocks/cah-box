@@ -11,9 +11,7 @@ const PATH__ABS_SCREENSHOTS = `/e2e/${PATH__REL_SCREENSHOTS}`;
 export const STATUS__ACTIVE = '#27cfb6';
 export const STATUS__DEFAULT = '#393939';
 export const STATUS__DISCONNECTED = '#ffff00';
-const fixtures = [];
 const screenshotNdxs = {};
-let currFixture;
 
 const exec = promisify(_exec);
 const genShotKeys = (testInfo) => {
@@ -29,13 +27,14 @@ const pad = (num) => `${num}`.padStart(2, '0');
 const transformAnswerText = (txt) => txt.trim().replace(/\.$/, '');
 
 class GameFixture {
-  constructor({ browser, context, page, testInfo }) {
-    if (!currFixture) currFixture = this;
-    fixtures.push(this);
+  constructor({ browser, context, page, testCtx, testInfo }) {
+    if (!testCtx.fixture) testCtx.fixture = this;
+    testCtx.fixtures.push(this);
     
     this.browser = browser;
     this.ctx = context;
     this.page = page;
+    this.testCtx = testCtx;
     this.testInfo = testInfo;
     
     const { testFileKey, testNameKey } = genShotKeys(testInfo);
@@ -54,95 +53,99 @@ class GameFixture {
   }
   
   async assignCzar({ from: userAName, to: userBName }) {
-    if (userAName) await currFixture.valitateUser({ czar: true, name: userAName, status: STATUS__ACTIVE });
-    await currFixture.valitateUser({ czar: false, name: userBName, status: STATUS__DEFAULT });
+    if (userAName) await this.testCtx.fixture.valitateUser({ czar: true, name: userAName, status: STATUS__ACTIVE });
+    await this.testCtx.fixture.valitateUser({ czar: false, name: userBName, status: STATUS__DEFAULT });
     
-    const menu = await currFixture.openAdminMenu(userBName);
-    const btn = currFixture.getAssignCzarBtn(menu, userBName);
+    const menu = await this.testCtx.fixture.openAdminMenu(userBName);
+    const btn = this.testCtx.fixture.getAssignCzarBtn(menu, userBName);
     
     await btn.click();
     await expect(menu).not.toBeAttached();
-    if (userAName) await currFixture.valitateUser({ czar: false, name: userAName, status: STATUS__DEFAULT });
-    await currFixture.valitateUser({ czar: true, name: userBName, status: STATUS__ACTIVE });
+    if (userAName) await this.testCtx.fixture.valitateUser({ czar: false, name: userAName, status: STATUS__DEFAULT });
+    await this.testCtx.fixture.valitateUser({ czar: true, name: userBName, status: STATUS__ACTIVE });
   }
   
   async assignMC({ from: userAName, to: userBName }) {
-    await currFixture.valitateUser({ admin: true, name: userAName });
-    await currFixture.valitateUser({ admin: false, name: userBName });
+    await this.testCtx.fixture.valitateUser({ admin: true, name: userAName });
+    await this.testCtx.fixture.valitateUser({ admin: false, name: userBName });
     
-    const menu = await currFixture.openAdminMenu(userBName);
-    const btn = currFixture.getAssignMCBtn(menu, userBName);
+    const menu = await this.testCtx.fixture.openAdminMenu(userBName);
+    const btn = this.testCtx.fixture.getAssignMCBtn(menu, userBName);
     
     await btn.click();
     await expect(menu).not.toBeAttached();
-    await currFixture.valitateUser({ admin: false, name: userAName });
-    await currFixture.valitateUser({ admin: true, name: userBName });
+    await this.testCtx.fixture.valitateUser({ admin: false, name: userAName });
+    await this.testCtx.fixture.valitateUser({ admin: true, name: userBName });
   }
   
   async closePage(pageNum, { waitForUserRemoval } = {}) {
     const fNdx = pageNum - 1;
-    const fx = fixtures[fNdx];
+    const fx = this.testCtx.fixtures[fNdx];
     
     await fx.page.close();
     await fx.ctx.close();
     
     if (waitForUserRemoval) {
-      const user = currFixture.getUser(waitForUserRemoval);
-      await expect(user).not.toBeAttached({ timeout: DISCONNECT_TIMEOUT + 1000 });
+      const user = this.testCtx.fixture.getUser(waitForUserRemoval);
+      await expect(
+        user,
+        `'${waitForUserRemoval}' should be removed after disconnect`
+      ).not.toBeAttached({ timeout: DISCONNECT_TIMEOUT + 1000 });
     }
     
-    fixtures.splice(fNdx, 1);
+    this.testCtx.fixtures.splice(fNdx, 1);
   }
   
   async closePointsAwarded() {
-    const dialog = await currFixture.waitForDialog('.points-awarded');
+    const dialog = await this.testCtx.fixture.waitForDialog('.points-awarded');
     await dialog.getByRole('button', { name: 'Close' }).click();
     await expect(dialog).not.toBeAttached();
   }
   
   async copyGameCode(el) {
     await el.locator('.copyable-item.for--code').click();
-    const gameCode = await currFixture.readClipboard();
+    const gameCode = await this.testCtx.fixture.readClipboard();
     await expect(
       gameCode,
       "should copy the room code to the clipboard"
-    ).toEqual(currFixture.getRoomCode());
+    ).toEqual(this.testCtx.fixture.getRoomCode());
     return gameCode;
   }
   
   async copyGameURL(el) {
     await el.locator('.copyable-item.for--url').click();
-    const gameURL = await currFixture.readClipboard();
+    const gameURL = await this.testCtx.fixture.readClipboard();
     await expect(
       gameURL,
       "should copy the room's URL to the clipboard"
-    ).toEqual(`https://cahbox:3000/${currFixture.getRoomCode()}`);
+    ).toEqual(`https://cahbox:3000/${this.testCtx.fixture.getRoomCode()}`);
     return gameURL;
   }
   
   async createGame({ screenshots } = {}) {
-    await currFixture.waitForDialog();
-    const { createBtn } = await currFixture.validateGameEntry();
-    if (screenshots) await currFixture.screenshot('game entry');
+    await this.testCtx.fixture.waitForDialog();
+    const { createBtn } = await this.testCtx.fixture.validateGameEntry();
+    if (screenshots) await this.testCtx.fixture.screenshot('game entry');
     
-    const { pathname: oldPath } = currFixture.getURLParts();
-    const navPromise = currFixture.page.waitForNavigation();
+    const { pathname: oldPath } = this.testCtx.fixture.getURLParts();
+    const navPromise = this.testCtx.fixture.page.waitForNavigation();
     await createBtn.click();
     await navPromise;
-    const { pathname: newPath } = currFixture.getURLParts();
+    const { pathname: newPath } = this.testCtx.fixture.getURLParts();
     expect(oldPath).not.toEqual(newPath);
-    if (screenshots) await currFixture.screenshot('new room created');
+    if (screenshots) await this.testCtx.fixture.screenshot('new room created');
   }
   
   async createPage() {
-    const ctx = await currFixture.browser.newContext();
+    const ctx = await this.testCtx.fixture.browser.newContext();
     const page = await ctx.newPage();
     
     new GameFixture({
-      browser: currFixture.browser,
+      browser: this.testCtx.fixture.browser,
       context: ctx,
       page,
-      testInfo: currFixture.testInfo,
+      testCtx: this.testCtx,
+      testInfo: this.testCtx.fixture.testInfo,
     });
   }
   
@@ -150,7 +153,7 @@ class GameFixture {
     // NOTE: There are cards with HTML entities (`A gerbil named &quot;Gerbil&quot;.`),
     // so when comparing the raw WS data against what's in the DOM, errors will
     // occur unless decoded.
-    return await currFixture.page.evaluate((str) => {
+    return await this.testCtx.fixture.page.evaluate((str) => {
       const el = document.createElement('div');
       el.innerHTML = str;
       return el.textContent;
@@ -158,13 +161,13 @@ class GameFixture {
   }
   
   async findCzar() {
-    return await currFixture.page
+    return await this.testCtx.fixture.page
       .locator('.users-list .user.is--czar .user__name')
       .evaluate((el) => el.textContent);
   }
   
   getAnswerNav() {
-    return currFixture.page.locator('.black-card-wrapper .card.is--black + nav');
+    return this.testCtx.fixture.page.locator('.black-card-wrapper .card.is--black + nav');
   }
   
   getAssignCzarBtn(menu, user) {
@@ -184,54 +187,58 @@ class GameFixture {
   
   getBlackCard(inDialog = false) {
     const par = (inDialog) ? '.dialog' : '.cards .answers';
-    return currFixture.page.locator(`${par} .card.is--black .card__text`);
+    return this.testCtx.fixture.page.locator(`${par} .card.is--black .card__text`);
   }
   
   async getBlackCardAnswers() {
-    return await currFixture.getBlackCard()
+    return await this.testCtx.fixture.getBlackCard()
       .locator('.answer')
       .evaluateAll((els) => els.map(el => el.textContent));
   }
   
   getCardsNav() {
-    return currFixture.page.locator('.cards-nav');
+    return this.testCtx.fixture.page.locator('.cards-nav');
   }
   
   getCancelCardSwapBtn() {
-    return currFixture.getCardsNav().getByRole('button', { name: 'Cancel Card Swap' });
+    return this.testCtx.fixture.getCardsNav().getByRole('button', { name: 'Cancel Card Swap' });
   }
   
   // getFixturePage(fNum) {
-  //   return fixtures[fNum].page;
+  //   return this.testCtx.fixtures[fNum].page;
   // }
   
+  async getJoinDialog() {
+    return await this.testCtx.fixture.waitForDialog('.join-form');
+  }
+  
   getLocalUser(extraSelector = '') {
-    return currFixture.page.locator(`.user.is--local${extraSelector}`);
+    return this.testCtx.fixture.page.locator(`.user.is--local${extraSelector}`);
   }
   
   async getLocalUserPoints() {
-    const localUser = currFixture.getLocalUser();
+    const localUser = this.testCtx.fixture.getLocalUser();
     return +(await localUser.locator('.user__points').evaluate(el => el.textContent));
   }
   
   getNextAnswerBtn() {
-    return currFixture.getAnswerNav().locator('.next-btn');
+    return this.testCtx.fixture.getAnswerNav().locator('.next-btn');
   }
   
   async getOrderedUsers(otherUsers, users) {
     await expect(
-      currFixture.getPrevAnswerBtn(),
+      this.testCtx.fixture.getPrevAnswerBtn(),
       "View previous answer button should be disabled at start"
     ).toBeDisabled();
     await expect(
-      currFixture.getNextAnswerBtn(),
+      this.testCtx.fixture.getNextAnswerBtn(),
       "View next answer button should be enabled at start"
     ).toBeEnabled();
     
     const orderedUsers = [];
     // NOTE: order of user's answers is shuffled, so find the order so assertions can continue.
     for (let a=0; a<otherUsers.length; a++) {
-      const answers = await currFixture.getBlackCardAnswers();
+      const answers = await this.testCtx.fixture.getBlackCardAnswers();
       
       for (let u=0; u<otherUsers.length; u++) {
         const uName = otherUsers[u];
@@ -240,26 +247,26 @@ class GameFixture {
         if (transformAnswerText(chosenCards[0]) === answers[0]) orderedUsers.push(uName);
       }
       
-      if (a < otherUsers.length - 1) await currFixture.viewNextAnswer();
+      if (a < otherUsers.length - 1) await this.testCtx.fixture.viewNextAnswer();
     }
     await expect(
-      currFixture.getPrevAnswerBtn(),
+      this.testCtx.fixture.getPrevAnswerBtn(),
       "View previous answer button should be enabled at end"
     ).toBeEnabled();
     await expect(
-      currFixture.getNextAnswerBtn(),
+      this.testCtx.fixture.getNextAnswerBtn(),
       "View next answer button should be disabled at end"
     ).toBeDisabled();
     
     for (let u=0; u<otherUsers.length; u++) {
-      if (u < otherUsers.length - 1) await currFixture.viewPrevAnswer();
+      if (u < otherUsers.length - 1) await this.testCtx.fixture.viewPrevAnswer();
     }
     await expect(
-      currFixture.getPrevAnswerBtn(),
+      this.testCtx.fixture.getPrevAnswerBtn(),
       "View previous answer button should be disabled at start"
     ).toBeDisabled();
     await expect(
-      currFixture.getNextAnswerBtn(),
+      this.testCtx.fixture.getNextAnswerBtn(),
       "View next answer button should be enabled at start"
     ).toBeEnabled();
     
@@ -267,11 +274,11 @@ class GameFixture {
   }
   
   getPickAnswerBtn() {
-    return currFixture.getAnswerNav().locator('.pick-answer-btn');
+    return this.testCtx.fixture.getAnswerNav().locator('.pick-answer-btn');
   }
   
   getPrevAnswerBtn() {
-    return currFixture.getAnswerNav().locator('.prev-btn');
+    return this.testCtx.fixture.getAnswerNav().locator('.prev-btn');
   }
   
   getRemoveUserBtn(menu, user) {
@@ -279,11 +286,11 @@ class GameFixture {
   }
   
   getRoomCode() {
-    return currFixture.getURLParts().pathname.replace(/^\//, '');
+    return this.testCtx.fixture.getURLParts().pathname.replace(/^\//, '');
   }
   
   getSocketMsg(type) {
-    let payload = currFixture.page.wsMsgs[type];
+    let payload = this.testCtx.fixture.page.wsMsgs[type];
     
     switch (type) {
       case WS__MSG__CARDS_DEALT: {
@@ -310,30 +317,30 @@ class GameFixture {
   }
   
   getSwapCardBtn() {
-    return currFixture.getCardsNav().getByRole('button', { name: 'Swap Card' });
+    return this.testCtx.fixture.getCardsNav().getByRole('button', { name: 'Swap Card' });
   }
   
   getURLParts() {
-    return new URL(currFixture.page.url());
+    return new URL(this.testCtx.fixture.page.url());
   }
   
   getUser(name) {
-    return currFixture.page.locator(`.users-list .user[data-name="${name}"]`);
+    return this.testCtx.fixture.page.locator(`.users-list .user[data-name="${name}"]`);
   }
   
   async goOffline() {
-    await currFixture.ctx.setOffline(true);
+    await this.testCtx.fixture.ctx.setOffline(true);
   }
   
   async goOnline() {
-    await currFixture.ctx.setOffline(false);
+    await this.testCtx.fixture.ctx.setOffline(false);
   }
   
   async joinGame({ isFirst, name, screenshot }) {
-    const dialog = await currFixture.waitForDialog('.join-form');
+    const dialog = await this.testCtx.fixture.getJoinDialog();
     await dialog.getByLabel('Enter Username').fill(name);
     
-    if (screenshot) await currFixture.screenshot(`${screenshot} (name entered)`);
+    if (screenshot) await this.testCtx.fixture.screenshot(`${screenshot} (name entered)`);
     
     await dialog.getByRole('button', { name: 'Join Game' }).click();
     await expect(
@@ -344,61 +351,61 @@ class GameFixture {
     if (isFirst) {
       const opts = {};
       if (screenshot) opts.screenshot = `${screenshot} (admin instructions)`;
-      await currFixture.validateAdminInstructions(opts);
+      await this.testCtx.fixture.validateAdminInstructions(opts);
     }
     
-    if (screenshot) await currFixture.screenshot(`${screenshot} (added to list)`);
+    if (screenshot) await this.testCtx.fixture.screenshot(`${screenshot} (added to list)`);
   }
   
   async loadRoom(str) {
     const route = (str)
       ? (str.startsWith('http')) ? str : `/${str}`
       : '';
-    await currFixture.page.goto(route);
+    await this.testCtx.fixture.page.goto(route);
   }
   
   async openAdminMenu(name) {
-    await currFixture.getUser(name).click();
-    return await currFixture.waitForDialog('.user-data-menu');
+    await this.testCtx.fixture.getUser(name).click();
+    return await this.testCtx.fixture.waitForDialog('.user-data-menu');
   }
   
   async openGameMenu() {
-    await currFixture.page
+    await this.testCtx.fixture.page
       .locator('.top-nav')
       .getByRole('button', { name: 'Menu' })
       .click();
-    return await currFixture.waitForDialog('.game-menu');
+    return await this.testCtx.fixture.waitForDialog('.game-menu');
   }
   
   async readClipboard() {
-    await currFixture.ctx.grantPermissions(['clipboard-read']);
-    const handle = await currFixture.page.evaluateHandle(() => navigator.clipboard.readText());
+    await this.testCtx.fixture.ctx.grantPermissions(['clipboard-read']);
+    const handle = await this.testCtx.fixture.page.evaluateHandle(() => navigator.clipboard.readText());
     const txt = await handle.jsonValue();
     await handle.dispose();
     return txt;
   }
   
   async removeUser({ screenshot, user }) {
-    const menu = await currFixture.openAdminMenu(user);
-    const btn = currFixture.getRemoveUserBtn(menu, user);
+    const menu = await this.testCtx.fixture.openAdminMenu(user);
+    const btn = this.testCtx.fixture.getRemoveUserBtn(menu, user);
     
     await btn.click();
     await expect(menu).not.toBeAttached();
-    await expect(currFixture.getUser(user)).not.toBeAttached();
+    await expect(this.testCtx.fixture.getUser(user)).not.toBeAttached();
     
-    if (screenshot) await currFixture.screenshot(screenshot, '.users-list');
+    if (screenshot) await this.testCtx.fixture.screenshot(screenshot, '.users-list');
   }
   
   async screenshot(name, loc) {
-    const _loc = (typeof loc === 'string') ? currFixture.page.locator(loc) : loc; 
-    if (!screenshotNdxs[currFixture.ndxKey]) screenshotNdxs[currFixture.ndxKey] = 1;
+    const _loc = (typeof loc === 'string') ? this.testCtx.fixture.page.locator(loc) : loc; 
+    if (!screenshotNdxs[this.testCtx.fixture.ndxKey]) screenshotNdxs[this.testCtx.fixture.ndxKey] = 1;
     
-    const screenshotNdx = screenshotNdxs[currFixture.ndxKey];
-    const filename = `${PATH__REL_SCREENSHOTS}/${`${currFixture.shotNamePrefix}_${pad(screenshotNdx)}__${name}`.toLowerCase().replace(/\s/g, '-')}.jpg`;
+    const screenshotNdx = screenshotNdxs[this.testCtx.fixture.ndxKey];
+    const filename = `${PATH__REL_SCREENSHOTS}/${`${this.testCtx.fixture.shotNamePrefix}_${pad(screenshotNdx)}__${name}`.toLowerCase().replace(/\s/g, '-')}.jpg`;
     
-    screenshotNdxs[currFixture.ndxKey] += 1;
+    screenshotNdxs[this.testCtx.fixture.ndxKey] += 1;
     
-    const el = (_loc) ? _loc : currFixture.page;
+    const el = (_loc) ? _loc : this.testCtx.fixture.page;
     await el.screenshot({
       animations: 'disabled', // stops CSS animations, CSS transitions and Web Animations.
       fullPage: !_loc,
@@ -409,23 +416,23 @@ class GameFixture {
   }
   
   async showAnswers() {
-    const nav = currFixture.getAnswerNav();
+    const nav = this.testCtx.fixture.getAnswerNav();
     
     await expect(
-      currFixture.getPrevAnswerBtn(),
+      this.testCtx.fixture.getPrevAnswerBtn(),
       "Previous answer button should not be visible"
     ).toHaveClass(/\bhidden\b/);
     await expect(
-      currFixture.getNextAnswerBtn(),
+      this.testCtx.fixture.getNextAnswerBtn(),
       "Next answer button should not be visible"
     ).toHaveClass(/\bhidden\b/);
     await expect(
-      currFixture.getPickAnswerBtn(),
+      this.testCtx.fixture.getPickAnswerBtn(),
       "Pick answer button should be disabled"
     ).toBeDisabled();
     await nav.locator('.show-answer-btn').click();
     await expect(
-      currFixture.getPickAnswerBtn(),
+      this.testCtx.fixture.getPickAnswerBtn(),
       "Pick answer button should be enabled when reviewing answers"
     ).toBeEnabled();
   }
@@ -434,31 +441,31 @@ class GameFixture {
     const _users = [...users];
     
     if (freshPage) {
-      await currFixture.createPage();
-      await currFixture.switchToPage(fixtures.length);
+      await this.testCtx.fixture.createPage();
+      await this.testCtx.fixture.switchToPage(this.testCtx.fixtures.length);
     }
     
-    await currFixture.loadRoom();
-    await currFixture.createGame();
-    await currFixture.joinGame({ isFirst: true, name: _users.shift() });
-    const menuDialog = await currFixture.openGameMenu();
-    const gameURL = await currFixture.copyGameURL(menuDialog);
+    await this.testCtx.fixture.loadRoom();
+    await this.testCtx.fixture.createGame();
+    await this.testCtx.fixture.joinGame({ isFirst: true, name: _users.shift() });
+    const menuDialog = await this.testCtx.fixture.openGameMenu();
+    const gameURL = await this.testCtx.fixture.copyGameURL(menuDialog);
     
     for (let i=0; i<_users.length; i++) {
       const name = _users[i];
-      await currFixture.createPage();
-      await currFixture.switchToPage(fixtures.length);
-      await currFixture.loadRoom(gameURL);
-      await currFixture.joinGame({ name });
+      await this.testCtx.fixture.createPage();
+      await this.testCtx.fixture.switchToPage(this.testCtx.fixtures.length);
+      await this.testCtx.fixture.loadRoom(gameURL);
+      await this.testCtx.fixture.joinGame({ name });
     }
   }
   
   async submitWhiteCards({ chosenCards, screenshot }) {
-    const userCards = currFixture.page.locator('.user-cards');
+    const userCards = this.testCtx.fixture.page.locator('.user-cards');
     const selectMultiple = chosenCards.length > 1;
     
     for (let i=0; i<chosenCards.length; i++) {
-      const cardText = (await currFixture.decodeHTML(chosenCards[i]));
+      const cardText = (await this.testCtx.fixture.decodeHTML(chosenCards[i]));
       const card = userCards.locator(`.card:has-text("${cardText.replace(/"/g, "\\\"")}")`);
       
       await expect(card, "card should be enabled before selection").toBeEnabled();
@@ -469,7 +476,7 @@ class GameFixture {
       await expect(card).not.toHaveClass(/\bis--selectable\b/);
       await expect(card).toHaveClass(/\bis--selected\b/);
       
-      const answerCard = currFixture.page
+      const answerCard = this.testCtx.fixture.page
         .locator('.answers-wrapper.displaying-users-cards .card.is--white.is--selectable')
         .nth(i);
       await expect(answerCard).toHaveText(cardText);
@@ -496,62 +503,62 @@ class GameFixture {
       }
     }
     
-    await currFixture.page.locator('.submit-cards-btn').click();
+    await this.testCtx.fixture.page.locator('.submit-cards-btn').click();
     await expect(userCards, "User's cards should not be visible after they've submitted answers").not.toBeAttached();
-    const localUser = currFixture.getLocalUser('.cards-submitted');
+    const localUser = this.testCtx.fixture.getLocalUser('.cards-submitted');
     const animName = await localUser.evaluate((el) => {
       return window.getComputedStyle(el, '::after').getPropertyValue('animation-name');
     });
     await expect(animName).toMatch(/.*showCard$/);
     
-    if (screenshot) await currFixture.screenshot(screenshot, '.game-ui');
+    if (screenshot) await this.testCtx.fixture.screenshot(screenshot, '.game-ui');
   }
   
   async swapMaxCards() {
     const SELECTOR__WHITE_CARDS = '.user-cards .card.is--white.is--selectable';
     const SELECTOR__SWAPPABLE = '.is--swappable';
     
-    let points = await currFixture.getLocalUserPoints();
+    let points = await this.testCtx.fixture.getLocalUserPoints();
     
-    await currFixture.screenshot("pre-swap cards");
+    await this.testCtx.fixture.screenshot("pre-swap cards");
     
     for (let i=0; i<points; i++) {
-      await currFixture.getSwapCardBtn().click();
+      await this.testCtx.fixture.getSwapCardBtn().click();
       
-      let card = currFixture.page.locator(`${SELECTOR__WHITE_CARDS}${SELECTOR__SWAPPABLE}`).nth(0);
+      let card = this.testCtx.fixture.page.locator(`${SELECTOR__WHITE_CARDS}${SELECTOR__SWAPPABLE}`).nth(0);
       const cardText1 = await card.evaluate(el => el.textContent);
       await card.click();
       
-      card = currFixture.page.locator(`${SELECTOR__WHITE_CARDS}:not(${SELECTOR__SWAPPABLE})`).nth(0);
+      card = this.testCtx.fixture.page.locator(`${SELECTOR__WHITE_CARDS}:not(${SELECTOR__SWAPPABLE})`).nth(0);
       const cardText2 = await card.evaluate(el => el.textContent);
       await expect(cardText2).not.toBe(cardText1);
       
-      await currFixture.screenshot("swapped card");
+      await this.testCtx.fixture.screenshot("swapped card");
     }
     
-    points = await currFixture.getLocalUserPoints();
+    points = await this.testCtx.fixture.getLocalUserPoints();
     await expect(points).toBe(0);
-    await expect(currFixture.getSwapCardBtn()).not.toBeAttached();
-    await expect(currFixture.getCancelCardSwapBtn()).not.toBeAttached();
+    await expect(this.testCtx.fixture.getSwapCardBtn()).not.toBeAttached();
+    await expect(this.testCtx.fixture.getCancelCardSwapBtn()).not.toBeAttached();
     
-    await currFixture.screenshot("swapped available points for cards");
+    await this.testCtx.fixture.screenshot("swapped available points for cards");
   }
   
   async switchToPage(pageNum) {
-    currFixture = fixtures[pageNum - 1];
-    await currFixture.page.bringToFront();
-    await expect(currFixture.page.locator('body')).toBeAttached();
+    this.testCtx.fixture = this.testCtx.fixtures[pageNum - 1];
+    await this.testCtx.fixture.page.bringToFront();
+    await expect(this.testCtx.fixture.page.locator('body')).toBeAttached();
   }
   
   async validateAdminInstructions({ screenshot }) {
-    const dialog = await currFixture.waitForDialog('.admin-instructions');
+    const dialog = await this.testCtx.fixture.waitForDialog('.admin-instructions');
     const instructions = dialog.locator('p');
     await expect(instructions.nth(0)).toHaveText("Congrats! You're the MC, so you're running the game. In order for others to join, just send them");
     await expect(instructions.nth(1)).toHaveText("When starting a new CAH game it's up to the group to choose the Card Czar. Y'all can do that via the typical Who was the last to poop? question, or by what ever means you choose.");
     await expect(instructions.nth(2)).toHaveText("Once the group's chosen the Czar, you just have to click on that User and choose Make <User> the Czar. Once you do so, the game will start.");
-    await currFixture.copyGameURL(dialog);
-    await currFixture.copyGameCode(dialog);
-    if (screenshot) await currFixture.screenshot(screenshot);
+    await this.testCtx.fixture.copyGameURL(dialog);
+    await this.testCtx.fixture.copyGameCode(dialog);
+    if (screenshot) await this.testCtx.fixture.screenshot(screenshot);
     await dialog.getByRole('button', { name: 'Close' }).click();
     await expect(
       dialog,
@@ -568,20 +575,20 @@ class GameFixture {
     });
     
     await expect(
-      currFixture.getBlackCard(inDialog),
+      this.testCtx.fixture.getBlackCard(inDialog),
       "black card should have gaps replaced with answer text"
-    ).toHaveText(await currFixture.decodeHTML(expected));
+    ).toHaveText(await this.testCtx.fixture.decodeHTML(expected));
   }
   
   async validateCards({ blackCard, whiteCards }) {
-    const answers = currFixture.page.locator('.cards .answers');
-    const userCards = currFixture.page.locator('.cards .user-cards');
+    const answers = this.testCtx.fixture.page.locator('.cards .answers');
+    const userCards = this.testCtx.fixture.page.locator('.cards .user-cards');
     
     let cards = answers.locator('.card');
     await expect(cards).toHaveCount(1);
     let card = cards.nth(0);
     await expect(card).toHaveClass(/\bis--black\b/);
-    await expect(card).toHaveText( await currFixture.decodeHTML(blackCard) );
+    await expect(card).toHaveText( await this.testCtx.fixture.decodeHTML(blackCard) );
     
     if (whiteCards) {
       cards = userCards.locator('.card');
@@ -590,12 +597,12 @@ class GameFixture {
       for (let i=0; i<cardsCount; i++) {
         card = cards.nth(i);
         await expect(card).toHaveClass(/\bis--white\b/);
-        await expect(card).toHaveText( await currFixture.decodeHTML(whiteCards[i]) );
+        await expect(card).toHaveText( await this.testCtx.fixture.decodeHTML(whiteCards[i]) );
       }
     }
     else {
-      const waitingMsg = currFixture.page.locator('.czar-waiting-msg');
-      const userNames = await currFixture.page
+      const waitingMsg = this.testCtx.fixture.page.locator('.czar-waiting-msg');
+      const userNames = await this.testCtx.fixture.page
         .locator('.users-list .user:not(.is--czar):not(.cards-submitted)')
         .evaluateAll(els => els.map((el) => el.dataset.name));
       const formattedTxt = (userNames.length > 1)
@@ -616,7 +623,7 @@ class GameFixture {
   }
   
   async validateGameEntry() {
-    const dialog = await currFixture.waitForDialog();
+    const dialog = await this.testCtx.fixture.waitForDialog();
     const rows = dialog.locator('.row');
     const codeRow = rows.nth(0);
     const codeLabel = codeRow.locator('label');
@@ -642,20 +649,20 @@ class GameFixture {
   }
   
   async valitatePendingMsg({ loc, msg, note }) {
-    await expect(currFixture.page.locator(loc), note).toHaveText(msg);
+    await expect(this.testCtx.fixture.page.locator(loc), note).toHaveText(msg);
   }
   
   async validatePointsMsg({ answers, blackCard, points, screenshot, user, winner }) {
-    const dialog = await currFixture.waitForDialog('.points-awarded');
+    const dialog = await this.testCtx.fixture.waitForDialog('.points-awarded');
     
     if (winner) {
-      await expect(currFixture.page.locator('.dialog-wrapper .confetti')).toBeAttached();
+      await expect(this.testCtx.fixture.page.locator('.dialog-wrapper .confetti')).toBeAttached();
       // TODO: check if audio play(ing/ed). Haven't found anything that allows for this check
     }
     
     await expect(dialog.locator('.points-awarded__msg')).toHaveText(`${winner ? 'You' : user} got ${points} point${(points > 1 ? 's' : '')} for`);
-    await currFixture.validateAnswerFormatting(blackCard, answers, true);
-    if (screenshot) await currFixture.screenshot(screenshot);
+    await this.testCtx.fixture.validateAnswerFormatting(blackCard, answers, true);
+    if (screenshot) await this.testCtx.fixture.screenshot(screenshot);
     await dialog.getByRole('button', { name: 'Close' }).click();
     await expect(dialog).not.toBeAttached();
   }
@@ -665,29 +672,29 @@ class GameFixture {
     const SELECTOR__SWAPPABLE = '.is--swappable';
     
     await expect(
-      await currFixture.getLocalUserPoints(),
+      await this.testCtx.fixture.getLocalUserPoints(),
       "should have at least one point for swapping to be enabled"
     ).toBeGreaterThan(0);
     
-    const swapBtn = currFixture.getSwapCardBtn();
+    const swapBtn = this.testCtx.fixture.getSwapCardBtn();
     await expect(
       swapBtn,
       "ability to swap cards should be enabled"
     ).toBeAttached();
     await swapBtn.click();
-    const swappableCards = currFixture.page.locator(`${SELECTOR__WHITE_CARDS}${SELECTOR__SWAPPABLE}`);
+    const swappableCards = this.testCtx.fixture.page.locator(`${SELECTOR__WHITE_CARDS}${SELECTOR__SWAPPABLE}`);
     await expect(
       swappableCards,
       "all cards should be swappable"
     ).toHaveCount(10);
     
-    const cancelSwapBtn = currFixture.getCancelCardSwapBtn();
+    const cancelSwapBtn = this.testCtx.fixture.getCancelCardSwapBtn();
     await expect(
       cancelSwapBtn,
       "ability to cancel swapping cards should be enabled"
     ).toBeAttached();
     await cancelSwapBtn.click();
-    const unSwappableCards = currFixture.page.locator(`${SELECTOR__WHITE_CARDS}:not(${SELECTOR__SWAPPABLE})`);
+    const unSwappableCards = this.testCtx.fixture.page.locator(`${SELECTOR__WHITE_CARDS}:not(${SELECTOR__SWAPPABLE})`);
     await expect(
       unSwappableCards,
       "all cards should be not be swappable"
@@ -695,15 +702,15 @@ class GameFixture {
   }
   
   async validateTooltip({ id, msg, note }) {
-    await currFixture.page.locator(`button[popovertarget="${id}"]`).click();
+    await this.testCtx.fixture.page.locator(`button[popovertarget="${id}"]`).click();
     await expect(
-      currFixture.page.locator(`[popover][role="tooltip"][id="${id}"]`),
+      this.testCtx.fixture.page.locator(`[popover][role="tooltip"][id="${id}"]`),
       note
     ).toHaveText(msg);
   }
   
   async valitateUser({ admin, czar, disconnected, name, points, screenshot, status }) {
-    const userEl = currFixture.getUser(name);
+    const userEl = this.testCtx.fixture.getUser(name);
     let userIcon;
     
     if (admin) {
@@ -747,24 +754,24 @@ class GameFixture {
     
     if (status) {
       const statusEl = (disconnected) ? userEl : userEl.locator('.user__status-indicator');
-      await currFixture.waitForAnimations(statusEl);
+      await this.testCtx.fixture.waitForAnimations(statusEl);
       await expect(
-        await currFixture.getBGColor(statusEl),
+        await this.testCtx.fixture.getBGColor(statusEl),
         "should display User status color"
       ).toEqual(status);
     }
     
-    if (screenshot) await currFixture.screenshot(screenshot, '.users-list');
+    if (screenshot) await this.testCtx.fixture.screenshot(screenshot, '.users-list');
   }
   
   async valitateUserRemoved({ name, screenshot }) {
-    const user = currFixture.getUser(name);
+    const user = this.testCtx.fixture.getUser(name);
     await expect(user).not.toBeAttached({ timeout: DISCONNECT_TIMEOUT });
-    if (screenshot) await currFixture.screenshot(screenshot, currFixture.page.locator('.users-list'));
+    if (screenshot) await this.testCtx.fixture.screenshot(screenshot, this.testCtx.fixture.page.locator('.users-list'));
   }
   
   async validateUserMenu({ btns, screenshot, user }) {
-    const menu = await currFixture.openAdminMenu(user);
+    const menu = await this.testCtx.fixture.openAdminMenu(user);
     const cancelBtn = menu.getByRole('button', { name: 'Cancel' });
     
     for (const [ key, { caption, enabled } ] of Object.entries(btns)) {
@@ -772,15 +779,15 @@ class GameFixture {
       
       switch (key) {
         case 'czar': {
-          btnEl = currFixture.getAssignCzarBtn(menu, user);
+          btnEl = this.testCtx.fixture.getAssignCzarBtn(menu, user);
           break;
         }
         case 'mc': {
-          btnEl = currFixture.getAssignMCBtn(menu, user);
+          btnEl = this.testCtx.fixture.getAssignMCBtn(menu, user);
           break;
         }
         case 'remove': {
-          btnEl = currFixture.getRemoveUserBtn(menu, user);
+          btnEl = this.testCtx.fixture.getRemoveUserBtn(menu, user);
           break;
         }
       }
@@ -791,14 +798,14 @@ class GameFixture {
       if (caption) await expect(btnEl.locator(' + .help')).toHaveText(caption);
     }
     
-    if (screenshot) await currFixture.screenshot(screenshot);
+    if (screenshot) await this.testCtx.fixture.screenshot(screenshot);
     
     await cancelBtn.click();
     await expect(menu).not.toBeAttached();
   }
   
   async validateUserOrder({ screenshot, userNames }) {
-    const users = currFixture.page.locator('.users-list .user.is--connected');
+    const users = this.testCtx.fixture.page.locator('.users-list .user.is--connected');
     const usersCount = await users.count();
     
     await expect(usersCount).toEqual(userNames.length);
@@ -807,11 +814,11 @@ class GameFixture {
       await expect(users.nth(i)).toHaveAttribute('data-name', userNames[i]);
     }
     
-    if (screenshot) await currFixture.screenshot(screenshot, currFixture.page.locator('.users-list'));
+    if (screenshot) await this.testCtx.fixture.screenshot(screenshot, this.testCtx.fixture.page.locator('.users-list'));
   }
   
   async validateUserPoints({ screenshot, users }) {
-    const usersLoc = currFixture.page.locator('.users-list .user');
+    const usersLoc = this.testCtx.fixture.page.locator('.users-list .user');
     const usersCount = await usersLoc.count();
     
     for (let i=0; i<usersCount; i++) {
@@ -823,19 +830,19 @@ class GameFixture {
       ).toHaveText(`${users[uName].points}`);
     }
     
-    if (screenshot) await currFixture.screenshot(screenshot, currFixture.page.locator('.users-list'));
+    if (screenshot) await this.testCtx.fixture.screenshot(screenshot, this.testCtx.fixture.page.locator('.users-list'));
   }
   
   async viewNextAnswer() {
-    await currFixture.getNextAnswerBtn().click();
+    await this.testCtx.fixture.getNextAnswerBtn().click();
   }
   
   async viewPrevAnswer() {
-    await currFixture.getPrevAnswerBtn().click();
+    await this.testCtx.fixture.getPrevAnswerBtn().click();
   }
   
   async waitForDialog(selector) {
-    const dialog = currFixture.page.locator('.dialog');
+    const dialog = this.testCtx.fixture.page.locator('.dialog');
     await dialog.waitFor({ state: 'visible' });
     
     if (selector) {
@@ -851,7 +858,7 @@ class GameFixture {
   }
   
   async writeClipboard() {
-    await currFixture.ctx.grantPermissions(['clipboard-write']);
+    await this.testCtx.fixture.ctx.grantPermissions(['clipboard-write']);
   }
 }
 
@@ -864,7 +871,11 @@ export const test = base.extend({
     });
     
     // [ test ] ================================================================
-    const game = new GameFixture({ browser, context, page, testInfo });
+    const testCtx = {
+      fixture: undefined,
+      fixtures: [],
+    };
+    const game = new GameFixture({ browser, context, page, testCtx, testInfo });
     await use(game);
     
     // [ after test ] ==========================================================

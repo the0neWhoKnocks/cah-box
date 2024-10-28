@@ -4,7 +4,6 @@ module.exports = function checkUsername(wss, {
 }) {
   const {
     ERROR_CODE__NAME_TAKEN,
-    ERROR_CODE__ROOM_DOES_NOT_EXIST,
     WS__MSG__CHECK_USERNAME,
   } = require('../../constants');
   const payload = { username };
@@ -20,12 +19,6 @@ module.exports = function checkUsername(wss, {
         break;
       }
     }
-  }
-  else {
-    payload.error = {
-      code: ERROR_CODE__ROOM_DOES_NOT_EXIST,
-      msg: `Room ${roomID} doesn't seem to exist anymore.`,
-    };
   }
 
   wss.dispatchToClient(WS__MSG__CHECK_USERNAME, payload);

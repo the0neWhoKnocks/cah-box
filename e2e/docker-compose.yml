@@ -22,7 +22,7 @@ services:
   
   cahbox-e2e:
     build:
-      context: ./e2e/
+      context: "${PWD}/e2e/"
       dockerfile: Dockerfile
     command: $CMD
     container_name: cahbox-e2e

@@ -1,7 +1,6 @@
 <script>
   import {
     ERROR_CODE__NAME_TAKEN,
-    ERROR_CODE__ROOM_DOES_NOT_EXIST,
     WS__MSG__CHECK_USERNAME,
   } from '../../constants';
   import addSocketListeners from '../utils/addSocketListeners';
@@ -31,13 +30,6 @@
       switch (error.code) {
         case ERROR_CODE__NAME_TAKEN:
           usernameInputError = 'Sorry, it looks like that username is taken';
-          break;
-        
-        // TODO this may have just been a leftover from a copy-paste
-        // Try to start joining a room, but have the only other User leave and
-        // see if the room disappears.
-        case ERROR_CODE__ROOM_DOES_NOT_EXIST:
-          handleRoomDestruction();
           break;
       }
     }
