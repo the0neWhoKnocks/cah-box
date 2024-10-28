@@ -401,17 +401,22 @@ class GameFixture {
     if (!screenshotNdxs[this.testCtx.fixture.ndxKey]) screenshotNdxs[this.testCtx.fixture.ndxKey] = 1;
     
     const screenshotNdx = screenshotNdxs[this.testCtx.fixture.ndxKey];
-    const filename = `${PATH__REL_SCREENSHOTS}/${`${this.testCtx.fixture.shotNamePrefix}_${pad(screenshotNdx)}__${name}`.toLowerCase().replace(/\s/g, '-')}.jpg`;
+    const formattedName = `${`${this.testCtx.fixture.shotNamePrefix}_${pad(screenshotNdx)}__${name}`.toLowerCase().replace(/\s/g, '-')}`;
+    const filename = `${PATH__REL_SCREENSHOTS}/${formattedName}.jpg`;
     
     screenshotNdxs[this.testCtx.fixture.ndxKey] += 1;
     
     const el = (_loc) ? _loc : this.testCtx.fixture.page;
-    await el.screenshot({
+    const img = await el.screenshot({
       animations: 'disabled', // stops CSS animations, CSS transitions and Web Animations.
       fullPage: !_loc,
       path: filename,
       quality: 90,
       type: 'jpeg',
+    });
+    this.testInfo.attach(formattedName, {
+      body: img,
+      contentType: 'image/jpeg',
     });
   }
   
