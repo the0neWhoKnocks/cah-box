@@ -12,7 +12,6 @@ export CURR_GID=$(id -g)
 REPO_FUNCS+=("startcont")
 function startcont {
   # ensure required directories are set up
-  # mkdir -p ./{.app_data,.ignore} # TODO delete
   mkdir -p ./.ignore
   touch ./.ignore/.zsh_history
   chmod 777 ./.ignore/.zsh_history

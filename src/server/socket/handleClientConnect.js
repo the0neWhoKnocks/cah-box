@@ -14,7 +14,7 @@ const disconnectKey = (roomID, username) => `${roomID}__${username}`;
 module.exports = function handleClientConnect(wss) {
   Object.assign(wss, {
     data: {},
-    socket: wss.clientSocket, // TODO maybe just use `wss.id`
+    socket: wss.clientSocket,
     
     createRoom(roomID, data = {}) {
       let room = rooms.get(roomID);
@@ -32,7 +32,6 @@ module.exports = function handleClientConnect(wss) {
       log.info(`Room "${roomID}" deleted`);
     },
     
-    // TODO maybe instead of checking sockets, store the unique client `id` and compare against it.
     dispatchToAllInRoom(roomID, type, data = {}) {
       const filterFn = (socket) => {
         const room = wss.getRoom(roomID);
@@ -53,7 +52,7 @@ module.exports = function handleClientConnect(wss) {
   
     enterRoom(roomID, username, cb) {
       const room = rooms.get(roomID);
-  
+      
       if (room) room.sockets.push(this.socket);
       // User didn't create the room, they're just joining so keep a reference
       if (!this.data.roomID) this.data.roomID = roomID;

@@ -135,7 +135,6 @@ module.exports = function socket(server, opts = {}) {
     socket.on('close', (code, reason) => {
       log.info(`Client disconnected | ${code} | ${reason}`);
       
-      // TODO `reason` seems to be coming through as a Buffer
       if (opts.handleClientDisconnect) opts.handleClientDisconnect(_wss, code, reason);
     });
   });
