@@ -201,7 +201,11 @@ const shell = ({ props, view } = {}) => {
         .dialog__body {
           padding: 1em;
         }
-
+        
+        .for--reader { /* screen readers */
+          font-size: 0px;
+        }
+        
         @media (min-width: 400px) {
           body {
             font-size: 16px;

@@ -484,7 +484,7 @@ class GameFixture {
       const answerCard = this.testCtx.fixture.page
         .locator('.answers-wrapper.displaying-users-cards .card.is--white.is--selectable')
         .nth(i);
-      await expect(answerCard).toHaveText(cardText);
+      await expect(answerCard).toHaveText(`(white card) ${cardText}`);
       
       if (selectMultiple) {
         if (i < chosenCards.length - 1) {
@@ -593,7 +593,7 @@ class GameFixture {
     await expect(cards).toHaveCount(1);
     let card = cards.nth(0);
     await expect(card).toHaveClass(/\bis--black\b/);
-    await expect(card).toHaveText( await this.testCtx.fixture.decodeHTML(blackCard) );
+    await expect(card).toHaveText(`(black card) ${await this.testCtx.fixture.decodeHTML(blackCard)}`);
     
     if (whiteCards) {
       cards = userCards.locator('.card');
@@ -602,7 +602,7 @@ class GameFixture {
       for (let i=0; i<cardsCount; i++) {
         card = cards.nth(i);
         await expect(card).toHaveClass(/\bis--white\b/);
-        await expect(card).toHaveText( await this.testCtx.fixture.decodeHTML(whiteCards[i]) );
+        await expect(card).toHaveText(`(white card) ${await this.testCtx.fixture.decodeHTML(whiteCards[i])}`);
       }
     }
     else {

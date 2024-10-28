@@ -10,7 +10,10 @@
   export let swappable = false;
   export let text = '';
   export let type = 'white';
-
+  
+  const elType = type === 'white' ? 'button' : 'figure';
+  const isBtn = elType === 'button';
+  
   function handleClick() {
     if (swappable && onSwapClick) {
       onSwapClick($$props.ndx);
@@ -22,11 +25,10 @@
   }
 
   const transformAnswer = (t, a) => {
+    const gaps = getGaps(t);
     let ret = t;
 
     if (Array.isArray(a) && a.length) {
-      const gaps = getGaps(t);
-
       if (!gaps.length) {
         ret = `${t}<span class="answer">${a[0].trim()}</span>`;
       }
@@ -36,27 +38,34 @@
         }, t);
       }
     }
+    else {
+      ret = gaps.reduce((_t, gap) => {
+        return _t.replace(gap, `<span role="img" aria-label="blank">${gap}</span>`);
+      }, t);
+    }
     
     return ret;
   }
 </script>
 
-<!-- TODO changed from div to button. verify styling -->
-<!-- TODO should be a dynamic element, if white = button, else div -->
-<button
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<svelte:element
+  this={elType}
   class="card"
   class:is--white={type === 'white'}
   class:is--black={type === 'black'}
   class:is--selected={selected}
-  class:is--selectable={!!onClick && !selected}
+  class:is--selectable={isBtn ? !selected : undefined}
   class:is--swappable={swappable}
   style={rotate ? `transform: rotate(${randomNumber(-2, 2)}deg);` : undefined}
-  disabled={selected}
-  on:click={!!onClick && handleClick}
+  disabled={isBtn ? selected : undefined}
+  tabindex={!isBtn ? '0' : undefined}
+  on:click={isBtn ? handleClick : undefined}
 >
+  <div class="for--reader">({#if type === 'white'}white {:else}black{/if} card)</div>
   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
   <div class="card__text">{@html transformAnswer(text, answer)}</div>
-</button>
+</svelte:element>
 
 <style>
   .card {
@@ -66,6 +75,9 @@
     border-radius: 0.75em;
     opacity: 1;
     transition: opacity 300ms;
+  }
+  .card:focus-visible {
+    outline: solid 0.5em #ffff00;
   }
   .card * {
     pointer-events: none;
