@@ -13,8 +13,9 @@ export default function initSocket(opts = {}) {
         socket.close();
       },
       emit(type, data = {}) {
-        // TODO: error occurs here when reloading Dev files (already in Closed or Closing state)
-        socket.send(JSON.stringify({ data, type }));
+        if (socket.readyState === socket.OPEN) {
+          socket.send(JSON.stringify({ data, type }));
+        }
       },
       listeners: {},
       off(type, cb) {
