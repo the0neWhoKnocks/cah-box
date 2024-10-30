@@ -88,6 +88,7 @@
   }
   .card.is--black {
     color: #fff;
+    margin: 0; /* remove `figure` styling */
     background: #000;
   }
   .card.is--selectable {
