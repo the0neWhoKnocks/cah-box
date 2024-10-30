@@ -777,7 +777,7 @@ class GameFixture {
   
   async validateUserMenu({ btns, screenshot, user }) {
     const menu = await this.testCtx.fixture.openHostMenu(user);
-    const cancelBtn = menu.getByRole('button', { name: 'Cancel' });
+    const cancelBtn = menu.getByRole('button', { name: 'Close' });
     
     for (const [ key, { caption, enabled } ] of Object.entries(btns)) {
       let btnEl;
