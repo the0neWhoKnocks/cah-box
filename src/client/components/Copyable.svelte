@@ -1,4 +1,6 @@
 <script>
+  import SVG, { ICON__CLIPBOARD } from './SVG.svelte';
+  
   const cssVars = {
     copiedMsgDuration: 2000,
   };
@@ -40,12 +42,7 @@
 >
   <div class="copyable-item__text">{text}</div>
   <div class="copyable-item__clipboard-icon">
-    <svg class="icon">
-      <use
-        xmlns:xlink="http://www.w3.org/1999/xlink"
-        xlink:href="#ui-icon__clipboard"
-      ></use>
-    </svg>
+    <SVG icon={ICON__CLIPBOARD} />
   </div>
 </button>
 
@@ -110,7 +107,7 @@
     right: 0px;
     transform: translateY(-50%) rotate(-10deg) scale(1.2);
   }
-  .copyable-item__clipboard-icon .icon {
+  .copyable-item__clipboard-icon :global(.icon) {
     width: 2.25em;
     height: 2.25em;
     margin-right: -0.4em;

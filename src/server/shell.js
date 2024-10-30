@@ -160,12 +160,6 @@ const shell = ({ props, view } = {}) => {
           }
         }
 
-        .icon {
-          width: 1em;
-          height: 1em;
-          fill: currentColor;
-        }
-
         .loading-msg {
           width: 100%;
           height: 100%;
@@ -333,6 +327,9 @@ const shell = ({ props, view } = {}) => {
             d="M168 280.001c8.84 0 16-7.16 16-16 0-39.768 32.232-72 72-72 8.84 0 16-7.16 16-16s-7.16-16-16-16c-57.44 0-104 46.56-104 104 0 8.84 7.16 16 16 16z"
             fill="#89c763"
           />
+        </symbol>
+        <symbol id="ui-icon__remove-user" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path d="M14,8c0-2.21-1.79-4-4-4S6,5.79,6,8s1.79,4,4,4S14,10.21,14,8z M17,10v2h6v-2H17z M2,18v2h16v-2c0-2.66-5.33-4-8-4 S2,15.34,2,18z" />
         </symbol>
       </svg>
       

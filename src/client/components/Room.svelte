@@ -33,6 +33,12 @@
   import EnterUsername from './EnterUsername.svelte';
   import GameEntry from './GameEntry.svelte';
   import PointsAwarded from './PointsAwarded.svelte';
+  import SVG, {
+    ICON__CZAR,
+    ICON__HOST,
+    ICON__MENU,
+    ICON__REMOVE_USER,
+  } from './SVG.svelte';
   import UsersList from './UsersList.svelte';
   
   export let roomID;
@@ -402,12 +408,7 @@
       <nav class="top-nav">
         <button on:click={openGameMenu}>
           Menu
-          <svg class="icon">
-            <use
-              xmlns:xlink="http://www.w3.org/1999/xlink"
-              xlink:href="#ui-icon__menu"
-            ></use>
-          </svg>
+          <SVG icon={ICON__MENU} />
         </button>
       </nav>
 
@@ -593,12 +594,16 @@
         >
           <div class="user-data-menu" slot="dialogBody">
             <button
+              class="icon-btn"
               type="button"
-              on:click={setCzar}
               disabled={userData.czar || !minimumNumberOfPlayersJoined}
+              on:click={setCzar}
             >
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html MSG__SET_CZAR.replace('<User>', `<q>${userData.name}</q>`)}
+              <SVG icon={ICON__CZAR} />
+              <span>
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                {@html MSG__SET_CZAR.replace('<User>', `<q>${userData.name}</q>`)}
+              </span>
             </button>
             {#if !minimumNumberOfPlayersJoined}
               <div class="help">
@@ -611,12 +616,16 @@
               </div>
             {/if}
             <button
+              class="icon-btn for--host"
               type="button"
-              on:click={setHost}
               disabled={userData.host}
+              on:click={setHost}
             >
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html `Make <q>${userData.name}</q> the Host`}
+              <SVG icon={ICON__HOST} />
+              <span>
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                {@html `Make <q>${userData.name}</q> the Host`}
+              </span>
             </button>
             {#if userData.host}
               <div class="help">
@@ -624,18 +633,22 @@
               </div>
             {/if}
             <button
+              class="icon-btn for--rm-user"
               type="button"
-              on:click={removeUserFromGame}
               disabled={userData.host}
               data-username={userData.name}
+              on:click={removeUserFromGame}
             >
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html `Remove <q>${userData.name}</q> from game`}
+              <SVG icon={ICON__REMOVE_USER} />
+              <span>
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                {@html `Remove <q>${userData.name}</q> from game`}
+              </span>
             </button>
             <button
               type="button"
               on:click={closeUserDataMenu}
-            >Cancel</button>
+            >Close</button>
           </div>
         </Dialog>
       {/if}
@@ -698,6 +711,10 @@
 </div>
 
 <style>
+  :root {
+    --user-color__host: #228fff;
+  }
+  
   .wrapper {
     width: 100%;
     height: 100%;
@@ -727,7 +744,7 @@
   .top-nav button:focus {
     box-shadow: 0px 0px 6px inset #fffcd5;
   }
-  .top-nav button .icon {
+  .top-nav button :global(.icon) {
     width: 1.5em;
     height: 1.5em;
     margin-left: 0.25em;
@@ -813,6 +830,39 @@
   }
   .user-data-menu button:disabled :global(q) {
     color: currentColor;
+  }
+  .user-data-menu .icon-btn {
+    overflow: hidden;
+    padding: 2px;
+    border: none;
+    border-radius: 0.5em;
+    box-shadow: 0px 0px 8px 0px #00000026;
+    background-image: linear-gradient(180deg, #0000006b, #ffffff73);
+    display: flex;
+    align-items: stretch;
+  }
+  .user-data-menu .icon-btn:disabled {
+    color: currentColor;
+    opacity: 0.3;
+  }
+  .user-data-menu .icon-btn :global(.icon) {
+    box-sizing: content-box;
+    padding: 0.5em;
+    border-radius: 0.4em 0 0 0.4em;
+    background: linear-gradient(180deg, #cfcfcf, #222 12%, #222 90%, #000000);
+  }
+  .user-data-menu .icon-btn.for--host :global(.icon) {
+    fill: var(--user-color__host);
+  }
+  .user-data-menu .icon-btn.for--rm-user :global(.icon) {
+    fill: #ff4747;
+  }
+  .user-data-menu .icon-btn span {
+    width: 100%;
+    padding: 0 0.75em;
+    border-radius: 0 0.4em 0.4em 0;
+    background: linear-gradient(180deg, white, #ddd 12%, #ddd 90%, #bbb);
+    align-content: center;
   }
   .user-data-menu .help {
     color: #666;
@@ -962,7 +1012,7 @@
     .top-nav {
       font-size: 0.7em;
     }
-    .top-nav button .icon {
+    .top-nav button :global(.icon) {
       width: 1.25em;
       height: 1.25em;
       margin-top: -0.05em;

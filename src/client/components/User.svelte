@@ -1,6 +1,7 @@
 <script>
   import DisconnectIndicator from './DisconnectIndicator.svelte';
-
+  import SVG, { ICON__CZAR, ICON__HOST } from './SVG.svelte';
+  
   let className = '';
   
   export let cardsSubmitted = false;
@@ -21,12 +22,7 @@
   data-name={name}
 >
   <span class="user__icon">
-    <svg class="icon">
-      <use
-        xmlns:xlink="http://www.w3.org/1999/xlink"
-        xlink:href={`#ui-icon__${czar ? 'crown' : 'star'}`}
-      ></use>
-    </svg>
+    <SVG icon={czar ? ICON__CZAR : ICON__HOST} />
   </span>
   {#if !connected}
     <DisconnectIndicator />
@@ -73,8 +69,8 @@
   .user:not(.is--host):not(.is--czar) .user__icon {
     opacity: 0;
   }
-  .user.is--host .icon {
-    fill: #228fff;
+  .user.is--host :global(.icon) {
+    fill: var(--user-color__host);
   }
 
   .user__points {
