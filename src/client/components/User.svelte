@@ -3,10 +3,10 @@
 
   let className = '';
   
-  export let admin = false;
   export let cardsSubmitted = false;
   export let connected = false;
   export let czar = false;
+  export let host = false;
   export let name = '';
   export let points = 0;
   export { className as class };
@@ -14,9 +14,9 @@
 
 <div
   class={`user ${className}`}
-  class:is--admin={admin}
   class:is--connected={connected}
   class:is--czar={czar}
+  class:is--host={host}
   class:cards-submitted={cardsSubmitted}
   data-name={name}
 >
@@ -70,10 +70,10 @@
     text-overflow: ellipsis;
   }
 
-  .user:not(.is--admin):not(.is--czar) .user__icon {
+  .user:not(.is--host):not(.is--czar) .user__icon {
     opacity: 0;
   }
-  .user.is--admin .icon {
+  .user.is--host .icon {
     fill: #228fff;
   }
 

@@ -7,11 +7,11 @@ module.exports = function joinGame(wss, { roomID, username }) {
 
   if (!user) {
     user = {
-      admin: !users.length,
       cards: [],
       cardsSubmitted: false,
       connected: true,
       czar: false,
+      host: !users.length,
       maxCardsSelected: false,
       name: username,
       points: 0,

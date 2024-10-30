@@ -23,7 +23,7 @@ test('Create and play', async ({ game }) => {
       screenshot: 'Adding first User',
     });
     await game.valitateUser({
-      admin: true,
+      host: true,
       name: 'User1',
       points: '0',
       status: STATUS__DEFAULT,
@@ -31,9 +31,9 @@ test('Create and play', async ({ game }) => {
     await game.valitatePendingMsg({
       loc: '.czar-pending-msg',
       msg: 'Waiting for more users to join.',
-      note: "should inform the Admin that more users are required to play",
+      note: "should inform the Host that more users are required to play",
     });
-    await game.screenshot('Admin User with pending czar message');
+    await game.screenshot('Host User with pending czar message');
   });
   
   
@@ -52,7 +52,7 @@ test('Create and play', async ({ game }) => {
       screenshot: 'Adding second User',
     });
     await game.valitateUser({
-      admin: false,
+      host: false,
       name: 'User2',
       points: '0',
       status: STATUS__DEFAULT,
@@ -76,14 +76,14 @@ test('Create and play', async ({ game }) => {
     await game.valitatePendingMsg({
       loc: '.czar-pending-msg',
       msg: 'You need to pick the Card Czar. To do so, just click on a User in the side menu.',
-      note: "should inform the Admin that a Czar needs to be chozen",
+      note: "should inform the Host that a Czar needs to be chozen",
     });
     await game.validateTooltip({
       id: 'popover-card-czar',
       msg: 'The Card Czar shuffles all of the answers and shares each card combination with the group. For full effect, the Card Czar should usually re-read the Black Card.',
-      note: "should inform the Admin what the Czar is",
+      note: "should inform the Host what the Czar is",
     });
-    await game.screenshot('Admin with pending czar message');
+    await game.screenshot('Host with pending czar message');
     const menuDialog = await game.openGameMenu();
     const gameCode = await game.copyGameCode(menuDialog);
     await expect(
@@ -98,7 +98,7 @@ test('Create and play', async ({ game }) => {
       screenshot: 'Adding third User',
     });
     await game.valitateUser({
-      admin: false,
+      host: false,
       name: 'User3',
       points: '0',
       status: STATUS__DEFAULT,
@@ -112,7 +112,7 @@ test('Create and play', async ({ game }) => {
       btns: {
         czar: { enabled: true },
         mc: {
-          caption: "You're already the MC, yuh silly goose.",
+          caption: "You're already the Host, yuh silly goose.",
           enabled: false,
         },
         remove: { enabled: false },
@@ -152,9 +152,9 @@ test('Create and play', async ({ game }) => {
   
   await test.step('Assign the Czar role to another player', async () => {
     await game.switchToPage(1);
-    await game.valitateUser({ admin: true, name: 'User1', status: STATUS__DEFAULT });
+    await game.valitateUser({ host: true, name: 'User1', status: STATUS__DEFAULT });
     await game.assignCzar({ from: 'User3', to: 'User1' });
-    await game.valitateUser({ admin: false, czar: true, name: 'User1', status: STATUS__ACTIVE });
+    await game.valitateUser({ czar: true, host: false, name: 'User1', status: STATUS__ACTIVE });
     
     const { blackCard, whiteCards } = game.getSocketMsg(WS__MSG__CARDS_DEALT);
     await game.validateCards({ blackCard });
@@ -179,14 +179,14 @@ test('Create and play', async ({ game }) => {
   });
   
   
-  await test.step('Assign the MC role to another player', async () => {
+  await test.step('Assign the Host role to another player', async () => {
     await game.switchToPage(1);
     await game.assignMC({ from: 'User1', to: 'User2' });
-    await game.screenshot('Assigned User2 as MC from User1');
+    await game.screenshot('Assigned User2 as Host from User1');
     await game.switchToPage(2);
-    await game.validateAdminInstructions({ screenshot: 'New MC is presented with instructions' });
+    await game.validateHostInstructions({ screenshot: 'New Host is presented with instructions' });
     await game.assignMC({ from: 'User2', to: 'User1' });
-    await game.screenshot('Assigned User1 as MC from User2');
+    await game.screenshot('Assigned User1 as Host from User2');
   });
   
   
@@ -396,7 +396,7 @@ test('Auto-Reassign roles', async ({ game }) => {
     await game.switchToPage(1);
   });
   
-  await test.step('MC removes last user and first user becomes Czar', async () => {
+  await test.step('Host removes last user and first user becomes Czar', async () => {
     await game.assignCzar({ to: users[3] });
     await game.removeUser({
       screenshot: `${users[3]} removed `,
@@ -422,19 +422,19 @@ test('Auto-Reassign roles', async ({ game }) => {
     });
   });
   
-  await test.step('MC leaves game and third user becomes MC', async () => {
+  await test.step('Host leaves game and third user becomes Host', async () => {
     await game.switchToPage(2);
     await game.valitateUser({
-      admin: false,
+      host: false,
       name: users[2],
-      screenshot: `${users[2]} is not the Admin`,
+      screenshot: `${users[2]} is not the Host`,
     });
     await game.closePage(1, { waitForUserRemoval: users[0] });
-    await game.validateAdminInstructions({ screenshot: 'Auto-assigned MC is presented with instructions' });
+    await game.validateHostInstructions({ screenshot: 'Auto-assigned Host is presented with instructions' });
     await game.valitateUser({
-      admin: true,
+      host: true,
       name: users[2],
-      screenshot: `${users[2]} should be auto-assigned the MC role`,
+      screenshot: `${users[2]} should be auto-assigned the Host role`,
     });
   });
 });

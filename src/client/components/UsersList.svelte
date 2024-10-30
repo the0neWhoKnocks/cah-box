@@ -4,7 +4,7 @@
   let localUser;
   let sortedUsers = [];
 
-  export let isAdmin = false;
+  export let isHost = false;
   export let localUsername = undefined;
   export let onUserClick = undefined;
   export let users = undefined;
@@ -29,29 +29,29 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   class="users-list"
-  class:is--admin={isAdmin}
+  class:is--host={isHost}
   on:click={onUserClick}
 >
   {#if localUser}
     <User
-      admin={localUser.admin}
       cardsSubmitted={localUser.cardsSubmitted}
       class="is--local"
       connected={localUser.connected}
       czar={localUser.czar}
+      host={localUser.host}
       name={localUser.name}
       points={localUser.points}
     />
   {/if}
   {#if sortedUsers.length}
-    {#each sortedUsers as { admin, cardsSubmitted, connected, czar, name, points }}
+    {#each sortedUsers as { cardsSubmitted, connected, czar, host, name, points }}
       <User
-        admin={admin}
-        cardsSubmitted={cardsSubmitted}
-        connected={connected}
-        czar={czar}
-        name={name}
-        points={points}
+        {cardsSubmitted}
+        {connected}
+        {czar}
+        {host}
+        {name}
+        {points}
       />
     {/each}
   {/if}
@@ -73,11 +73,11 @@
     margin-top: 0;
     background: #000;
   }
-  .users-list.is--admin :global(.user:hover) {
+  .users-list.is--host :global(.user:hover) {
     cursor: pointer;
     background: rgba(255, 255, 0, 0.5);
   }
-  .users-list.is--admin :global(.user.is--local:hover) {
+  .users-list.is--host :global(.user.is--local:hover) {
     color: #000;
   }
 </style>

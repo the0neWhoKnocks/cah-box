@@ -12,9 +12,9 @@
     WS__MSG__REMOVE_USER_FROM_ROOM,
     WS__MSG__ROOM_DESTROYED,
     WS__MSG__SERVER_DOWN,
-    WS__MSG__SET_ADMIN,
     WS__MSG__SET_ANSWER_REVIEW_STATE,
     WS__MSG__SET_CZAR,
+    WS__MSG__SET_HOST,
     WS__MSG__SUBMIT_CARDS,
     WS__MSG__SWAP_CARD,
     WS__MSG__TOGGLE_CARD_SELECTION,
@@ -50,14 +50,14 @@
   const ACTION__USER_REMOVED = 'userRemoved';
   const ACTION__USER_UPDATE = 'userUpdate';
   const sessionData = JSON.parse(window.sessionStorage.getItem(roomID) || '{}');
-  let adminInstructionsShown = sessionData.adminInstructionsShown;
   let blackCard;
-  let closeAdminInstructionsBtnRef;
+  let closeHostInstructionsBtnRef;
   let czarSelected = false;
+  let hostInstructionsShown = sessionData.hostInstructionsShown;
   let localUser = { name: sessionData.username };
   let minimumNumberOfPlayersJoined = false;
   let room;
-  let showAdminInstructions = false;
+  let showHostInstructions = false;
   let showUserCards = false;
   let showUserDataMenu = false;
   let socketConnected = true;
@@ -69,7 +69,7 @@
   let pointsAwardedIsOpen = false;
   let pointsAwardedData = {};
   let roomCheckComplete = false;
-  let gameMC;
+  let gameHost;
   let swappingCards = false;
   let showGameMenu = false;
 
@@ -88,8 +88,8 @@
       if (users.length) {
         let someoneIsCzar = false;
         
-        const user = users.filter(({ admin, czar, name }) => {
-          if (admin) gameMC = name;
+        const user = users.filter(({ czar, host, name }) => {
+          if (host) gameHost = name;
           if (czar) someoneIsCzar = true;
           return name === localUser.name;
         })[0];
@@ -111,14 +111,14 @@
         swappingCards = false;
       }
 
-      userClickHandler = (localUser.admin) ? handleUserClick : undefined;
+      userClickHandler = (localUser.host) ? handleUserClick : undefined;
       
-      if (localUser.admin && !adminInstructionsShown) {
-        showAdminInstructions = true;
-        adminInstructionsShown = true;
+      if (localUser.host && !hostInstructionsShown) {
+        showHostInstructions = true;
+        hostInstructionsShown = true;
 
         window.sessionStorage.setItem(roomID, JSON.stringify({
-          adminInstructionsShown: true,
+          hostInstructionsShown: true,
           username: localUser.name,
         }));
       }
@@ -203,8 +203,8 @@
     };
   }
 
-  function closeAdminInstructions() {
-    showAdminInstructions = false;
+  function closeHostInstructions() {
+    showHostInstructions = false;
   }
 
   function openUserDataMenu(username) {
@@ -248,8 +248,8 @@
     window.clientSocket.emit(WS__MSG__DEAL_CARDS, { newRound: true, roomID });
   }
 
-  function setAdmin() {
-    window.clientSocket.emit(WS__MSG__SET_ADMIN, {
+  function setHost() {
+    window.clientSocket.emit(WS__MSG__SET_HOST, {
       roomID,
       username: userData.name,
     });
@@ -258,7 +258,7 @@
 
   function removeUserFromGame(ev) {
     const { username } = ev.currentTarget.dataset;
-    window.clientSocket.emit(WS__MSG__REMOVE_USER_FROM_ROOM, { admin: localUser.name, roomID, username });
+    window.clientSocket.emit(WS__MSG__REMOVE_USER_FROM_ROOM, { host: localUser.name, roomID, username });
     closeUserDataMenu();
   }
 
@@ -361,8 +361,8 @@
     });
   }
   
-  function handleFocusAdmin() {
-    closeAdminInstructionsBtnRef.focus();
+  function handleFocusHost() {
+    closeHostInstructionsBtnRef.focus();
   }
 
   titleSuffix.set(`Game ${roomID}`);
@@ -413,7 +413,7 @@
 
       <div class="game-ui">
         <UsersList
-          isAdmin={localUser.admin}
+          isHost={localUser.host}
           localUsername={localUser.name}
           onUserClick={userClickHandler}
           users={users}
@@ -519,7 +519,7 @@
           {:else}
             <div class="czar-pending-msg">
               <p>
-                {#if localUser.admin}
+                {#if localUser.host}
                   {#if users.length === 1}
                     Waiting for more users to join.
                   {:else}
@@ -528,7 +528,7 @@
                     To do so, just click on a User in the side menu.
                   {/if}
                 {:else}
-                  Waiting for <mark>{gameMC}</mark> to pick the <button popovertarget="popover-card-czar">Card Czar</button>.
+                  Waiting for <mark>{gameHost}</mark> to pick the <button popovertarget="popover-card-czar">Card Czar</button>.
                 {/if}
               </p>
             </div>
@@ -542,12 +542,12 @@
         roomID={roomID}
       />
       
-      {#if showAdminInstructions}
-        <Dialog modal onOpenEnd={handleFocusAdmin}>
-          <div class="admin-instructions" slot="dialogBody">
+      {#if showHostInstructions}
+        <Dialog modal onOpenEnd={handleFocusHost}>
+          <div class="host-instructions" slot="dialogBody">
             <p>
-              Congrats! You're the MC, so you're running the game. In order for
-              others to join, just send them
+              As the Host, you're running the game. In order for others to join,
+              just send them
             </p>
             <ul>
               <li>
@@ -579,8 +579,8 @@
             </p>
             <button 
               type="button"
-              on:click={closeAdminInstructions}
-              bind:this={closeAdminInstructionsBtnRef}
+              on:click={closeHostInstructions}
+              bind:this={closeHostInstructionsBtnRef}
             >Close</button>
           </div>
         </Dialog>
@@ -607,26 +607,26 @@
             {/if}
             {#if userData.czar}
               <div class="help">
-                {#if userData.admin}You're{:else}They're{/if} already the Czar, yuh silly goose.
+                {#if userData.host}You're{:else}They're{/if} already the Czar, yuh silly goose.
               </div>
             {/if}
             <button
               type="button"
-              on:click={setAdmin}
-              disabled={userData.admin}
+              on:click={setHost}
+              disabled={userData.host}
             >
               <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html `Make <q>${userData.name}</q> the MC`}
+              {@html `Make <q>${userData.name}</q> the Host`}
             </button>
-            {#if userData.admin}
+            {#if userData.host}
               <div class="help">
-                You're already the MC, yuh silly goose.
+                You're already the Host, yuh silly goose.
               </div>
             {/if}
             <button
               type="button"
               on:click={removeUserFromGame}
-              disabled={userData.admin}
+              disabled={userData.host}
               data-username={userData.name}
             >
               <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -790,11 +790,11 @@
     background: #333;
   }
 
-  .admin-instructions {
+  .host-instructions {
     width: 500px;
     font-size: 1.3em;
   }
-  .admin-instructions li {
+  .host-instructions li {
     margin: 0.5em 0;
   }
 

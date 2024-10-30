@@ -56,7 +56,7 @@ class GameFixture {
     if (userAName) await this.testCtx.fixture.valitateUser({ czar: true, name: userAName, status: STATUS__ACTIVE });
     await this.testCtx.fixture.valitateUser({ czar: false, name: userBName, status: STATUS__DEFAULT });
     
-    const menu = await this.testCtx.fixture.openAdminMenu(userBName);
+    const menu = await this.testCtx.fixture.openHostMenu(userBName);
     const btn = this.testCtx.fixture.getAssignCzarBtn(menu, userBName);
     
     await btn.click();
@@ -66,16 +66,16 @@ class GameFixture {
   }
   
   async assignMC({ from: userAName, to: userBName }) {
-    await this.testCtx.fixture.valitateUser({ admin: true, name: userAName });
-    await this.testCtx.fixture.valitateUser({ admin: false, name: userBName });
+    await this.testCtx.fixture.valitateUser({ host: true, name: userAName });
+    await this.testCtx.fixture.valitateUser({ host: false, name: userBName });
     
-    const menu = await this.testCtx.fixture.openAdminMenu(userBName);
+    const menu = await this.testCtx.fixture.openHostMenu(userBName);
     const btn = this.testCtx.fixture.getAssignMCBtn(menu, userBName);
     
     await btn.click();
     await expect(menu).not.toBeAttached();
-    await this.testCtx.fixture.valitateUser({ admin: false, name: userAName });
-    await this.testCtx.fixture.valitateUser({ admin: true, name: userBName });
+    await this.testCtx.fixture.valitateUser({ host: false, name: userAName });
+    await this.testCtx.fixture.valitateUser({ host: true, name: userBName });
   }
   
   async closePage(pageNum, { waitForUserRemoval } = {}) {
@@ -175,7 +175,7 @@ class GameFixture {
   }
   
   getAssignMCBtn(menu, user) {
-    return menu.getByRole('button', { name: `Make ${user} the MC` });
+    return menu.getByRole('button', { name: `Make ${user} the Host` });
   }
   
   async getBGColor(loc) {
@@ -350,8 +350,8 @@ class GameFixture {
     
     if (isFirst) {
       const opts = {};
-      if (screenshot) opts.screenshot = `${screenshot} (admin instructions)`;
-      await this.testCtx.fixture.validateAdminInstructions(opts);
+      if (screenshot) opts.screenshot = `${screenshot} (host instructions)`;
+      await this.testCtx.fixture.validateHostInstructions(opts);
     }
     
     if (screenshot) await this.testCtx.fixture.screenshot(`${screenshot} (added to list)`);
@@ -364,7 +364,7 @@ class GameFixture {
     await this.testCtx.fixture.page.goto(route);
   }
   
-  async openAdminMenu(name) {
+  async openHostMenu(name) {
     await this.testCtx.fixture.getUser(name).click();
     return await this.testCtx.fixture.waitForDialog('.user-data-menu');
   }
@@ -386,7 +386,7 @@ class GameFixture {
   }
   
   async removeUser({ screenshot, user }) {
-    const menu = await this.testCtx.fixture.openAdminMenu(user);
+    const menu = await this.testCtx.fixture.openHostMenu(user);
     const btn = this.testCtx.fixture.getRemoveUserBtn(menu, user);
     
     await btn.click();
@@ -555,10 +555,10 @@ class GameFixture {
     await expect(this.testCtx.fixture.page.locator('body')).toBeAttached();
   }
   
-  async validateAdminInstructions({ screenshot }) {
-    const dialog = await this.testCtx.fixture.waitForDialog('.admin-instructions');
+  async validateHostInstructions({ screenshot }) {
+    const dialog = await this.testCtx.fixture.waitForDialog('.host-instructions');
     const instructions = dialog.locator('p');
-    await expect(instructions.nth(0)).toHaveText("Congrats! You're the MC, so you're running the game. In order for others to join, just send them");
+    await expect(instructions.nth(0)).toHaveText("As the Host, you're running the game. In order for others to join, just send them");
     await expect(instructions.nth(1)).toHaveText("When starting a new CAH game it's up to the group to choose the Card Czar. Y'all can do that via the typical Who was the last to poop? question, or by what ever means you choose.");
     await expect(instructions.nth(2)).toHaveText("Once the group's chosen the Czar, you just have to click on that User and choose Make <User> the Czar. Once you do so, the game will start.");
     await this.testCtx.fixture.copyGameURL(dialog);
@@ -567,7 +567,7 @@ class GameFixture {
     await dialog.getByRole('button', { name: 'Close' }).click();
     await expect(
       dialog,
-      "should've closed Admin instructions"
+      "should've closed Host instructions"
     ).not.toBeAttached();
   }
   
@@ -714,12 +714,12 @@ class GameFixture {
     ).toHaveText(msg);
   }
   
-  async valitateUser({ admin, czar, disconnected, name, points, screenshot, status }) {
+  async valitateUser({ czar, disconnected, host, name, points, screenshot, status }) {
     const userEl = this.testCtx.fixture.getUser(name);
     let userIcon;
     
-    if (admin) {
-      await expect(userEl).toHaveClass(/\bis--admin\b/);
+    if (host) {
+      await expect(userEl).toHaveClass(/\bis--host\b/);
       userIcon = 'ui-icon__star';
     }
     else if (czar) {
@@ -776,7 +776,7 @@ class GameFixture {
   }
   
   async validateUserMenu({ btns, screenshot, user }) {
-    const menu = await this.testCtx.fixture.openAdminMenu(user);
+    const menu = await this.testCtx.fixture.openHostMenu(user);
     const cancelBtn = menu.getByRole('button', { name: 'Cancel' });
     
     for (const [ key, { caption, enabled } ] of Object.entries(btns)) {

@@ -1,6 +1,6 @@
 const log = require('../../utils/logger')('gameActions:removeUserFromRoom');
 
-module.exports = function removeUserFromRoom(wss, { admin, roomID, username }) {
+module.exports = function removeUserFromRoom(wss, { host, roomID, username }) {
   const {
     WS__CLOSE_CODE__USER_REMOVED,
     WS__MSG__USER_REMOVED,
@@ -9,7 +9,7 @@ module.exports = function removeUserFromRoom(wss, { admin, roomID, username }) {
 
   room.sockets.forEach(socket => {
     if (socket._username === username) {
-      const msg = `User "${username}" was removed from room "${roomID}" by "${admin}"`;
+      const msg = `User "${username}" was removed from room "${roomID}" by "${host}"`;
       log.info(msg);
       socket.close(WS__CLOSE_CODE__USER_REMOVED, msg);
     }

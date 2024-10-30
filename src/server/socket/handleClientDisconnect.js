@@ -9,8 +9,8 @@ module.exports = function handleClientDisconnect(wss, code, reason) {
     WS__MSG__USER_DISCONNECTED,
     WS__MSG__USER_LEFT_ROOM,
   } = require('../../constants');
-  const assignNextAdmin = require('../utils/assignNextAdmin');
   const assignNextCzar = require('../utils/assignNextCzar');
+  const assignNextHost = require('../utils/assignNextHost');
   const resetGameRound = require('../utils/resetGameRound');
   const dealCards = require('../gameActions/dealCards');
 
@@ -35,12 +35,12 @@ module.exports = function handleClientDisconnect(wss, code, reason) {
       const disconnectCheck = setTimeout(() => {
         if (!user.connected) {
           const { private: { cards: { live } } } = room.data;
-          const { admin, cards, czar } = user;
+          const { cards, czar, host } = user;
           
-          // user is Admin, assign next admin
-          if (admin) assignNextAdmin(room);
+          // user is Host, assign next Host
+          if (host) assignNextHost(room);
           
-          // user is Czar, assign next czar
+          // user is Czar, assign next Czar
           if (czar) {
             assignNextCzar(room, true);
             dealCards(wss, { newRound: true, roomID });
@@ -54,7 +54,7 @@ module.exports = function handleClientDisconnect(wss, code, reason) {
             log.info(`All Users have left, killing room "${roomID}"`);
 
             // it's possible that a User is in the process of joining when
-            // the Admin left the room, so lets tell them that the room no
+            // the Host left the room, so lets tell them that the room no
             // longer exists.
             wss.dispatchToOthersInRoom(roomID, WS__MSG__ROOM_DESTROYED);
 
