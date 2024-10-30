@@ -38,7 +38,7 @@
   captionsLabel="Celebration cheer"
   {play}
   {sources}
-/>
+/> <!-- audio is top-level so that it preloads and can play on-demand -->
 {#if open}
   <Dialog
     modal

@@ -5,6 +5,7 @@
     WS__MSG__PONG,
   } from '../../constants';
   import logger from '../../utils/logger';
+  import { gameFocused } from '../store';
   import Dialog from './Dialog.svelte';
 
   const log = logger('Shell');
@@ -50,6 +51,10 @@
       }, 1000);
     }, 2000);
   }
+  
+  function handleWinBlur() { gameFocused.set(false); }
+  
+  function handleWinFocus() { gameFocused.set(true); }
 
   onMount(async () => {
     mounted = true;
@@ -102,7 +107,11 @@
   }
 </script>
 
-<svelte:window bind:online={online}/>
+<svelte:window
+  on:blur={handleWinBlur}
+  on:focus={handleWinFocus}
+  bind:online={online}
+/>
 
 {#if mounted && socketConnected}
   <svelte:component this={Route} {...routeProps} />
