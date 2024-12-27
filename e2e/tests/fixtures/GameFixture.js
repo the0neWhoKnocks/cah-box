@@ -465,7 +465,7 @@ class GameFixture {
     }
   }
   
-  async submitWhiteCards({ chosenCards, screenshot }) {
+  async submitWhiteCards({ blackCard, chosenCards, screenshot }) {
     const userCards = this.testCtx.fixture.page.locator('.user-cards');
     const selectMultiple = chosenCards.length > 1;
     
@@ -506,6 +506,11 @@ class GameFixture {
           "no cards should be selectable after required cards selected"
         ).toHaveClass(/\bdisabled\b/);
       }
+    }
+    
+    if (blackCard) {
+      await this.testCtx.fixture.validateAnswerFormatting(blackCard, chosenCards);
+      if (screenshot) await this.testCtx.fixture.screenshot(`${screenshot}--preview-answers`, '.answers');
     }
     
     await this.testCtx.fixture.page.locator('.submit-cards-btn').click();

@@ -1,7 +1,4 @@
-import {
-  /* APP__TITLE, */
-  WS__MSG__CARDS_DEALT,
-} from '@src/constants';
+import { WS__MSG__CARDS_DEALT } from '@src/constants';
 import {
   STATUS__ACTIVE,
   STATUS__DEFAULT,
@@ -236,6 +233,7 @@ test('Create and play', async ({ game }) => {
         
         uData.chosenCards = chooseCards(whiteCards, uName, required);
         await game.submitWhiteCards({
+          blackCard,
           chosenCards: uData.chosenCards,
           screenshot: `round${rNum} - ${uName} submitted card${(required > 1) ? 's' : ''}`,
         });
