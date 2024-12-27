@@ -22,21 +22,24 @@
 
   const transformAnswer = (t, a) => {
     const gaps = getGaps(t);
+    const genGap = (gap) => `<span role="img" aria-label="blank">${gap}</span>`;
     let ret = t;
-
+    
     if (Array.isArray(a) && a.length) {
       if (!gaps.length) {
         ret = `${t}<span class="answer">${a[0].trim()}</span>`;
       }
       else {
         ret = gaps.reduce((_t, gap, _ndx) => {
-          return _t.replace(gap, `<span class="answer gap">${a[_ndx].trim().replace(/\.$/, '')}</span>`);
+          return (a[_ndx])
+            ? _t.replace(gap, `<span class="answer gap">${a[_ndx].trim().replace(/\.$/, '')}</span>`)
+            : _t.replace(gap, genGap(gap));
         }, t);
       }
     }
     else {
       ret = gaps.reduce((_t, gap) => {
-        return _t.replace(gap, `<span role="img" aria-label="blank">${gap}</span>`);
+        return _t.replace(gap, genGap(gap));
       }, t);
     }
     

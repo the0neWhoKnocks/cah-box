@@ -580,7 +580,7 @@
                   bind:this={answersWrapperRef}
                 >
                   <div class="black-card-wrapper">
-                    <Card type="black" text={blackCard} answer={room.blackCardAnswer.cards} />
+                    <Card type="black" text={blackCard} answer={room.blackCardAnswer.cards || localUser.selectedCards.map(({ text }) => text)} />
                     {#if czarWaitingMsg}
                       <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                       <div class="czar-waiting-msg">{@html czarWaitingMsg}</div>
