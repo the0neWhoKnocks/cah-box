@@ -3,6 +3,7 @@
   import randomNumber from '../utils/randomNumber';
 
   export let answer = undefined;
+  export let ndx = undefined;
   export let onClick = undefined;
   export let onSwapClick = undefined;
   export let rotate = false;
@@ -15,13 +16,8 @@
   const isBtn = elType === 'button';
   
   function handleClick() {
-    if (swappable && onSwapClick) {
-      onSwapClick($$props.ndx);
-    }
-    else if (onClick) {
-      selected = !selected;
-      onClick($$props.ndx);
-    }
+    if (swappable && onSwapClick) onSwapClick(ndx);
+    else if (onClick) onClick(ndx);
   }
 
   const transformAnswer = (t, a) => {
@@ -33,8 +29,8 @@
         ret = `${t}<span class="answer">${a[0].trim()}</span>`;
       }
       else {
-        ret = gaps.reduce((_t, gap, ndx) => {
-          return _t.replace(gap, `<span class="answer gap">${a[ndx].trim().replace(/\.$/, '')}</span>`);
+        ret = gaps.reduce((_t, gap, _ndx) => {
+          return _t.replace(gap, `<span class="answer gap">${a[_ndx].trim().replace(/\.$/, '')}</span>`);
         }, t);
       }
     }
@@ -57,9 +53,10 @@
   class:is--selected={selected}
   class:is--selectable={isBtn ? !selected : undefined}
   class:is--swappable={swappable}
-  style={rotate ? `transform: rotate(${randomNumber(-2, 2)}deg);` : undefined}
+  data-ndx={ndx}
   disabled={isBtn ? selected : undefined}
   tabindex={!isBtn ? '0' : undefined}
+  style={rotate ? `transform: rotate(${randomNumber(-2, 2)}deg);` : undefined}
   on:click={isBtn ? handleClick : undefined}
 >
   <div class="for--reader">({#if type === 'white'}white {:else}black{/if} card)</div>
@@ -95,9 +92,12 @@
     cursor: pointer;
   }
   .card.is--selected {
-    cursor: default;
+    color: transparent;
+    border-style: dashed;
+    background: transparent;
     opacity: 0.25;
     pointer-events: none;
+    cursor: default;
   }
   .card.is--swappable {
     border-color: #27cfb6;

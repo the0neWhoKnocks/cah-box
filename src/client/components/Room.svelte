@@ -1,4 +1,5 @@
 <script>
+  import { tick } from 'svelte';
   import {
     WS__MSG__ANSWER_REVIEW_STATE_UPDATED,
     WS__MSG__CARD_SELECTION_TOGGLED,
@@ -26,6 +27,7 @@
     WS__MSG__USER_UPDATE,
   } from '../../constants';
   import addSocketListeners from '../utils/addSocketListeners';
+  import getRelativeCoords from '../utils/getRelativeCoords';
   import { title, titleSuffix } from '../store';
   import Card from './Card.svelte';
   import Copyable from './Copyable.svelte';
@@ -56,6 +58,8 @@
   const ACTION__USER_REMOVED = 'userRemoved';
   const ACTION__USER_UPDATE = 'userUpdate';
   const sessionData = JSON.parse(window.sessionStorage.getItem(roomID) || '{}');
+  let answerCardsAnimRef;
+  let answersWrapperRef;
   let blackCard;
   let closeHostInstructionsBtnRef;
   let czarSelected = false;
@@ -68,6 +72,8 @@
   let showUserDataMenu = false;
   let socketConnected = true;
   let socketConnectedAtLeastOnce = true;
+  let userCardsAnimRef;
+  let userCardsRef;
   let userClickHandler;
   let userData;
   let users = [];
@@ -87,6 +93,8 @@
 
   function updateGameState(action) {
     return (data) => {
+      let prevLocalUser = {};
+      
       if (data.room) room = data.room;
 
       if (room && room.users) users = [...room.users];
@@ -100,7 +108,10 @@
           return name === localUser.name;
         })[0];
 
-        if (user) localUser = { ...user };
+        if (user) {
+          prevLocalUser = { ...localUser };
+          localUser = { ...user };
+        }
         else localUser = {};
         
         czarSelected = someoneIsCzar;
@@ -115,6 +126,29 @@
       }
       else if (action === ACTION__CARD_SWAPPED) {
         swappingCards = false;
+      }
+      else if (action === ACTION__CARD_SELECTION_TOGGLED) {
+        const getCard = (cardsA, cardsB) => {
+          for (let a=0; a<cardsA.length; a++) {
+            const card = cardsA[a];
+            
+            if (!cardsB.length) return card;
+            else {
+              const { ndx } = card;
+              const ndxs = cardsB.map((c) => c.ndx);
+              if (!ndxs.includes(ndx)) return card;
+            }
+          }
+        };
+        
+        if (localUser.selectedCards.length > prevLocalUser.selectedCards.length) {
+          const { ndx } = getCard(localUser.selectedCards, prevLocalUser.selectedCards);
+          animateCardSelection('added', ndx);
+        }
+        else {
+          const { ndx } = getCard(prevLocalUser.selectedCards, localUser.selectedCards);
+          animateCardSelection('removed', ndx);
+        }
       }
 
       userClickHandler = (localUser.host) ? handleUserClick : undefined;
@@ -267,7 +301,117 @@
     window.clientSocket.emit(WS__MSG__REMOVE_USER_FROM_ROOM, { host: localUser.name, roomID, username });
     closeUserDataMenu();
   }
-
+  
+  async function animateCardSelection(action, ndx) {
+    const uBounds = userCardsAnimRef.getBoundingClientRect();
+    const centerX = uBounds.width / 2;
+    let aCard, aCardRot, aCoords, origACard, origACardTrans, origUCard, origUCardTrans, uCard, uCoords; 
+    
+    const setACard = () => {
+      origACard = answersWrapperRef.querySelector(`.card.is--white[data-ndx="${ndx}"]`);
+      aCard = origACard.cloneNode(true);
+      aCoords = getRelativeCoords(origACard);
+      
+      aCardRot = +origACard.style.transform.match(/rotate\((.+)deg\)/)[1];
+    };
+    const setUCard = () => {
+      origUCard = userCardsRef.querySelector(`.card.is--white[data-ndx="${ndx}"]`);
+      uCard = origUCard.cloneNode(true);
+      uCoords = getRelativeCoords(origUCard);
+    };
+    
+    if (action === 'added') {
+      setUCard();
+      await tick(); // wait for bottom card to render
+      setACard();
+      
+      origACardTrans = origACard.style.transition;
+      origACard.style.cssText += 'opacity: 0; transition: unset;';
+      aCard.style.opacity = 0;
+    }
+    else {
+      setACard();
+      await tick(); // wait for top card to render
+      setUCard();
+      
+      origUCardTrans = origUCard.style.transition;
+      origUCard.style.cssText += 'opacity: 0; transition: unset;';
+      uCard.style.opacity = 0;
+    }
+    
+    uCard.classList.add('for--animation');
+    uCard.style.cssText += `top: ${uCoords.y}px; left: ${uCoords.x}px;`;
+    userCardsAnimRef.appendChild(uCard);
+    
+    // Since the wrapper has overflow, ensure the anim-wrapper is sized to matched.
+    answerCardsAnimRef.style.cssText = `width: ${answersWrapperRef.offsetWidth}px; height: ${answersWrapperRef.offsetHeight}px;`;
+    
+    aCard.classList.add('for--animation');
+    aCard.style.cssText += `top: ${aCoords.y}px; left: ${aCoords.x}px; transform: rotate(${aCardRot}deg);`;
+    answerCardsAnimRef.appendChild(aCard);
+    
+    const spinRot = ((uCoords.x + uCard.offsetWidth) > centerX) ? -45 : 45;
+    const keyframeOpts = { duration: 200, fill: 'forwards' };
+    const aCardKeys = [
+      { transform: `translate(0px, -${aCard.offsetHeight + 100}px) scale(1.05) rotate(45deg)` },
+      { transform: `translate(0px, 0px) scale(1) rotate(${aCardRot}deg)` },
+    ];
+    const uCardKeys = [
+      { transform: 'translate(0px, 0px) scale(1)' },
+      {
+        // TODO: shadow rotates with element instead of being fixed 
+        // boxShadow: '0 1em 1em 0.25em rgba(0, 0, 0, 0.5)',
+        transform: `translate(${(centerX - uCoords.x) - (uCard.offsetWidth/2)}px, -${uCoords.y + uCard.offsetHeight}px) scale(1.05) rotate(${spinRot}deg)`,
+      },
+    ];
+    
+    if (action === 'added') {
+      const outAnim = uCard.animate(
+        uCardKeys,
+        { ...keyframeOpts, id: 'submitCardOut' }
+      );
+      outAnim.finished.then(async () => {
+        uCard.remove();
+        
+        aCard.style.opacity = 1;
+        const inAnim = aCard.animate(
+          aCardKeys,
+          { ...keyframeOpts, id: 'submitCardIn' }
+        );
+        inAnim.finished.then(async () => {
+          origACard.style.opacity = 1;
+          aCard.remove();
+          setTimeout(() => { // `requestAnimationFrame` causes a flicker
+            origACard.style.transition = origACardTrans;
+          }, 300);
+        });
+      });
+    }
+    else {
+      const outAnim = aCard.animate(
+        [...aCardKeys].reverse(),
+        { ...keyframeOpts, id: 'returnCardOut' }
+      );
+      outAnim.finished.then(async () => {
+        aCard.remove();
+        
+        uCard.style.opacity = 1;
+        const inAnim = uCard.animate(
+          [...uCardKeys].reverse(),
+          { ...keyframeOpts, id: 'returnCardIn' }
+        );
+        inAnim.finished.then(async () => {
+          origUCard.style.opacity = 1;
+          uCard.remove();
+          setTimeout(() => { // `requestAnimationFrame` causes a flicker
+            origUCard.style.transition = origUCardTrans;
+            origUCard.style = '';
+          }, 300);
+        });
+      });
+    }
+  }
+  
   function handleCardSelectionToggle(ndx) {
     window.clientSocket.emit(WS__MSG__TOGGLE_CARD_SELECTION, {
       ndx,
@@ -433,6 +577,7 @@
                 <div
                   class="answers-wrapper"
                   class:displaying-users-cards={showUserCards}
+                  bind:this={answersWrapperRef}
                 >
                   <div class="black-card-wrapper">
                     <Card type="black" text={blackCard} answer={room.blackCardAnswer.cards} />
@@ -476,15 +621,16 @@
               </div>
 
               {#if showUserCards}
-                {#if localUser.maxCardsSelected}
-                  <button
-                    class="submit-cards-btn"
-                    on:click={handleSubmitCards}
-                  >
-                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                    {@html `Submit Card${localUser.selectedCards.length > 1 ? 's' : ''}`}
-                  </button>
-                {/if}
+                <button
+                  class="submit-cards-btn"
+                  disabled={!localUser.maxCardsSelected}
+                  on:click={handleSubmitCards}
+                >
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  {@html `Submit Card${localUser.selectedCards.length > 1 ? 's' : ''}`}
+                </button>
+                
+                <div class="answer-cards-anim" bind:this={answerCardsAnimRef}></div>
                 
                 <div class="user-cards-wrapper">
                   <div class="sep is--top"></div>
@@ -500,7 +646,11 @@
                     </nav>
                   {/if}
                   
-                  <div class="user-cards" class:disabled={localUser.maxCardsSelected}>
+                  <div
+                    class="user-cards"
+                    class:disabled={localUser.maxCardsSelected}
+                    bind:this={userCardsRef}
+                  >
                     {#each localUser.cards as { ndx, selected, text }}
                       <Card
                         {ndx}
@@ -512,6 +662,8 @@
                       />
                     {/each}
                   </div>
+                  
+                  <div class="user-cards-anim" bind:this={userCardsAnimRef}></div>
     
                   <div class="sep is--btm"></div>
                 </div>
@@ -893,6 +1045,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
   }
   .cards :global(.card) {
     flex-shrink: 0;
@@ -903,7 +1056,8 @@
   .cards .answers-wrapper {
     display: flex;
     overflow: auto;
-    padding: 0.5em 1em;
+    padding: 0.5em 1em; /* Card rotation can expand outside of the container's bounds. The padding allows for the rotation without overflow kicking in. */
+    position: relative;
   }
   .cards .user-cards-wrapper {
     height: 100%;
@@ -922,16 +1076,29 @@
     padding: 0.5em 0.75em;
     background: #fff;
   }
-  .cards .user-cards {
+  .user-cards {
     width: 100%;
     height: 100%;
     padding-top: 4em;
     padding-bottom: 4em;
     overflow: auto;
   }
-  .cards .user-cards.disabled :global(.card) {
+  .user-cards.disabled :global(.card) {
     opacity: 0.25;
     pointer-events: none;
+  }
+  .answer-cards-anim,
+  .user-cards-anim {
+    pointer-events: none;
+    position: absolute;
+  }
+  .user-cards-anim {
+    inset: 0;
+  }
+  .answer-cards-anim :global(.card.for--animation),
+  .user-cards-anim :global(.card.for--animation) {
+    position: absolute;
+    transform-origin: center;
   }
   .cards .sep {
     width: 100%;
@@ -965,6 +1132,10 @@
     border: solid 1px;
     border-radius: 0.25em;
     background: #5df1db;
+  }
+  .submit-cards-btn:disabled {
+    background: #ddd;
+    opacity: 0.5;
   }
 
   .black-card-wrapper {
@@ -1073,8 +1244,8 @@
       flex-wrap: wrap;
       justify-content: center;
     }
-    .cards .user-cards :global(.card) {
-      margin: 0.25em;
+    .cards .user-cards {
+      gap: 0.5em;
     }
   }
 </style>
