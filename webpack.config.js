@@ -104,7 +104,7 @@ const conf = {
     splitChunks: {
       cacheGroups: {
         vendor: {
-          chunks: 'initial',
+          chunks: 'all',
           enforce: true,
           name: 'js/vendor',
           test: /[\\/]node_modules[\\/]/,
@@ -154,13 +154,6 @@ const conf = {
      * having to know the hashed name.
      */
     new WebpackManifestPlugin({
-      filter: ({ isChunk, isInitial, path }) => {
-        return (
-          (isChunk && isInitial)
-          // ignore Stylus (`global` JS files) & source-map files
-          && !/(global.+\.js|\.map)$/.test(path)
-        );
-      },
       map: (fd) => {
         // strip off preceding directory info, the name is enough
         fd.name = fd.name.split('/').pop();
