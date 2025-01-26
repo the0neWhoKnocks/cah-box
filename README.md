@@ -2,6 +2,8 @@
 
 Cards Against Humanity mixed with the play-on-any-device strategy of JackBox games. Yuh know, cuz of COVID, and I wanted to play around with Svelte.
 
+https://github.com/user-attachments/assets/8cfcfd8b-018f-4638-934c-f9d0fd9889be
+
 - [Development](#development)
 - [Docker](#docker)
 - [E2E Testing](#e2e-testing)
@@ -41,6 +43,10 @@ nr start
 # Dev mode
 nr start:dev
 ```
+
+**NOTE**: This repo utilizes `git-lfs`.
+- [Installation instructions](https://github.com/git-lfs/git-lfs/wiki/Installation)
+- Once installed and initialized, you can run `git lfs track '<FILE_GLOB>'` or edit the `.gitattributes` file directly.
 
 ---
 
