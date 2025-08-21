@@ -11,6 +11,10 @@ isWSL=false
 # Parse arguments
 while [ $# -gt 0 ]; do
   case $1 in
+    --name)
+      CONT_NAME=$2
+      shift
+      ;;
     --skip-build)
       BUILD=false
       ;;
@@ -33,10 +37,12 @@ else
   isOSX=$(uname | grep -qi "darwin" &> /dev/null)
 fi
 
-APP_SERVICE="cahbox-test"
+APP_SERVICE="${CONT_NAME}-test"
+CURR_GID=$(id -g)
+CURR_UID=$(id -u)
 E2E_COMPOSE_FILE="./e2e/docker-compose.yml"
-E2E_CONTAINER_NAME="cahbox-e2e"
-E2E_SERVICE="cahbox-e2e"
+E2E_CONTAINER_NAME="${CONT_NAME}-e2e"
+E2E_SERVICE="${CONT_NAME}-e2e"
 runnerCmd=""
 xlaunchPath="${SCRIPT_DIR}/XServer.xlaunch"
 extraArgs=""

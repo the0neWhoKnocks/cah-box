@@ -8,10 +8,17 @@ module.exports = {
     },
   ],
   rules: {
-    'node/no-missing-import': ['error', {
+    'n/no-missing-import': ['error', {
       allowModules: [
+        '@colors/colors',
         '@playwright/test', // NOTE: There's a known issue where new modules with an `exports` section don't resolve in eslint: https://github.com/import-js/eslint-plugin-import/issues/1810
-        '@src/constants', // NOTE: mapped from `docker-compose` file
+      ],
+    }],
+    'n/no-unsupported-features/node-builtins': ['error', {
+      'ignores': [
+        'localStorage',
+        'navigator',
+        'sessionStorage',
       ],
     }],
     'playwright/expect-expect': ['error', {

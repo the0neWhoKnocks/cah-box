@@ -16,13 +16,26 @@ services:
     container_name: cahbox-test
     environment:
       DATA_PATH: /test/data.json
-    hostname: cahbox # domain name (usually assigned via container name)
+      NODE_EXTRA_CA_CERTS: /home/node/certs/tests.crt
+    healthcheck:
+      interval: "3s"
+      retries: 3
+      start_interval: "2s"
+      test: wget --no-verbose --tries=1 --spider --no-check-certificate https://tests.lan:3000 || exit 1
+      timeout: "2s"
+    hostname: tests.lan # domain name (usually assigned via container name)
     volumes:
-      - "${PWD}/e2e/tests/fixtures/data.json:/test/data.json:r"
+      - type: bind
+        source: "${PWD}/certs"
+        target: "/home/node/certs"
+      - type: bind
+        read_only: true
+        source: "${PWD}/e2e/tests/fixtures/data.json"
+        target: "/test/data.json"
   
   cahbox-e2e:
     build:
-      context: "${PWD}/e2e/"
+      context: "${PWD}/e2e/.docker"
       dockerfile: Dockerfile
     command: $CMD
     container_name: cahbox-e2e
@@ -30,7 +43,9 @@ services:
       cahbox-test:
         condition: service_healthy
     environment:
-      BASE_URL: "https://cahbox:3000" # <PROTOCOL>://<CONTAINER_NAME>:<CONTAINER_PORT>
+      # runner env
+      BASE_URL: "https://tests.lan:3000" # <PROTOCOL>://<CONTAINER_NAME>:<CONTAINER_PORT>
+      CMD: $CMD # so the config can check if it's headless or not
       DISPLAY: $TEST_DISPLAY
     hostname: e2etests
     ipc: host # Using `--ipc=host` is recommended when using Chrome (Docker docs). Chrome can run out of memory without this flag.
@@ -38,8 +53,14 @@ services:
       - "3001:3000"
     security_opt:
       - "seccomp:${PWD}/e2e/seccomp_profile.json"
+    user: "${CURR_UID}:${CURR_GID}"
     volumes:
-      - "${PWD}/e2e:/e2e"
-      - "${PWD}/src/constants.js:/node_modules/@src/constants.js:r" # map local modules to the fake `@src` parent
+      - type: bind
+        source: "${PWD}/e2e"
+        target: "/e2e"
+      - type: bind
+        read_only: true
+        source: "${PWD}/src/constants.js"
+        target: "/node_modules/@src/constants.js" # map local modules to the fake `@src` parent
       - $VOL_DBUS
       - $VOL_X11

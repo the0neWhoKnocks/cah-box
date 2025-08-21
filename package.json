@@ -6,8 +6,11 @@
     "preinstall": "if [ -z \"$IN_CONTAINER\" ] || ! $IN_CONTAINER; then echo \" [ERROR] Not in Docker\\n\"; rm -rf node_modules; exit 1; fi",
     "start": "node ./dist/server",
     "start:dev": "./bin/prep-dist.sh && webpack & ./watcher.js \"./bin/prep-dist.sh\" \"./dist/public/manifest.json\"",
-    "test": "./e2e/bin/test-runner.sh",
+    "test": "./e2e/bin/test-runner.sh --name cahbox",
     "test:watch": "npm run test -- --watch"
+  },
+  "engines": {
+    "node": ">=24.1.0"
   },
   "dependencies": {
     "anylogger": "1.0.11",
@@ -18,13 +21,14 @@
     "ws": "8.18.0"
   },
   "devDependencies": {
+    "@stylistic/eslint-plugin": "3.1.0",
     "browser-sync": "3.0.3",
     "chokidar": "3.5.2",
     "clean-webpack-plugin": "4.0.0",
     "css-loader": "6.5.1",
     "css-minimizer-webpack-plugin": "3.1.3",
     "eslint": "8.57.1",
-    "eslint-plugin-node": "11.1.0",
+    "eslint-plugin-n": "17.21.3",
     "eslint-plugin-playwright": "1.7.0",
     "eslint-plugin-svelte": "2.44.1",
     "ignore-emit-webpack-plugin": "2.0.6",

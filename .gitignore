@@ -1,10 +1,7 @@
 # Folders
-.app_data
 .git
 .ignore
 certs*
-e2e/artifacts
-e2e/reports
 dist
 node_modules
 

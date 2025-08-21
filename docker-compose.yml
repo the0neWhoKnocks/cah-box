@@ -7,12 +7,6 @@ services:
     environment:
       NODE_EXTRA_CA_CERTS: /app_certs/localhost.crt
       TZ: America/Los_Angeles
-    healthcheck:
-      interval: "3s"
-      retries: 3
-      start_interval: "2s"
-      test: wget --no-verbose --tries=1 --spider --no-check-certificate https://localhost:3000 || exit 1
-      timeout: "2s"
     image: theonewhoknocks/cahbox
     ports:
       # Map Local port to the Container's exposed port
