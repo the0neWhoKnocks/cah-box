@@ -1,5 +1,5 @@
 ## Base Node image
-FROM node:20.6.0-alpine3.18 as node20-dev-base
+FROM node:20.6.0-alpine3.18 AS node20-dev-base
 # Add any extra base packages below. Comment why they're added for your own 
 # sanity later. Add any App specific packages further down (there's a comment).
 # - `rsync` for the `dist` setup
@@ -14,7 +14,7 @@ COPY ./.docker/.zshrc /home/node/.zshrc
 COPY ./.docker/zsh-autosuggestions.zsh /home/node/zsh-autosuggestions.zsh
 
 ## Create intermediary Container specifically for package.json 
-FROM node20-dev-base as cahbox--packagejson
+FROM node20-dev-base AS cahbox--packagejson
 # Create a temporary package.json where things like `version` and `scripts`
 # are omitted so the cache of the build step won't be invalidated.
 COPY --chown=node:node ./package*.json ./
@@ -38,8 +38,8 @@ RUN ["node", "-e", " \
   if (lock) fs.writeFileSync('package-lock.json', JSON.stringify(lock)); \
 "]
 
-# Set up the environment
-FROM node20-dev-base AS cahbox
+# Env where prod deps are installed
+FROM node20-dev-base AS cahbox--prod
 ENV APP=/home/node/app
 ENV IN_CONTAINER=true
 ENV NODE_ENV=production
@@ -60,12 +60,26 @@ COPY --chown=node:node --from=cahbox--packagejson ./package*.json ./
 RUN npm i --only=production --quiet --unsafe-perm \
   && rm ./package*.json
 
-# Copy locally compiled code to the image
-COPY --chown=node:node ./dist/data.json ./data.json
-COPY --chown=node:node ./dist/constants.js ./constants.js
-COPY --chown=node:node ./dist/utils ./utils
-COPY --chown=node:node ./dist/server ./server
-COPY --chown=node:node ./dist/public ./public
+# Env with dev deps to compile assets
+FROM cahbox--prod AS cahbox--dev
+# Install Dev deps (updated scripts or deps will invalidate build-cache)
+COPY --chown=node:node ./package*.json ./
+ENV NODE_ENV=development
+RUN npm i --quiet
+# Build is separate to utilize the build-cache if the package.json hasn't changed.
+COPY --chown=node:node ./.webpack ./.webpack
+COPY --chown=node:node ./bin/prep-dist.sh ./bin/
+COPY --chown=node:node ./src ./src
+COPY --chown=node:node ./webpack.config.js ./
+RUN npm run build
+
+# Bring over compiled assets and finalize.
+FROM cahbox--prod AS cahbox
+COPY --chown=node:node --from=cahbox--dev $APP/dist/server ./server
+COPY --chown=node:node --from=cahbox--dev $APP/dist/utils ./utils
+COPY --chown=node:node --from=cahbox--dev $APP/dist/public ./public
+COPY --chown=node:node --from=cahbox--dev $APP/dist/constants.js ./
+COPY --chown=node:node --from=cahbox--dev $APP/dist/data.json ./
 
 # Expose the default port from the Server, on the container
 EXPOSE 3000

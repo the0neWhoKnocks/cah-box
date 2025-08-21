@@ -103,10 +103,6 @@ fi
 
 if $BUILD; then
   echo;
-  echo "[BUILD] App"
-  npm run build
-  
-  echo;
   echo "[BUILD] Containers"
   docker compose -f "${E2E_COMPOSE_FILE}" build ${APP_SERVICE} ${E2E_SERVICE} 
 fi
