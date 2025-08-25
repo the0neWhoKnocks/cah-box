@@ -4,12 +4,14 @@
 </script>
 
 <Dialog modal>
-  <div class="start-form" slot="dialogBody">
-    <p>
-      Welcome to CAH-Box! A mashup of Cards Against Humanity and Jackbox games.
-    </p>
-    <GameEntry />
-  </div>
+  {#snippet s_dialogBody()}
+    <div class="start-form">
+      <p>
+        Welcome to CAH-Box! A mashup of Cards Against Humanity and Jackbox games.
+      </p>
+      <GameEntry />
+    </div>
+  {/snippet}
 </Dialog>
 
 <style>

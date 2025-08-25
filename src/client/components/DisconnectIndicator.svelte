@@ -2,9 +2,9 @@
   import { onDestroy, onMount } from 'svelte';
   import { DISCONNECT_TIMEOUT } from '../../constants';
 
-  let topMaskRef;
   let btmMaskRef;
   let int;
+  let topMaskRef;
 
   function stopAnimation() {
     clearInterval(int);
@@ -38,11 +38,11 @@
   <svg id="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
     <defs>
       <mask id="mask">
-        <rect 
+        <rect
           bind:this={topMaskRef}
           x="162" y="87" width="180" height="160" fill="#fff" style="transform-box: fill-box; transform-origin: center bottom; transform: scaleY(1);"
         ></rect>
-        <rect 
+        <rect
           bind:this={btmMaskRef}
           x="162" y="265" width="180" height="160" fill="#fff" style="transform-box: fill-box; transform-origin: center bottom; transform: scaleY(0);"
         ></rect>

@@ -10,31 +10,29 @@ const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const ENTRY_PREFIX__CSS = 'css/'; // folder path to dump CSS files in after compilation
 const ENTRY_PREFIX__JS = 'js/'; // folder path to dump JS files in after compilation
 const HASH_LENGTH = 5;
-const alias = {
-  svelte: resolve('node_modules', 'svelte/src/runtime'),
-};
 const conditionNames = [
+  'svelte',
+  'browser',
   'require',
   'node',
-  'svelte',
 ];
 const extensions = [
-  '.svelte',
   '.mjs',
   '.js',
+  '.svelte',
   '.json',
   '.html',
 ];
 const mainFields = [
   'svelte',
-  'module',
   'browser',
+  'module',
   'main',
 ];
 const mode = process.env.NODE_ENV || 'development';
 const dev = mode === 'development';
 
-const outputFilename = ({ chunk, contentHashType }) => {  
+const outputFilename = ({ chunk, contentHashType }) => {
   let _name;
   
   // Account for dynamic imports that likely won't have path prefixes.
@@ -59,7 +57,7 @@ const outputFilename = ({ chunk, contentHashType }) => {
 };
 
 const conf = {
-  devtool: dev && 'inline-cheap-source-map',
+  devtool: dev && 'eval-source-map',
   entry: {
     [`${ENTRY_PREFIX__JS}app`]: resolve(__dirname, './src/client/index.js'),
   },
@@ -90,8 +88,6 @@ const conf = {
               url: false,
             },
           },
-          // remove duplicate svelte classes
-          { loader: resolve('./.webpack/loader.remove-duplicate-svelte-classes') },
         ],
       },
     ],
@@ -162,7 +158,7 @@ const conf = {
       writeToFileEmit: true,
     }),
   ],
-  resolve: { alias, conditionNames, extensions, mainFields },
+  resolve: { conditionNames, extensions, mainFields },
   stats: {
     children: false,
     entrypoints: false,

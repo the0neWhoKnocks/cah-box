@@ -1,16 +1,17 @@
 <script>
   import SVG, { ICON__CLIPBOARD } from './SVG.svelte';
   
+  let {
+    class: className = '',
+    onCopy = undefined,
+    text = '',
+    title = 'Click to copy',
+  } = $props();
+  
   const cssVars = {
     copiedMsgDuration: 2000,
   };
-  let className = '';
-  let copied = false;
-
-  export let onCopy = undefined;
-  export let text = '';
-  export let title = 'Click to copy';
-  export { className as class };
+  let copied = $state.raw(false);
 
   function addValueToClipboard() {
     if (!copied) {
@@ -38,7 +39,7 @@
   class:copied
   style="--copiedMsgDuration: {cssVars.copiedMsgDuration}ms;"
   {title}
-  on:click={addValueToClipboard}
+  onclick={addValueToClipboard}
 >
   <div class="copyable-item__text">{text}</div>
   <div class="copyable-item__clipboard-icon">

@@ -4,34 +4,34 @@
   import Card from './Card.svelte';
   import Dialog from './Dialog.svelte';
   
+  let {
+    answer = undefined,
+    blackCard = '',
+    closeHandler = undefined,
+    localUsername = '',
+    name = '',
+    onClose = undefined,
+    open = false,
+    points = undefined,
+  } = $props();
+  
   const sources = ['/audio/celebrate.mp3'];
-  let _name = '';
-  let canvasRef;
+  let _name = $derived((localUsername === name) ? 'You' : name);
+  let canvasRef = $state();
   let celebrate;
-  let play = false;
-  let pointWord = '';
+  let play = $derived(open && localUsername === name);
+  let pointWord = $derived((points > 1) ? 'points' : 'point');
 
-  export let answer = undefined;
-  export let blackCard = '';
-  export let closeHandler = undefined;
-  export let localUsername = '';
-  export let name = '';
-  export let onClose = undefined;
-  export let open = false;
-  export let points = undefined;
-
-  $: _name = (localUsername === name) ? 'You' : name;
-  $: pointWord = (points > 1) ? 'points' : 'point';
-  $: play = open && localUsername === name;
-
-  $: if (open && canvasRef && play) {
-    celebrate = new Celebrate({ canvas: canvasRef });
-    celebrate.init();
-    celebrate.render();
-  }
-  else if (celebrate) {
-    celebrate.stop();
-  }
+  $effect(() => {
+    if (open && canvasRef && play) {
+      celebrate = new Celebrate({ canvas: canvasRef });
+      celebrate.init();
+      celebrate.render();
+    }
+    else if (celebrate) {
+      celebrate.stop();
+    }
+  });
 </script>
 
 <Audio
@@ -44,17 +44,21 @@
     modal
     onCloseClick={onClose}
   >
-    <canvas slot="supplemental" class="confetti" bind:this={canvasRef}></canvas>
-    <div class="points-awarded" slot="dialogBody">
-      <div class="points-awarded__msg">
-        <mark class="username">{_name}</mark>
-        <p>
-          got <mark class="points">{points}</mark> {pointWord} for
-        </p>
+    {#snippet s_supplemental()}
+      <canvas class="confetti" bind:this={canvasRef}></canvas>
+    {/snippet}
+    {#snippet s_dialogBody()}
+      <div class="points-awarded">
+        <div class="points-awarded__msg">
+          <mark class="username">{_name}</mark>
+          <p>
+            got <mark class="points">{points}</mark> {pointWord} for
+          </p>
+        </div>
+        <Card type="black" text={blackCard} answer={answer} />
+        <button onclick={closeHandler}>Close</button>
       </div>
-      <Card type="black" text={blackCard} answer={answer} />
-      <button on:click={closeHandler}>Close</button>
-    </div>
+    {/snippet}
   </Dialog>
 {/if}
 

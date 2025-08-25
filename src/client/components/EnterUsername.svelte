@@ -5,16 +5,18 @@
   } from '../../constants';
   import addSocketListeners from '../utils/addSocketListeners';
   import Dialog from './Dialog.svelte';
-
+  
+  let {
+    onUsernameSuccess = undefined,
+    open = false,
+    roomID = undefined,
+  } = $props();
+  
   const MAX_USERNAME_LENGTH = 15;
   const NON_ALPHA_NUMERIC_CHARS = /[^a-z0-9]+/i;
-  let usernameInputError;
-  let usernameInputRef;
-  let username = '';
-  
-  export let onUsernameSuccess = undefined;
-  export let open = false;
-  export let roomID = undefined;
+  let usernameInputError = $state.raw();
+  let usernameInputRef = $state();
+  let username = $state.raw('');
 
   function handleJoinSubmit(ev) {
     ev.preventDefault();
@@ -39,39 +41,40 @@
   function handleFocusUsername() {
     usernameInputRef.focus();
   }
-
-  $: {
-    if (NON_ALPHA_NUMERIC_CHARS.test(username)) username = username.replace(NON_ALPHA_NUMERIC_CHARS, '');
-    if (username.length > MAX_USERNAME_LENGTH) username = username.substring(0, MAX_USERNAME_LENGTH);
-  }
-
+  
   addSocketListeners({
     [WS__MSG__CHECK_USERNAME]: handleUsernameCheck,
+  });
+  
+  $effect(() => {
+    if (NON_ALPHA_NUMERIC_CHARS.test(username)) username = username.replace(NON_ALPHA_NUMERIC_CHARS, '');
+    if (username.length > MAX_USERNAME_LENGTH) username = username.substring(0, MAX_USERNAME_LENGTH);
   });
 </script>
 
 {#if open}
   <Dialog modal onOpenEnd={handleFocusUsername}>
-    <form
-      class="join-form"
-      autocomplete="off"
-      slot="dialogBody"
-      on:submit={handleJoinSubmit}
-    >
-      <label for="username">Enter Username</label>
-      <input 
-        id="username"
-        type="text"
-        name="username"
-        required
-        bind:this={usernameInputRef}
-        bind:value={username}
-      />
-      {#if usernameInputError}
-        <div class="error-msg">{usernameInputError}</div>
-      {/if}
-      <button>Join Game</button>
-    </form>
+    {#snippet s_dialogBody()}
+      <form
+        class="join-form"
+        autocomplete="off"
+        onsubmit={handleJoinSubmit}
+      >
+        <label for="username">Enter Username</label>
+        <input
+          id="username"
+          type="text"
+          name="username"
+          required
+          bind:this={usernameInputRef}
+          bind:value={username}
+        />
+        {#if usernameInputError}
+          <div class="error-msg">{usernameInputError}</div>
+        {/if}
+        <button>Join Game</button>
+      </form>
+    {/snippet}
   </Dialog>
 {/if}
 

@@ -2,15 +2,15 @@
   import DisconnectIndicator from './DisconnectIndicator.svelte';
   import SVG, { ICON__CZAR, ICON__HOST } from './SVG.svelte';
   
-  let className = '';
-  
-  export let cardsSubmitted = false;
-  export let connected = false;
-  export let czar = false;
-  export let host = false;
-  export let name = '';
-  export let points = 0;
-  export { className as class };
+  let {
+    class: className = '',
+    cardsSubmitted = false,
+    connected = false,
+    czar = false,
+    host = false,
+    name = '',
+    points = 0,
+  } = $props();
 </script>
 
 <div

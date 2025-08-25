@@ -7,21 +7,19 @@
   import logger from '../../utils/logger';
   import { gameFocused } from '../store';
   import Dialog from './Dialog.svelte';
-
+  
+  let { routeProps, routeName } = $props();
+  
   const log = logger('Shell');
-
   let connectionVerified = false;
-  let mounted = false;
+  let mounted = $state(false);
   let heartbeat;
   let heartbeatTimeout;
-  let online = false;
-  let Route;
-  let socketConnected = false;
-  let socketError = '';
-  let wentOffline = false;
-
-  export let routeProps;
-  export let routeName;
+  let online = $state(false);
+  let Route = $state();
+  let socketConnected = $state(false);
+  let socketError = $state('');
+  let wentOffline = $state(false);
 
   function setConnectedState() {
     connectionVerified = true;
@@ -88,37 +86,41 @@
       
       case 'room':
         Route = (await import(
-          /* webpackChunkName: "route_Room" */  
+          /* webpackChunkName: "route_Room" */
           './Room.svelte'
         )).default;
         break;
     }
   });
 
-  $: if (mounted && !online) {
-    wentOffline = true;
-    stopHeartbeat();
-    log.info('Browser disconnected');
-  }
-  else if (wentOffline && online) {
-    wentOffline = false;
-    startHeartbeat();
-    log.info('Browser reconnected');
-  }
+  $effect(() => {
+    if (mounted && !online) {
+      wentOffline = true;
+      stopHeartbeat();
+      log.info('Browser disconnected');
+    }
+    else if (wentOffline && online) {
+      wentOffline = false;
+      startHeartbeat();
+      log.info('Browser reconnected');
+    }
+  });
 </script>
 
 <svelte:window
-  on:blur={handleWinBlur}
-  on:focus={handleWinFocus}
+  onblur={handleWinBlur}
+  onfocus={handleWinFocus}
   bind:online={online}
 />
 
 {#if mounted && socketConnected}
-  <svelte:component this={Route} {...routeProps} />
+  <Route {...routeProps} />
 {/if}
 
 {#if socketError}
   <Dialog modal>
-    <svelte:fragment slot="dialogBody">{socketError}</svelte:fragment>
+    {#snippet s_dialogBody()}
+      {socketError}
+    {/snippet}
   </Dialog>
 {/if}

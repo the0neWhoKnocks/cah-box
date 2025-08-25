@@ -2,15 +2,17 @@
   import getGaps from '../../utils/getGaps';
   import randomNumber from '../utils/randomNumber';
 
-  export let answer = undefined;
-  export let ndx = undefined;
-  export let onClick = undefined;
-  export let onSwapClick = undefined;
-  export let rotate = false;
-  export let selected = false;
-  export let swappable = false;
-  export let text = '';
-  export let type = 'white';
+  let {
+    answer = undefined,
+    ndx = undefined,
+    onClick = undefined,
+    onSwapClick = undefined,
+    rotate = false,
+    selected = false,
+    swappable = false,
+    text = '',
+    type = 'white',
+  } = $props();
   
   const elType = type === 'white' ? 'button' : 'figure';
   const isBtn = elType === 'button';
@@ -44,10 +46,10 @@
     }
     
     return ret;
-  }
+  };
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <svelte:element
   this={elType}
   class="card"
@@ -60,7 +62,7 @@
   disabled={isBtn ? selected : undefined}
   tabindex={!isBtn ? '0' : undefined}
   style={rotate ? `transform: rotate(${randomNumber(-2, 2)}deg);` : undefined}
-  on:click={isBtn ? handleClick : undefined}
+  onclick={isBtn ? handleClick : undefined}
 >
   <div class="for--reader">({#if type === 'white'}white {:else}black{/if} card)</div>
   <!-- eslint-disable-next-line svelte/no-at-html-tags -->

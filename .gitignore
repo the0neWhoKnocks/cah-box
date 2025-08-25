@@ -9,3 +9,7 @@ node_modules
 *.log
 *.patch
 .DS_STORE
+
+# E2E Folders/Files
+e2e/artifacts
+e2e/reports

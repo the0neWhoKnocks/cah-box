@@ -43,7 +43,7 @@
   } from './SVG.svelte';
   import UsersList from './UsersList.svelte';
   
-  export let roomID;
+  let { roomID } = $props();
 
   const MSG__SET_CZAR = 'Make <User> the Czar';
   const ACTION__ANSWER_REVIEW_STATE_UPDATED = 'answerReviewStateUpdated';
@@ -58,33 +58,34 @@
   const ACTION__USER_REMOVED = 'userRemoved';
   const ACTION__USER_UPDATE = 'userUpdate';
   const sessionData = JSON.parse(window.sessionStorage.getItem(roomID) || '{}');
-  let answerCardsAnimRef;
-  let answersWrapperRef;
-  let blackCard;
-  let closeHostInstructionsBtnRef;
-  let czarSelected = false;
+  let answerCardsAnimRef = $state();
+  let answersWrapperRef = $state();
+  let blackCard = $state.raw();
+  let closeHostInstructionsBtnRef = $state();
+  let czarSelected = $state.raw(false);
   let hostInstructionsShown = sessionData.hostInstructionsShown;
-  let localUser = { name: sessionData.username };
-  let minimumNumberOfPlayersJoined = false;
-  let room;
-  let showHostInstructions = false;
-  let showUserCards = false;
-  let showUserDataMenu = false;
-  let socketConnected = true;
+  let localUser = $state.raw({ name: sessionData.username });
+  let room = $state.raw();
+  let showHostInstructions = $state.raw(false);
+  let showUserCards = $state.raw(false);
+  let showUserDataMenu = $state.raw(false);
+  let socketConnected = $state.raw(true);
   let socketConnectedAtLeastOnce = true;
-  let userCardsAnimRef;
-  let userCardsRef;
-  let userClickHandler;
-  let userData;
-  let users = [];
-  let czarWaitingMsg = '';
-  let pointsAwardedIsOpen = false;
-  let pointsAwardedData = {};
-  let roomCheckComplete = false;
-  let gameHost;
-  let swappingCards = false;
-  let showGameMenu = false;
-
+  let userCardsAnimRef = $state();
+  let userCardsRef = $state();
+  let userClickHandler = $state();
+  let userData = $state.raw();
+  let users = $state.raw([]);
+  let czarWaitingMsg = $state.raw('');
+  let pointsAwardedIsOpen = $state.raw(false);
+  let pointsAwardedData = $state.raw({});
+  let roomCheckComplete = $state.raw(false);
+  let gameHost = $state.raw();
+  let swappingCards = $state.raw(false);
+  let showGameMenu = $state.raw(false);
+  
+  let minimumNumberOfPlayersJoined = $derived(users.length > 1);
+  
   function updateTurnProps() {
     if (room && room.blackCard) blackCard = room.blackCard;
 
@@ -305,7 +306,7 @@
   async function animateCardSelection(action, ndx) {
     const uBounds = userCardsAnimRef.getBoundingClientRect();
     const centerX = uBounds.width / 2;
-    let aCard, aCardRot, aCoords, origACard, origACardTrans, origUCard, origUCardTrans, uCard, uCoords; 
+    let aCard, aCardRot, aCoords, origACard, origACardTrans, origUCard, origUCardTrans, uCard, uCoords;
     
     const setACard = () => {
       origACard = answersWrapperRef.querySelector(`.card.is--white[data-ndx="${ndx}"]`);
@@ -341,14 +342,14 @@
     
     uCard.classList.add('for--animation');
     uCard.style.cssText += `top: ${uCoords.y}px; left: ${uCoords.x}px;`;
-    userCardsAnimRef.appendChild(uCard);
+    userCardsAnimRef.appendChild(uCard); // eslint-disable-line svelte/no-dom-manipulating
     
     // Since the wrapper has overflow, ensure the anim-wrapper is sized to matched.
     answerCardsAnimRef.style.cssText = `width: ${answersWrapperRef.offsetWidth}px; height: ${answersWrapperRef.offsetHeight}px;`;
     
     aCard.classList.add('for--animation');
     aCard.style.cssText += `top: ${aCoords.y}px; left: ${aCoords.x}px; transform: rotate(${aCardRot}deg);`;
-    answerCardsAnimRef.appendChild(aCard);
+    answerCardsAnimRef.appendChild(aCard); // eslint-disable-line svelte/no-dom-manipulating
     
     const spinRot = ((uCoords.x + uCard.offsetWidth) > centerX) ? -45 : 45;
     const keyframeOpts = { duration: 200, fill: 'forwards' };
@@ -517,8 +518,6 @@
 
   titleSuffix.set(`Game ${roomID}`);
 
-  $: minimumNumberOfPlayersJoined = users.length > 1;
-
   addSocketListeners({
     [WS__MSG__ANSWER_REVIEW_STATE_UPDATED]: updateGameState(ACTION__ANSWER_REVIEW_STATE_UPDATED),
     [WS__MSG__CARD_SELECTION_TOGGLED]: updateGameState(ACTION__CARD_SELECTION_TOGGLED),
@@ -550,7 +549,7 @@
   {#if socketConnected}
     {#if room}
       <nav class="top-nav">
-        <button on:click={openGameMenu}>
+        <button onclick={openGameMenu}>
           Menu
           <SVG icon={ICON__MENU} />
         </button>
@@ -591,23 +590,23 @@
                           class="prev-btn"
                           class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
                           disabled={localUser.reviewNdx === 0}
-                          on:click={reviewPreviousAnswer}
+                          onclick={reviewPreviousAnswer}
                         >Previous</button>
                         <button
                           class="next-btn"
                           class:hidden={!localUser.startedReviewingAnswers || room.submittedCards.length < 2}
                           disabled={localUser.reviewNdx === room.submittedCards.length - 1}
-                          on:click={reviewNextAnswer}
+                          onclick={reviewNextAnswer}
                         >Next</button>
                         <button
                           class="show-answer-btn"
                           class:hidden={localUser.startedReviewingAnswers}
-                          on:click={startedReviewingAnswers}
+                          onclick={startedReviewingAnswers}
                         >Show Answer</button>
                         <button
                           class="pick-answer-btn"
                           disabled={!localUser.startedReviewingAnswers}
-                          on:click={chooseAnswer}
+                          onclick={chooseAnswer}
                         >Pick Answer</button>
                       </nav>
                     {/if}
@@ -624,7 +623,7 @@
                 <button
                   class="submit-cards-btn"
                   disabled={!localUser.maxCardsSelected}
-                  on:click={handleSubmitCards}
+                  onclick={handleSubmitCards}
                 >
                   <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                   {@html `Submit Card${localUser.selectedCards.length > 1 ? 's' : ''}`}
@@ -636,7 +635,7 @@
                   <div class="sep is--top"></div>
                   {#if localUser.points && !localUser.maxCardsSelected}
                     <nav class="cards-nav">
-                      <button on:click={toggleCardSwap}>
+                      <button onclick={toggleCardSwap}>
                         {#if swappingCards}
                           Cancel Card Swap
                         {:else}
@@ -651,7 +650,7 @@
                     class:disabled={localUser.maxCardsSelected}
                     bind:this={userCardsRef}
                   >
-                    {#each localUser.cards as { ndx, selected, text }}
+                    {#each localUser.cards as { ndx, selected, text } (text)}
                       <Card
                         {ndx}
                         onClick={handleCardSelectionToggle}
@@ -697,45 +696,47 @@
       
       {#if showHostInstructions}
         <Dialog modal onOpenEnd={handleFocusHost}>
-          <div class="host-instructions" slot="dialogBody">
-            <p>
-              As the Host, you're running the game. In order for others to join,
-              just send them
-            </p>
-            <ul>
-              <li>
-                this URL:
-                <Copyable
-                  class="for--url"
-                  text={window.location.href}
-                  title="Click to copy game URL"
-                />
-              </li>
-              <li>
-                or this code:
-                <Copyable
-                  class="for--code"
-                  text={roomID}
-                  title="Click to copy game code"
-                />
-              </li>
-            </ul>
-            <p>
-              When starting a new CAH game it's up to the group to choose the Card
-              Czar. Y'all can do that via the typical <q>Who was the last to poop?</q>
-              question, or by what ever means you choose.
-            </p>
-            <p>
-              Once the group's chosen the Czar, you just have to click on that
-              User and choose <q>{MSG__SET_CZAR}</q>. Once you do so, the game
-              will start.
-            </p>
-            <button 
-              type="button"
-              on:click={closeHostInstructions}
-              bind:this={closeHostInstructionsBtnRef}
-            >Close</button>
-          </div>
+          {#snippet s_dialogBody()}
+            <div class="host-instructions">
+              <p>
+                As the Host, you're running the game. In order for others to join,
+                just send them
+              </p>
+              <ul>
+                <li>
+                  this URL:
+                  <Copyable
+                    class="for--url"
+                    text={window.location.href}
+                    title="Click to copy game URL"
+                  />
+                </li>
+                <li>
+                  or this code:
+                  <Copyable
+                    class="for--code"
+                    text={roomID}
+                    title="Click to copy game code"
+                  />
+                </li>
+              </ul>
+              <p>
+                When starting a new CAH game it's up to the group to choose the Card
+                Czar. Y'all can do that via the typical <q>Who was the last to poop?</q>
+                question, or by what ever means you choose.
+              </p>
+              <p>
+                Once the group's chosen the Czar, you just have to click on that
+                User and choose <q>{MSG__SET_CZAR}</q>. Once you do so, the game
+                will start.
+              </p>
+              <button
+                type="button"
+                onclick={closeHostInstructions}
+                bind:this={closeHostInstructionsBtnRef}
+              >Close</button>
+            </div>
+          {/snippet}
         </Dialog>
       {/if}
       
@@ -744,64 +745,66 @@
           modal
           onCloseEnd={handleUserDataMenuClose}
         >
-          <div class="user-data-menu" slot="dialogBody">
-            <button
-              class="icon-btn"
-              type="button"
-              disabled={userData.czar || !minimumNumberOfPlayersJoined}
-              on:click={setCzar}
-            >
-              <SVG icon={ICON__CZAR} />
-              <span>
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                {@html MSG__SET_CZAR.replace('<User>', `<q>${userData.name}</q>`)}
-              </span>
-            </button>
-            {#if !minimumNumberOfPlayersJoined}
-              <div class="help">
-                There has to be at least 2 players before you can assign a Czar.
-              </div>
-            {/if}
-            {#if userData.czar}
-              <div class="help">
-                {#if userData.host}You're{:else}They're{/if} already the Czar, yuh silly goose.
-              </div>
-            {/if}
-            <button
-              class="icon-btn for--host"
-              type="button"
-              disabled={userData.host}
-              on:click={setHost}
-            >
-              <SVG icon={ICON__HOST} />
-              <span>
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                {@html `Make <q>${userData.name}</q> the Host`}
-              </span>
-            </button>
-            {#if userData.host}
-              <div class="help">
-                You're already the Host, yuh silly goose.
-              </div>
-            {/if}
-            <button
-              class="icon-btn for--rm-user"
-              type="button"
-              disabled={userData.host}
-              data-username={userData.name}
-              on:click={removeUserFromGame}
-            >
-              <SVG icon={ICON__REMOVE_USER} />
-              <span>
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                {@html `Remove <q>${userData.name}</q> from game`}
-              </span>
-            </button>
-            <button
-              type="button"
-              on:click={closeUserDataMenu}
-            >Close</button>
-          </div>
+          {#snippet s_dialogBody()}
+            <div class="user-data-menu">
+              <button
+                class="icon-btn"
+                type="button"
+                disabled={userData.czar || !minimumNumberOfPlayersJoined}
+                onclick={setCzar}
+              >
+                <SVG icon={ICON__CZAR} />
+                <span>
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  {@html MSG__SET_CZAR.replace('<User>', `<q>${userData.name}</q>`)}
+                </span>
+              </button>
+              {#if !minimumNumberOfPlayersJoined}
+                <div class="help">
+                  There has to be at least 2 players before you can assign a Czar.
+                </div>
+              {/if}
+              {#if userData.czar}
+                <div class="help">
+                  {#if userData.host}You're{:else}They're{/if} already the Czar, yuh silly goose.
+                </div>
+              {/if}
+              <button
+                class="icon-btn for--host"
+                type="button"
+                disabled={userData.host}
+                onclick={setHost}
+              >
+                <SVG icon={ICON__HOST} />
+                <span>
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  {@html `Make <q>${userData.name}</q> the Host`}
+                </span>
+              </button>
+              {#if userData.host}
+                <div class="help">
+                  You're already the Host, yuh silly goose.
+                </div>
+              {/if}
+              <button
+                class="icon-btn for--rm-user"
+                type="button"
+                disabled={userData.host}
+                data-username={userData.name}
+                onclick={removeUserFromGame}
+              >
+                <SVG icon={ICON__REMOVE_USER} />
+                <span>
+                  <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                  {@html `Remove <q>${userData.name}</q> from game`}
+                </span>
+              </button>
+              <button
+                type="button"
+                onclick={closeUserDataMenu}
+              >Close</button>
+            </div>
+          {/snippet}
         </Dialog>
       {/if}
       
@@ -814,50 +817,56 @@
       
       {#if showGameMenu}
         <Dialog onCloseClick={closeGameMenu}>
-          <section class="game-menu" slot="dialogBody">
-            <h3>Copy</h3>
-            <div class="row">
-              <div class="label">Game URL:</div>
-              <Copyable
-                class="for--url"
-                onCopy={closeGameMenu}
-                text={window.location.href}
-                title="Click to copy game URL"
-              />
-            </div>
-            <div class="row">
-              <div class="label">Game Code:</div>
-              <Copyable
-                class="for--code"
-                onCopy={closeGameMenu}
-                text={roomID}
-                title="Click to copy game code"
-              />
-            </div>
-          </section>
+          {#snippet s_dialogBody()}
+            <section class="game-menu">
+              <h3>Copy</h3>
+              <div class="row">
+                <div class="label">Game URL:</div>
+                <Copyable
+                  class="for--url"
+                  onCopy={closeGameMenu}
+                  text={window.location.href}
+                  title="Click to copy game URL"
+                />
+              </div>
+              <div class="row">
+                <div class="label">Game Code:</div>
+                <Copyable
+                  class="for--code"
+                  onCopy={closeGameMenu}
+                  text={roomID}
+                  title="Click to copy game code"
+                />
+              </div>
+            </section>
+          {/snippet}
         </Dialog>
       {/if}
     {/if}
     
     {#if roomCheckComplete && !room}
       <Dialog modal>
-        <div slot="dialogBody">
-          <div class="room-error-msg">
-            Sorry, it looks like room <code>{roomID}</code> doesn't exist anymore.
+        {#snippet s_dialogBody()}
+          <div>
+            <div class="room-error-msg">
+              Sorry, it looks like room <code>{roomID}</code> doesn't exist anymore.
+            </div>
+            <GameEntry />
           </div>
-          <GameEntry />
-        </div>
+        {/snippet}
       </Dialog>
     {/if}
   {/if}
   
   {#if !socketConnected && socketConnectedAtLeastOnce}
     <Dialog modal>
-      <div class="room-error-msg" slot="dialogBody">
-        Sorry, it looks like the game has lost connection to the Server. You can 
-        try refreshing the page, but it's likely the Server went down for 
-        maintainence and you'll have to start a new game.
-      </div>
+      {#snippet s_dialogBody()}
+        <div class="room-error-msg">
+          Sorry, it looks like the game has lost connection to the Server. You can
+          try refreshing the page, but it's likely the Server went down for
+          maintainence and you'll have to start a new game.
+        </div>
+      {/snippet}
     </Dialog>
   {/if}
 </div>

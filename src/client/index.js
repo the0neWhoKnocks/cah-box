@@ -1,3 +1,4 @@
+import { mount } from 'svelte';
 import {
   DOM__SVELTE_MOUNT_POINT,
   WS__MSG__PING,
@@ -5,7 +6,6 @@ import {
 } from '../constants';
 import Shell from './components/Shell.svelte';
 import initSocket from './utils/socket';
-
 
 initSocket({
   msgLogLevel: {
@@ -17,7 +17,7 @@ initSocket({
 });
 
 const { route, ...rest } = window.app.props;
-new Shell({
+mount(Shell, {
   target: document.getElementById(DOM__SVELTE_MOUNT_POINT),
   props: { routeName: route, routeProps: rest },
 });

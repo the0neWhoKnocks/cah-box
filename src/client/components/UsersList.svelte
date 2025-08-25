@@ -1,15 +1,17 @@
 <script>
   import User from './User.svelte';
 
-  let localUser;
-  let sortedUsers = [];
+  let {
+    isHost = false,
+    localUsername = undefined,
+    onUserClick = undefined,
+    users = undefined,
+  } = $props();
+  
+  let localUser = $state.raw();
+  let sortedUsers = $state.raw([]);
 
-  export let isHost = false;
-  export let localUsername = undefined;
-  export let onUserClick = undefined;
-  export let users = undefined;
-
-  $: {
+  $effect(() => {
     if (users.length) {
       localUser = users.filter(({ name }) => name === localUsername)[0];
       sortedUsers = users
@@ -22,15 +24,15 @@
           return 0;
         });
     }
-  }
+  });
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   class="users-list"
   class:is--host={isHost}
-  on:click={onUserClick}
+  onclick={onUserClick}
 >
   {#if localUser}
     <User
@@ -44,7 +46,7 @@
     />
   {/if}
   {#if sortedUsers.length}
-    {#each sortedUsers as { cardsSubmitted, connected, czar, host, name, points }}
+    {#each sortedUsers as { cardsSubmitted, connected, czar, host, name, points } (name)}
       <User
         {cardsSubmitted}
         {connected}
