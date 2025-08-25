@@ -22,4 +22,4 @@ module.exports = function checkUsername(wss, {
   }
 
   wss.dispatchToClient(WS__MSG__CHECK_USERNAME, payload);
-}
+};

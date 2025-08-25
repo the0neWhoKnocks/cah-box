@@ -45,4 +45,4 @@ module.exports = function choseAnswer(wss, { roomID }) {
   dealCards(wss, { newRound: true, roomID });
 
   wss.dispatchToAllInRoom(roomID, WS__MSG__POINTS_AWARDED, { ...winner });
-}
+};

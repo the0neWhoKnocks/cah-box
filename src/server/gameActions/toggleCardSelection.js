@@ -24,4 +24,4 @@ module.exports = function toggleCardSelection(wss, { ndx, roomID, username }) {
   wss.dispatchToClient(WS__MSG__CARD_SELECTION_TOGGLED, {
     room: room.data.public,
   });
-}
+};

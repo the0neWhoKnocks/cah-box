@@ -22,4 +22,4 @@ module.exports = function setAnswerReviewState(wss, {
   wss.dispatchToAllInRoom(roomID, WS__MSG__ANSWER_REVIEW_STATE_UPDATED, {
     room: room.data.public,
   });
-}
+};

@@ -18,4 +18,4 @@ module.exports = function enterRoom(wss, { roomID, username }) {
       wss.dispatchToClient(WS__MSG__ROOM_DESTROYED);
     }
   });
-}
+};

@@ -18,4 +18,4 @@ module.exports = function removeUserFromRoom(wss, { host, roomID, username }) {
   wss.dispatchToAllInRoom(roomID, WS__MSG__USER_REMOVED, {
     room: room.data.public,
   });
-}
+};

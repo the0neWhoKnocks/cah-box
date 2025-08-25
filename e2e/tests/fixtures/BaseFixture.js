@@ -27,7 +27,7 @@ const genShotKeys = (testInfo) => {
   const testFileKey = testInfo.titlePath[0].replace(/\.test\.js$/, '');
   const testNameKey = `[${testInfo.titlePath[1]}]`;
   
-  return { testFileKey, testNameKey }; 
+  return { testFileKey, testNameKey };
 };
 const genShotPrefix = ({ testFileKey, testNameKey }) => {
   return `${testFileKey}/${testNameKey}`.toLowerCase().replace(/\s/g, '-');
@@ -354,7 +354,7 @@ export default class BaseFixture {
   }
   
   async screenshot(name, loc) {
-    const _loc = (typeof loc === 'string') ? this.getEl(loc) : loc; 
+    const _loc = (typeof loc === 'string') ? this.getEl(loc) : loc;
     if (!screenshotNdxs[this.fx.ndxKey]) screenshotNdxs[this.fx.ndxKey] = 1;
     
     const screenshotNdx = screenshotNdxs[this.fx.ndxKey];
@@ -473,12 +473,12 @@ export default class BaseFixture {
           }
           else resolve();
         });
-      }, { ...scrollOpts, ...opts  }),
+      }, { ...scrollOpts, ...opts }),
       to: async (x, y, opts) => {
         if (x !== undefined) await loc.evaluate(scrollHandler, ['left', x, { ...scrollOpts, ...opts }]);
         if (y !== undefined) await loc.evaluate(scrollHandler, ['top', y, { ...scrollOpts, ...opts }]);
       },
-      toBottom: (opts) => loc.evaluate(scrollHandler, ['top','scrollHeight', { ...scrollOpts, ...opts }]),
+      toBottom: (opts) => loc.evaluate(scrollHandler, ['top', 'scrollHeight', { ...scrollOpts, ...opts }]),
       toLeft: (opts) => loc.evaluate(scrollHandler, ['left', 0, { ...scrollOpts, ...opts }]),
       toRight: (opts) => loc.evaluate(scrollHandler, ['left', 'scrollWidth', { ...scrollOpts, ...opts }]),
       toTop: (opts) => loc.evaluate(scrollHandler, ['top', 0, { ...scrollOpts, ...opts }]),
@@ -506,7 +506,7 @@ export default class BaseFixture {
       else await loc.pressSequentially(t);
     }
     
-    if (waitAfter) await this.fx.page.waitForTimeout(waitAfter);  // eslint-disable-line playwright/no-wait-for-timeout
+    if (waitAfter) await this.fx.page.waitForTimeout(waitAfter); // eslint-disable-line playwright/no-wait-for-timeout
   }
   
   async waitForDialog(selector) {
@@ -562,7 +562,7 @@ export default class BaseFixture {
           this.fx.page.wsHandlers.splice(this.fx.page.wsHandlers.indexOf(handler), 1);
           resolve(data);
         }
-      }
+      };
       
       this.fx.page.wsHandlers.push(handler);
     });

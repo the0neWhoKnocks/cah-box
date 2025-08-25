@@ -28,7 +28,7 @@ const { dirname, resolve } = require('node:path');
       .replace(/[_]+/g, BLANK_LINE);
   };
   
-  ['black', 'white'].forEach((key) => {  
+  ['black', 'white'].forEach((key) => {
     const old = [];
     
     payload[key] = data[key].reduce((arr, txt) => {

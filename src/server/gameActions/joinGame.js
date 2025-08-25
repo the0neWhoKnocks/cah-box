@@ -31,4 +31,4 @@ module.exports = function joinGame(wss, { roomID, username }) {
     room: room.data.public,
     username,
   });
-}
+};

@@ -68,6 +68,6 @@ export default function initSocket(opts = {}) {
       ) err = `WebSocket error, could not connect to ${WS_URL}`;
       
       reject(err);
-    }
+    };
   });
 }

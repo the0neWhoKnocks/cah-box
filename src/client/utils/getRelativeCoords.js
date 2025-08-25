@@ -9,7 +9,7 @@ export default function getRelativeCoords(el) {
   }
   
   const parRect = el.parentNode.getBoundingClientRect();
-  const childRect  = el.getBoundingClientRect();
+  const childRect = el.getBoundingClientRect();
   
   if (hasTransform) el.style.transform = prevTransform;
   

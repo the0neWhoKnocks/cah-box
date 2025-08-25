@@ -1,7 +1,7 @@
 const log = require('../../utils/logger')('gameActions:createGame');
 
 module.exports = function createGame(wss) {
-  const { 
+  const {
     PATH__DATA,
     WS__MSG__CREATE_GAME,
   } = require('../../constants');
@@ -41,4 +41,4 @@ module.exports = function createGame(wss) {
 
   // wss.emitToSelf(WS__MSG__CREATE_GAME, { roomID });
   wss.dispatchToClient(WS__MSG__CREATE_GAME, { roomID });
-}
+};

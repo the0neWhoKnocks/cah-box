@@ -11,4 +11,4 @@ module.exports = (roll) => function setUserState(wss, { roomID, username }) {
   wss.dispatchToAllInRoom(roomID, WS__MSG__USER_UPDATE, {
     room: room.data.public,
   });
-}
+};

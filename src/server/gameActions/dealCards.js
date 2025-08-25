@@ -73,4 +73,4 @@ module.exports = function dealCards(wss, { newRound, roomID }) {
   wss.dispatchToAllInRoom(roomID, WS__MSG__CARDS_DEALT, {
     room: room.data.public,
   });
-}
+};

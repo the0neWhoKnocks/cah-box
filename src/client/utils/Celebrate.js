@@ -6,7 +6,7 @@ const DRAG = 0.1;
 const GRAVITY = 1;
 const SPEED = 9;
 const colors = ['red', 'green', 'blue', 'yellow', 'orange', 'pink', 'purple', 'turquoise']
-.map((col) => ({ front: col, back: `dark${col}` }));
+  .map((col) => ({ front: col, back: `dark${col}` }));
 const confetti = [];
 const log = logger('Celebrate');
 

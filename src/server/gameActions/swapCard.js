@@ -24,4 +24,4 @@ module.exports = function swapCard(wss, {
   wss.dispatchToAllInRoom(roomID, WS__MSG__CARD_SWAPPED, {
     room: room.data.public,
   });
-}
+};

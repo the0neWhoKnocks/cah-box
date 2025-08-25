@@ -106,4 +106,4 @@ module.exports = function handleClientDisconnect(wss, code, reason) {
   else {
     log.info('User disconnected');
   }
-}
+};

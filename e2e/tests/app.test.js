@@ -35,7 +35,7 @@ test('Create and play', async ({ app }) => {
     await app.verifyPendingMsg({
       loc: '.czar-pending-msg',
       msg: 'Waiting for more users to join.',
-      note: "should inform the Host that more users are required to play",
+      note: 'should inform the Host that more users are required to play',
     });
     await app.screenshot('Host User with pending czar message');
   });
@@ -63,12 +63,12 @@ test('Create and play', async ({ app }) => {
     await app.verifyPendingMsg({
       loc: '.czar-pending-msg',
       msg: 'Waiting for User1 to pick the Card Czar.',
-      note: "should inform the User that a Czar needs to be chozen",
+      note: 'should inform the User that a Czar needs to be chozen',
     });
     await app.verifyTooltip({
       id: 'popover-card-czar',
       msg: 'The Card Czar shuffles all of the answers and shares each card combination with the group. For full effect, the Card Czar should usually re-read the Black Card.',
-      note: "should inform the User what the Czar is",
+      note: 'should inform the User what the Czar is',
     });
     await app.screenshot('Second User with pending czar message');
   });
@@ -78,12 +78,12 @@ test('Create and play', async ({ app }) => {
     await app.verifyPendingMsg({
       loc: '.czar-pending-msg',
       msg: 'You need to pick the Card Czar. To do so, just click on a User in the side menu.',
-      note: "should inform the Host that a Czar needs to be chozen",
+      note: 'should inform the Host that a Czar needs to be chozen',
     });
     await app.verifyTooltip({
       id: 'popover-card-czar',
       msg: 'The Card Czar shuffles all of the answers and shares each card combination with the group. For full effect, the Card Czar should usually re-read the Black Card.',
-      note: "should inform the Host what the Czar is",
+      note: 'should inform the Host what the Czar is',
     });
     await app.screenshot('Host with pending czar message');
     const menuDialog = await app.openGameMenu();
@@ -118,7 +118,7 @@ test('Create and play', async ({ app }) => {
         },
         remove: { enabled: false },
       },
-      screenshot: "User1 menu unassigned Czar",
+      screenshot: 'User1 menu unassigned Czar',
       user: 'User1',
     });
     await app.verifyUserMenu({
@@ -127,7 +127,7 @@ test('Create and play', async ({ app }) => {
         mc: { enabled: true },
         remove: { enabled: true },
       },
-      screenshot: "User3 menu nothing assigned",
+      screenshot: 'User3 menu nothing assigned',
       user: 'User3',
     });
     
@@ -194,28 +194,28 @@ test('Create and play', async ({ app }) => {
   await test.step('Local user should be at the top of the users list', async () => {
     await app.switchToPage(1);
     await app.verifyUserOrder({
-      screenshot: "User1 should be at top",
+      screenshot: 'User1 should be at top',
       userNames: ['User1', 'User2', 'User3'],
     });
     
     await app.switchToPage(2);
     await app.verifyUserOrder({
-      screenshot: "User2 should be at top",
+      screenshot: 'User2 should be at top',
       userNames: ['User2', 'User1', 'User3'],
     });
     
     await app.switchToPage(3);
     await app.verifyUserOrder({
-      screenshot: "User3 should be at top",
+      screenshot: 'User3 should be at top',
       userNames: ['User3', 'User1', 'User2'],
     });
   });
   
   await test.step('Play a couple rounds', async () => {
     const users = {
-      'User1': { pageNum: 1, points: 0 },
-      'User2': { pageNum: 2, points: 0 },
-      'User3': { pageNum: 3, points: 0 },
+      User1: { pageNum: 1, points: 0 },
+      User2: { pageNum: 2, points: 0 },
+      User3: { pageNum: 3, points: 0 },
     };
     
     for (let rNum=1; rNum<=2; rNum++) {
@@ -384,7 +384,7 @@ test('Non-existent room', async ({ app }) => {
   
   await expect(
     dialog.locator('.room-error-msg'),
-    "should display error message to User"
+    'should display error message to User'
   ).toHaveText("Sorry, it looks like room D3AD doesn't exist anymore.");
   
   await app.verifyGameEntry();

@@ -37,4 +37,4 @@ module.exports = function submitCards(wss, {
   wss.dispatchToAllInRoom(roomID, WS__MSG__CARDS_SUBMITTED, {
     room: room.data.public,
   });
-}
+};

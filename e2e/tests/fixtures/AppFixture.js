@@ -75,7 +75,7 @@ export class AppFixture extends BaseFixture {
     const gameCode = await this.readClipboard();
     await expect(
       gameCode,
-      "should copy the room code to the clipboard"
+      'should copy the room code to the clipboard'
     ).toEqual(this.getRoomCode());
     return gameCode;
   }
@@ -293,20 +293,20 @@ export class AppFixture extends BaseFixture {
     
     await expect(
       this.getPrevAnswerBtn(),
-      "Previous answer button should not be visible"
+      'Previous answer button should not be visible'
     ).toHaveClass(/\bhidden\b/);
     await expect(
       this.getNextAnswerBtn(),
-      "Next answer button should not be visible"
+      'Next answer button should not be visible'
     ).toHaveClass(/\bhidden\b/);
     await expect(
       this.getPickAnswerBtn(),
-      "Pick answer button should be disabled"
+      'Pick answer button should be disabled'
     ).toBeDisabled();
     await nav.locator('.show-answer-btn').click();
     await expect(
       this.getPickAnswerBtn(),
-      "Pick answer button should be enabled when reviewing answers"
+      'Pick answer button should be enabled when reviewing answers'
     ).toBeEnabled();
   }
   
@@ -339,13 +339,13 @@ export class AppFixture extends BaseFixture {
     
     for (let i=0; i<chosenCards.length; i++) {
       const cardText = (await this.decodeHTML(chosenCards[i]));
-      const card = userCards.locator(`.card:has-text("${cardText.replace(/"/g, "\\\"")}")`);
+      const card = userCards.locator(`.card:has-text("${cardText.replace(/"/g, '\\"')}")`);
       
-      await expect(card, "card should be enabled before selection").toBeEnabled();
+      await expect(card, 'card should be enabled before selection').toBeEnabled();
       await expect(card).toContainClass('is--selectable');
       await expect(card).not.toContainClass('is--selected');
       await card.click();
-      await expect(card, "card should be disabled after selection").toBeDisabled();
+      await expect(card, 'card should be disabled after selection').toBeDisabled();
       await expect(card).not.toContainClass('is--selectable');
       await expect(card).toContainClass('is--selected');
       
@@ -358,20 +358,20 @@ export class AppFixture extends BaseFixture {
         if (i < chosenCards.length - 1) {
           await expect(
             userCards,
-            "cards should still be selectable when all required cards have not been selected"
+            'cards should still be selectable when all required cards have not been selected'
           ).not.toContainClass('disabled');
         }
         else {
           await expect(
             userCards,
-            "no cards should be selectable after required cards selected"
+            'no cards should be selectable after required cards selected'
           ).toContainClass('disabled');
         }
       }
       else {
         await expect(
-          userCards, 
-          "no cards should be selectable after required cards selected"
+          userCards,
+          'no cards should be selectable after required cards selected'
         ).toContainClass('disabled');
       }
     }
@@ -398,7 +398,7 @@ export class AppFixture extends BaseFixture {
     
     let points = await this.getLocalUserPoints();
     
-    await this.screenshot("pre-swap cards");
+    await this.screenshot('pre-swap cards');
     
     for (let i=0; i<points; i++) {
       await this.getSwapCardBtn().click();
@@ -410,7 +410,7 @@ export class AppFixture extends BaseFixture {
       card = this.getEl(`${SELECTOR__WHITE_CARDS}:not(${SELECTOR__SWAPPABLE})`).nth(0);
       await expect(card).not.toHaveText(cardText1);
       
-      await this.screenshot("swapped card");
+      await this.screenshot('swapped card');
     }
     
     points = await this.getLocalUserPoints();
@@ -418,7 +418,7 @@ export class AppFixture extends BaseFixture {
     await expect(this.getSwapCardBtn()).not.toBeAttached();
     await expect(this.getCancelCardSwapBtn()).not.toBeAttached();
     
-    await this.screenshot("swapped available points for cards");
+    await this.screenshot('swapped available points for cards');
   }
   
   async verifyHostInstructions({ screenshot }) {
@@ -447,7 +447,7 @@ export class AppFixture extends BaseFixture {
     
     await expect(
       this.getBlackCard(inDialog),
-      "black card should have gaps replaced with answer text"
+      'black card should have gaps replaced with answer text'
     ).toHaveText(await this.decodeHTML(expected));
   }
   
@@ -476,11 +476,11 @@ export class AppFixture extends BaseFixture {
         .evaluateAll(els => els.map((el) => el.dataset.name));
       const formattedTxt = (userNames.length > 1)
         ? userNames.reduce((str, uName, ndx) => {
-          if (ndx === 0) str += uName;
-          else if (ndx === userNames.length - 1) str += `, and ${uName}`;
-          else str += `, ${uName}`;
-          return str;
-        }, '')
+            if (ndx === 0) str += uName;
+            else if (ndx === userNames.length - 1) str += `, and ${uName}`;
+            else str += `, ${uName}`;
+            return str;
+          }, '')
         : userNames[0];
       
       await expect(
@@ -513,7 +513,7 @@ export class AppFixture extends BaseFixture {
         expect(createLabel).toContain('Or');
         await expect(createBtn).toHaveText('Create Game');
       },
-      "should provide User with options to enter a new room code or create a new one"
+      'should provide User with options to enter a new room code or create a new one'
     ).toPass({ timeout: 1000 });
     
     return { codeBtn, codeInput, createBtn };
@@ -583,31 +583,31 @@ export class AppFixture extends BaseFixture {
     
     await expect(
       await this.getLocalUserPoints(),
-      "should have at least one point for swapping to be enabled"
+      'should have at least one point for swapping to be enabled'
     ).toBeGreaterThan(0);
     
     const swapBtn = this.getSwapCardBtn();
     await expect(
       swapBtn,
-      "ability to swap cards should be enabled"
+      'ability to swap cards should be enabled'
     ).toBeAttached();
     await swapBtn.click();
     const swappableCards = this.getEl(`${SELECTOR__WHITE_CARDS}${SELECTOR__SWAPPABLE}`);
     await expect(
       swappableCards,
-      "all cards should be swappable"
+      'all cards should be swappable'
     ).toHaveCount(10);
     
     const cancelSwapBtn = this.getCancelCardSwapBtn();
     await expect(
       cancelSwapBtn,
-      "ability to cancel swapping cards should be enabled"
+      'ability to cancel swapping cards should be enabled'
     ).toBeAttached();
     await cancelSwapBtn.click();
     const unSwappableCards = this.getEl(`${SELECTOR__WHITE_CARDS}:not(${SELECTOR__SWAPPABLE})`);
     await expect(
       unSwappableCards,
-      "all cards should be not be swappable"
+      'all cards should be not be swappable'
     ).toHaveCount(10);
   }
   
@@ -636,7 +636,7 @@ export class AppFixture extends BaseFixture {
       await expect(userEl).not.toContainClass('is--connected', { timeout: 5000 });
       await expect(
         userEl.locator('.disconnect-indicator'),
-        "should display animated icon that informs users when disconnected user will be removed"
+        'should display animated icon that informs users when disconnected user will be removed'
       ).toBeAttached();
     }
     
@@ -644,21 +644,21 @@ export class AppFixture extends BaseFixture {
       await expect(
         // NOTE: using `xlink:href` isn't valid, but `*|href` is.
         userEl.locator(`.user__icon .icon use[*|href="#${userIcon}"]`),
-        "should display correct icon"
+        'should display correct icon'
       ).toBeAttached();
     }
     
     if (name) {
       await expect(
         userEl.locator('.user__name'),
-        "should display sanitized User name"
+        'should display sanitized User name'
       ).toHaveText(name);
     }
     
     if (points) {
       await expect(
         userEl.locator('.user__points'),
-        "should display starting points"
+        'should display starting points'
       ).toHaveText(points);
     }
     
@@ -669,7 +669,7 @@ export class AppFixture extends BaseFixture {
         const statusColor = await this.getBGColor(statusEl);
         expect(
           statusColor,
-          "should display User status color"
+          'should display User status color'
         ).toEqual(status);
       }).toPass({ timeout: 3000 });
     }
